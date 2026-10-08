@@ -19,8 +19,25 @@ enum AuthStep: Equatable {
 @MainActor @Observable
 final class ProofModel {
     static let resendInterval: TimeInterval = 60
-    static let minimumPasswordLength = 6
-    static let codeLength = 6
+    /// New passwords only: existing accounts with shorter passwords still sign in.
+    nonisolated static let minimumPasswordLength = 10
+    /// Every length the Supabase "Email OTP length" setting allows, so a dashboard
+    /// change can never again leave people holding a code the app refuses.
+    nonisolated static let codeLengths = 6...10
+    nonisolated static let passwordRule = "Use at least \(minimumPasswordLength) characters, with at least one letter and one number."
+
+    /// Nil when a new password meets the rule; otherwise the plain-English rule.
+    /// Letters and digits are ASCII, as Supabase's "Letters and digits" requirement counts them.
+    nonisolated static func passwordProblem(_ password: String) -> String? {
+        let acceptable = password.count >= minimumPasswordLength
+            && password.contains { $0.isASCII && $0.isLetter } && password.contains { $0.isASCII && $0.isNumber }
+        return acceptable ? nil : passwordRule
+    }
+
+    /// Whether a typed code is all digits and a length Supabase can send.
+    nonisolated static func isCompleteCode(_ code: String) -> Bool {
+        codeLengths.contains(code.count) && code.allSatisfy { $0.isASCII && $0.isNumber }
+    }
 
     var email = ""
     var password = ""
@@ -44,6 +61,9 @@ final class ProofModel {
     @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private var client: SupabaseClient?
     @ObservationIgnored private var started = false
+    /// Set while a recovery code's session waits for its new password, so that session
+    /// is never shown as signed in unless the password is saved.
+    @ObservationIgnored private var holdingRecoverySession = false
     @ObservationIgnored private var lastSync: Date?
     @ObservationIgnored private let directory: URL
     @ObservationIgnored private weak var tracker: TrackerModel?
@@ -126,6 +146,7 @@ final class ProofModel {
         started = true
         Task {
             for await (_, session) in client.auth.authStateChanges {
+                if holdingRecoverySession { continue }
                 activate(session)
             }
         }
@@ -182,7 +203,7 @@ final class ProofModel {
         } catch let error as AuthError where error.errorCode == .emailNotConfirmed {
             // The account exists but its sign-up code was never entered.
             show(.confirmSignUp(email: address))
-            notice = "Confirm your email to finish creating your account. Enter the 6-digit code we sent to \(address), or send a new one."
+            notice = "Confirm your email to finish creating your account. Enter the code we sent to \(address), or send a new one."
             status = "Email not confirmed yet"
         } catch {
             errorMessage = describe(error)
@@ -210,9 +231,9 @@ final class ProofModel {
             errorMessage = "Enter your email address."
             return
         }
-        guard password.count >= Self.minimumPasswordLength else {
+        if let problem = Self.passwordProblem(password) {
             clearSecrets()
-            errorMessage = "Choose a password of at least \(Self.minimumPasswordLength) characters."
+            errorMessage = problem
             return
         }
         beginAttempt("Creating account…")
@@ -234,7 +255,7 @@ final class ProofModel {
             }
             show(.confirmSignUp(email: address))
             resendAvailableAt = now().addingTimeInterval(Self.resendInterval)
-            notice = "We emailed a 6-digit code to \(address). Enter it to finish creating your account."
+            notice = "We emailed a code to \(address). Enter it to finish creating your account."
             status = "Check your email for a code"
         } catch {
             errorMessage = describe(error)
@@ -283,7 +304,7 @@ final class ProofModel {
             try await client.auth.resetPasswordForEmail(address)
             show(.resetPassword(email: address))
             resendAvailableAt = now().addingTimeInterval(Self.resendInterval)
-            notice = "If \(address) has an account, we emailed it a 6-digit code. Enter it with your new password."
+            notice = "If \(address) has an account, we emailed it a code. Enter it with your new password."
             status = "Check your email for a code"
         } catch {
             errorMessage = describe(error)
@@ -294,20 +315,24 @@ final class ProofModel {
         }
     }
 
-    /// Verifying a recovery code signs the user in; the new password is then saved for that session.
+    /// The code and the new password are one step. Verifying a recovery code creates a
+    /// session; it is kept only once the new password is saved, and is otherwise signed
+    /// out on this Mac so an abandoned or failed reset never leaves anyone signed in.
     func completePasswordReset(code: String, newPassword: String) async {
         guard !isBusy, let client, case .resetPassword(let address) = authStep else { return }
         guard let token = validCode(code) else {
             clearSecrets()
             return
         }
-        guard newPassword.count >= Self.minimumPasswordLength else {
+        if let problem = Self.passwordProblem(newPassword) {
             clearSecrets()
-            errorMessage = "Choose a password of at least \(Self.minimumPasswordLength) characters."
+            errorMessage = problem
             return
         }
         beginAttempt("Checking code…")
         defer { endAttempt() }
+        holdingRecoverySession = true
+        defer { holdingRecoverySession = false }
         let session: Session
         do {
             guard let verified = try await client.auth.verifyOTP(email: address, token: token, type: .recovery).session else {
@@ -321,17 +346,27 @@ final class ProofModel {
             status = "Code not accepted"
             return
         }
+        let outcome: String
+        do {
+            try Task.checkCancellation()
+            try await client.auth.update(user: UserAttributes(password: newPassword))
+            outcome = "Password updated. You're signed in."
+        } catch let error as AuthError where error.errorCode == .samePassword {
+            outcome = "That was already your password. You're signed in."
+        } catch {
+            // Removes the session on this Mac even if the server can't be reached.
+            try? await client.auth.signOut(scope: .local)
+            show(.forgotPassword)
+            email = address
+            errorMessage = Task.isCancelled || error is CancellationError
+                ? "The password reset was interrupted and your new password was not saved. Start again to get a new code."
+                : "Your new password was not saved: \(describe(error)) Start again to get a new code."
+            status = "Password not changed"
+            return
+        }
         show(.signIn)
         activate(session)
-        do {
-            try await client.auth.update(user: UserAttributes(password: newPassword))
-            status = "Password updated. You're signed in."
-        } catch let error as AuthError where error.errorCode == .samePassword {
-            status = "That was already your password. You're signed in."
-        } catch {
-            errorMessage = "You're signed in, but the new password was not saved: \(describe(error)) Sign out and use Forgot password to try again."
-            status = "Password not changed"
-        }
+        if journal != nil { status = outcome }
     }
 
     /// Sends a fresh code for the current code step, at most once per resend interval.
@@ -343,10 +378,10 @@ final class ProofModel {
             switch authStep {
             case .confirmSignUp(let address):
                 try await client.auth.resend(email: address, type: .signup)
-                notice = "We sent a new 6-digit code to \(address)."
+                notice = "We sent a new code to \(address)."
             case .resetPassword(let address):
                 try await client.auth.resetPasswordForEmail(address)
-                notice = "If \(address) has an account, we sent it a new 6-digit code."
+                notice = "If \(address) has an account, we sent it a new code."
             case .signIn, .createAccount, .forgotPassword:
                 return
             }
@@ -378,9 +413,9 @@ final class ProofModel {
             errorMessage = "Sign in before changing your password."
             return false
         }
-        guard new.count >= Self.minimumPasswordLength else {
+        if let problem = Self.passwordProblem(new) {
             clearSecrets()
-            errorMessage = "Choose a password of at least \(Self.minimumPasswordLength) characters."
+            errorMessage = problem
             return false
         }
         beginAttempt("Changing password…")
@@ -422,9 +457,9 @@ final class ProofModel {
 
     private func validCode(_ value: String) -> String? {
         let digits = value.filter { !$0.isWhitespace }
-        guard digits.count == Self.codeLength, digits.allSatisfy(\.isASCII), digits.allSatisfy(\.isNumber) else {
+        guard Self.isCompleteCode(digits) else {
             code = ""
-            errorMessage = "Enter the 6-digit code from the email."
+            errorMessage = "Enter the code from the email."
             return nil
         }
         return digits
@@ -502,16 +537,21 @@ final class ProofModel {
             }
             // An upload response alone doesn't acknowledge a duplicate ID. Fetch and
             // compare actual immutable rows before clearing any pending entries.
+            // Rows are decoded one at a time: an unreadable row is skipped and counted,
+            // and only rows that decoded can acknowledge a pending entry.
             var remote: [ProbeEntry] = []
+            var skipped = 0
             var offset = 0
             while true {
-                let page: [ProbeEntry] = try await client.from("sync_probe_entries")
+                let page: [ServerRow<ProbeEntry>] = try await client.from("sync_probe_entries")
                     .select("id,owner_id,message,client_created_at")
                     .eq("owner_id", value: ownerID.uuidString)
                     .order("id", ascending: true)
                     .range(from: offset, to: offset + 499)
                     .execute().value
-                remote.append(contentsOf: page)
+                let readable = page.compactMap(\.value)
+                remote.append(contentsOf: readable)
+                skipped += page.count - readable.count
                 if page.count < 500 { break }
                 offset += page.count
             }
@@ -519,7 +559,8 @@ final class ProofModel {
             try current.merge(remote)
             self.journal = current
             lastSync = Date()
-            status = pendingCount == 0 ? "Up to date" : "\(pendingCount) entries still pending"
+            status = [pendingCount == 0 ? "Up to date" : "\(pendingCount) entries still pending", skippedRowsNotice(skipped)]
+                .compactMap { $0 }.joined(separator: " · ")
         } catch {
             errorMessage = error.localizedDescription
             status = "Sync unavailable; local entries are retained"

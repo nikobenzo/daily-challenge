@@ -106,7 +106,7 @@ struct AppearanceTests {
                 ("auth-forgot-password", ProofModel(fixtureOwnerID: nil, directory: directory, authStep: .forgotPassword)),
                 ("auth-confirm-code", ProofModel(
                     fixtureOwnerID: nil, directory: directory, authStep: .confirmSignUp(email: address),
-                    notice: "We emailed a 6-digit code to \(address). Enter it to finish creating your account.",
+                    notice: "We emailed a code to \(address). Enter it to finish creating your account.",
                     resendAvailableAt: Date().addingTimeInterval(42)
                 )),
                 ("auth-confirm-expired", ProofModel(
@@ -115,8 +115,12 @@ struct AppearanceTests {
                 )),
                 ("auth-reset-password", ProofModel(
                     fixtureOwnerID: nil, directory: directory, authStep: .resetPassword(email: address),
-                    notice: "If \(address) has an account, we emailed it a 6-digit code. Enter it with your new password.",
+                    notice: "If \(address) has an account, we emailed it a code. Enter it with your new password.",
                     resendAvailableAt: Date().addingTimeInterval(42)
+                )),
+                ("auth-reset-not-saved", ProofModel(
+                    fixtureOwnerID: nil, directory: directory, authStep: .forgotPassword,
+                    errorMessage: "The password reset was interrupted and your new password was not saved. Start again to get a new code."
                 )),
                 ("auth-account-exists", ProofModel(
                     fixtureOwnerID: nil, directory: directory,
@@ -124,11 +128,14 @@ struct AppearanceTests {
                 ))
             ]
             for (name, auth) in screens {
-                if auth.authStep != .forgotPassword { auth.email = name == "auth-sign-in" ? "" : address }
-                if name == "auth-create-account" {
-                    auth.password = "secret-1"
-                    auth.passwordConfirmation = "secret-2"
+                if auth.authStep != .forgotPassword || name == "auth-reset-not-saved" {
+                    auth.email = name == "auth-sign-in" ? "" : address
                 }
+                if name == "auth-create-account" {
+                    // Too short and no confirmation yet: the render shows the new-password rule.
+                    auth.password = "secret-1"
+                }
+                if name == "auth-reset-password" { auth.code = "12345678" }
                 try renderLiveModes(TrackerPopup(model: model, auth: auth, appearance: appearance), name: name, appearance: appearance)
                 #expect(auth.ownerID == nil)
             }

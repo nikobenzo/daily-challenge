@@ -30,6 +30,8 @@ private final class AuthRequestLog: @unchecked Sendable {
 
 private let newAccountID = "22222222-2222-4222-8222-222222222222"
 private let validCode = "123456"
+/// Supabase's "Email OTP length" allows 6 to 10 digits; the app must take any of them.
+private let validCodes = [validCode, "12345678", "1234567890"]
 private let staleCode = "999999"
 
 private func userJSON(email: String, confirmed: Bool, identities: Bool = true) -> [String: Any] {
@@ -114,7 +116,7 @@ private final class SignUpAuthProtocol: URLProtocol {
         let email = body["email"] as? String
         switch (method, path) {
         case ("POST", "/auth/v1/signup"):
-            guard body["password"] as? String == "fresh secret" else {
+            guard body["password"] as? String == "fresh secret 7" else {
                 return apiError(422, "weak_password", "Password should be at least 6 characters.")
             }
             switch email {
@@ -129,10 +131,12 @@ private final class SignUpAuthProtocol: URLProtocol {
             return apiError(400, "invalid_credentials", "Invalid login credentials")
         case ("POST", "/auth/v1/verify"):
             guard let type = body["type"] as? String, ["signup", "recovery"].contains(type),
-                  let email, body["token"] as? String == validCode else {
+                  let email, let token = body["token"] as? String, validCodes.contains(token) else {
                 return apiError(403, "otp_expired", "Token has expired or is invalid")
             }
             return (200, sessionJSON(email: email))
+        case ("POST", "/auth/v1/logout"):
+            return (204, [:])
         case ("POST", "/auth/v1/resend"):
             guard body["type"] as? String == "signup", email != nil else {
                 return apiError(400, "validation_failed", "Missing type")
@@ -148,8 +152,12 @@ private final class SignUpAuthProtocol: URLProtocol {
                 return apiError(401, "no_authorization", "This endpoint requires a valid Bearer token")
             }
             switch body["password"] as? String {
-            case "brand new secret": return (200, userJSON(email: "new@example.com", confirmed: true))
-            case "same secret": return apiError(422, "same_password", "New password should be different from the old password.")
+            case "brand new secret 9": return (200, userJSON(email: "new@example.com", confirmed: true))
+            case "slow secret 123":
+                // Stands in for the person closing the app or the screen mid-save.
+                RecoveryInterruption.shared.interrupt(host: request.url!.host!)
+                return apiError(500, "unexpected_failure", "Interrupted")
+            case "same secret 42": return apiError(422, "same_password", "New password should be different from the old password.")
             default: return apiError(422, "weak_password", "Password is known to be weak and easy to guess.")
             }
         default:
@@ -162,8 +170,18 @@ private final class TestClock: @unchecked Sendable {
     var now = Date(timeIntervalSince1970: 1_791_500_000)
 }
 
+/// Cancels the task running a password reset when the synthetic server is asked to save it.
+private final class RecoveryInterruption: @unchecked Sendable {
+    static let shared = RecoveryInterruption()
+    private let lock = NSLock()
+    private var tasks: [String: Task<Void, Never>] = [:]
+    func register(host: String, _ task: Task<Void, Never>) { lock.withLock { tasks[host] = task } }
+    func interrupt(host: String) { lock.withLock { tasks[host] }?.cancel() }
+}
+
 private struct Harness {
     let model: ProofModel
+    let client: SupabaseClient
     let host: String
     let clock: TestClock
     let directory: URL
@@ -189,7 +207,7 @@ private func makeHarness() -> Harness {
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     return Harness(
         model: ProofModel(client: client, directory: directory, now: { clock.now }),
-        host: host, clock: clock, directory: directory
+        client: client, host: host, clock: clock, directory: directory
     )
 }
 
@@ -206,8 +224,8 @@ private func expectSecretsCleared(_ model: ProofModel) {
     defer { try? FileManager.default.removeItem(at: h.directory) }
     h.model.show(.createAccount)
     h.model.email = " new@example.com "
-    h.model.password = "fresh secret"
-    h.model.passwordConfirmation = "fresh secret"
+    h.model.password = "fresh secret 7"
+    h.model.passwordConfirmation = "fresh secret 7"
     await h.model.signUp(email: h.model.email, password: h.model.password)
 
     #expect(h.model.authStep == .confirmSignUp(email: "new@example.com"))
@@ -224,7 +242,7 @@ private func expectSecretsCleared(_ model: ProofModel) {
 @Test @MainActor func signUpCodeConfirmsAndSignsIn() async {
     let h = makeHarness()
     defer { try? FileManager.default.removeItem(at: h.directory) }
-    await h.model.signUp(email: "new@example.com", password: "fresh secret")
+    await h.model.signUp(email: "new@example.com", password: "fresh secret 7")
     h.model.code = validCode
     await h.model.confirmSignUp(code: " 123 456 ")
 
@@ -244,7 +262,7 @@ private func expectSecretsCleared(_ model: ProofModel) {
 @Test @MainActor func wrongOrExpiredCodeKeepsTheCodeStepWithPlainEnglish() async {
     let h = makeHarness()
     defer { try? FileManager.default.removeItem(at: h.directory) }
-    await h.model.signUp(email: "new@example.com", password: "fresh secret")
+    await h.model.signUp(email: "new@example.com", password: "fresh secret 7")
     h.model.code = staleCode
     await h.model.confirmSignUp(code: staleCode)
 
@@ -256,7 +274,7 @@ private func expectSecretsCleared(_ model: ProofModel) {
 
     // A malformed code is rejected locally without a request.
     await h.model.confirmSignUp(code: "12ab")
-    #expect(h.model.errorMessage == "Enter the 6-digit code from the email.")
+    #expect(h.model.errorMessage == "Enter the code from the email.")
     #expect(h.requests(to: "/auth/v1/verify").count == 1)
 }
 
@@ -265,9 +283,9 @@ private func expectSecretsCleared(_ model: ProofModel) {
         let h = makeHarness()
         defer { try? FileManager.default.removeItem(at: h.directory) }
         h.model.show(.createAccount)
-        h.model.password = "fresh secret"
-        h.model.passwordConfirmation = "fresh secret"
-        await h.model.signUp(email: address, password: "fresh secret")
+        h.model.password = "fresh secret 7"
+        h.model.passwordConfirmation = "fresh secret 7"
+        await h.model.signUp(email: address, password: "fresh secret 7")
         #expect(h.model.authStep == .signIn)
         #expect(h.model.email == address)
         #expect(h.model.ownerID == nil)
@@ -279,7 +297,7 @@ private func expectSecretsCleared(_ model: ProofModel) {
 @Test @MainActor func signUpReturningASessionSignsInDirectly() async {
     let h = makeHarness()
     defer { try? FileManager.default.removeItem(at: h.directory) }
-    await h.model.signUp(email: "instant@example.com", password: "fresh secret")
+    await h.model.signUp(email: "instant@example.com", password: "fresh secret 7")
     #expect(h.model.ownerID == UUID(uuidString: newAccountID))
     #expect(h.model.authStep == .signIn)
     #expect(h.model.errorMessage == nil)
@@ -291,7 +309,7 @@ private func expectSecretsCleared(_ model: ProofModel) {
     h.model.password = "abc"
     h.model.passwordConfirmation = "abc"
     await h.model.signUp(email: "new@example.com", password: "abc")
-    #expect(h.model.errorMessage == "Choose a password of at least 6 characters.")
+    #expect(h.model.errorMessage == "Use at least 10 characters, with at least one letter and one number.")
     #expect(h.requests.isEmpty)
     expectSecretsCleared(h.model)
 }
@@ -299,9 +317,9 @@ private func expectSecretsCleared(_ model: ProofModel) {
 @Test @MainActor func serverRejectedSignUpClearsPasswordsAndExplains() async {
     let h = makeHarness()
     defer { try? FileManager.default.removeItem(at: h.directory) }
-    h.model.password = "guessable"
-    h.model.passwordConfirmation = "guessable"
-    await h.model.signUp(email: "new@example.com", password: "guessable")
+    h.model.password = "guessable 12"
+    h.model.passwordConfirmation = "guessable 12"
+    await h.model.signUp(email: "new@example.com", password: "guessable 12")
     #expect(h.model.authStep == .signIn)
     #expect(h.model.ownerID == nil)
     #expect(h.model.errorMessage?.hasPrefix("Choose a stronger password.") == true)
@@ -312,7 +330,7 @@ private func expectSecretsCleared(_ model: ProofModel) {
 @Test @MainActor func resendRespectsTheSixtySecondLimit() async {
     let h = makeHarness()
     defer { try? FileManager.default.removeItem(at: h.directory) }
-    await h.model.signUp(email: "new@example.com", password: "fresh secret")
+    await h.model.signUp(email: "new@example.com", password: "fresh secret 7")
     #expect(!h.model.canResend)
     await h.model.resendCode()
     #expect(h.requests(to: "/auth/v1/resend").isEmpty)
@@ -340,16 +358,16 @@ private func expectSecretsCleared(_ model: ProofModel) {
     #expect(h.model.resendWait(at: h.clock.now) == 60)
 
     h.model.code = validCode
-    h.model.newPassword = "brand new secret"
-    h.model.passwordConfirmation = "brand new secret"
-    await h.model.completePasswordReset(code: validCode, newPassword: "brand new secret")
+    h.model.newPassword = "brand new secret 9"
+    h.model.passwordConfirmation = "brand new secret 9"
+    await h.model.completePasswordReset(code: validCode, newPassword: "brand new secret 9")
 
     #expect(h.model.ownerID == UUID(uuidString: newAccountID))
     #expect(h.model.authStep == .signIn)
     #expect(h.model.errorMessage == nil)
     #expect(h.model.status == "Password updated. You're signed in.")
     #expect(h.requests(to: "/auth/v1/verify").first?["type"] as? String == "recovery")
-    #expect(h.requests(to: "/auth/v1/user").first?["password"] as? String == "brand new secret")
+    #expect(h.requests(to: "/auth/v1/user").first?["password"] as? String == "brand new secret 9")
     expectSecretsCleared(h.model)
     #expect(h.model.code.isEmpty)
 }
@@ -358,9 +376,9 @@ private func expectSecretsCleared(_ model: ProofModel) {
     let h = makeHarness()
     defer { try? FileManager.default.removeItem(at: h.directory) }
     await h.model.requestPasswordReset(email: "new@example.com")
-    h.model.newPassword = "brand new secret"
-    h.model.passwordConfirmation = "brand new secret"
-    await h.model.completePasswordReset(code: staleCode, newPassword: "brand new secret")
+    h.model.newPassword = "brand new secret 9"
+    h.model.passwordConfirmation = "brand new secret 9"
+    await h.model.completePasswordReset(code: staleCode, newPassword: "brand new secret 9")
 
     #expect(h.model.ownerID == nil)
     #expect(h.model.authStep == .resetPassword(email: "new@example.com"))
@@ -391,27 +409,27 @@ private func expectSecretsCleared(_ model: ProofModel) {
 @Test @MainActor func changePasswordNeedsASessionAndReportsTheResult() async {
     let h = makeHarness()
     defer { try? FileManager.default.removeItem(at: h.directory) }
-    h.model.newPassword = "brand new secret"
-    #expect(await h.model.changePassword(new: "brand new secret") == false)
+    h.model.newPassword = "brand new secret 9"
+    #expect(await h.model.changePassword(new: "brand new secret 9") == false)
     #expect(h.model.errorMessage == "Sign in before changing your password.")
     #expect(h.requests(to: "/auth/v1/user").isEmpty)
     expectSecretsCleared(h.model)
 
-    await h.model.signUp(email: "new@example.com", password: "fresh secret")
+    await h.model.signUp(email: "new@example.com", password: "fresh secret 7")
     await h.model.confirmSignUp(code: validCode)
     #expect(h.model.ownerID != nil)
 
-    h.model.newPassword = "same secret"
-    #expect(await h.model.changePassword(new: "same secret") == false)
+    h.model.newPassword = "same secret 42"
+    #expect(await h.model.changePassword(new: "same secret 42") == false)
     #expect(h.model.errorMessage == "That is already your password. Choose a different one.")
     expectSecretsCleared(h.model)
 
-    h.model.newPassword = "brand new secret"
-    h.model.passwordConfirmation = "brand new secret"
-    #expect(await h.model.changePassword(new: "brand new secret"))
+    h.model.newPassword = "brand new secret 9"
+    h.model.passwordConfirmation = "brand new secret 9"
+    #expect(await h.model.changePassword(new: "brand new secret 9"))
     #expect(h.model.errorMessage == nil)
     #expect(h.model.status == "Password changed. Use it next time you sign in.")
-    #expect(h.requests(to: "/auth/v1/user").last?["password"] as? String == "brand new secret")
+    #expect(h.requests(to: "/auth/v1/user").last?["password"] as? String == "brand new secret 9")
     expectSecretsCleared(h.model)
     #expect(h.model.ownerID == UUID(uuidString: newAccountID))
 }
@@ -420,7 +438,7 @@ private func expectSecretsCleared(_ model: ProofModel) {
     let h = makeHarness()
     defer { try? FileManager.default.removeItem(at: h.directory) }
     h.model.email = "pending@example.com"
-    h.model.password = "fresh secret"
+    h.model.password = "fresh secret 7"
     await h.model.signIn()
     #expect(h.model.ownerID == nil)
     #expect(h.model.authStep == .confirmSignUp(email: "pending@example.com"))
@@ -455,4 +473,122 @@ private func expectSecretsCleared(_ model: ProofModel) {
     #expect(h.model.code.isEmpty)
     #expect(h.model.email == "keep@example.com")
     #expect(h.model.authStep == .forgotPassword)
+}
+
+@Test @MainActor func everyCodeLengthSupabaseCanSendIsAccepted() async {
+    for code in validCodes {
+        let h = makeHarness()
+        defer { try? FileManager.default.removeItem(at: h.directory) }
+        await h.model.signUp(email: "new@example.com", password: "fresh secret 7")
+        #expect(ProofModel.isCompleteCode(code))
+        await h.model.confirmSignUp(code: code)
+        #expect(h.model.ownerID == UUID(uuidString: newAccountID), "\(code.count)-digit code")
+        #expect(h.requests(to: "/auth/v1/verify").first?["token"] as? String == code)
+    }
+}
+
+@Test @MainActor func codesOutsideSixToTenDigitsAreRejectedLocally() async {
+    for code in ["12345", "12345678901", "1234567a", "１２３４５６"] {
+        #expect(!ProofModel.isCompleteCode(code), "\(code)")
+        let h = makeHarness()
+        defer { try? FileManager.default.removeItem(at: h.directory) }
+        await h.model.signUp(email: "new@example.com", password: "fresh secret 7")
+        await h.model.confirmSignUp(code: code)
+        #expect(h.model.errorMessage == "Enter the code from the email.")
+        #expect(h.requests(to: "/auth/v1/verify").isEmpty)
+    }
+}
+
+@Test @MainActor func codeCopyNamesNoFixedLength() async {
+    let h = makeHarness()
+    defer { try? FileManager.default.removeItem(at: h.directory) }
+    await h.model.signUp(email: "new@example.com", password: "fresh secret 7")
+    #expect(h.model.notice == "We emailed a code to new@example.com. Enter it to finish creating your account.")
+    for step in [AuthStep.createAccount, .forgotPassword, .confirmSignUp(email: "a@b.c"), .resetPassword(email: "a@b.c")] {
+        #expect(!step.subtitle.contains("digit"))
+    }
+}
+
+@Test func newPasswordsNeedTenCharactersWithALetterAndANumber() {
+    let rule = "Use at least 10 characters, with at least one letter and one number."
+    #expect(ProofModel.passwordProblem("") == rule)
+    #expect(ProofModel.passwordProblem("abc123") == rule)
+    #expect(ProofModel.passwordProblem("abcdefghij") == rule)
+    #expect(ProofModel.passwordProblem("1234567890") == rule)
+    #expect(ProofModel.passwordProblem("abcdefghi1") == nil)
+    // Supabase's server-side "Letters and digits" rule counts only ASCII characters.
+    #expect(ProofModel.passwordProblem("ééééééééé1") == rule)
+    #expect(ProofModel.passwordProblem("abcdefghi١") == rule)
+    #expect(ProofModel.passwordProblem("fresh secret 7") == nil)
+}
+
+@Test @MainActor func weakNewPasswordsAreRejectedBeforeAnyRequest() async {
+    let h = makeHarness()
+    defer { try? FileManager.default.removeItem(at: h.directory) }
+    await h.model.signUp(email: "new@example.com", password: "freshsecret")
+    #expect(h.model.errorMessage == "Use at least 10 characters, with at least one letter and one number.")
+    await h.model.requestPasswordReset(email: "new@example.com")
+    await h.model.completePasswordReset(code: validCode, newPassword: "1234567890")
+    #expect(h.model.errorMessage == "Use at least 10 characters, with at least one letter and one number.")
+    #expect(h.requests(to: "/auth/v1/signup").isEmpty)
+    #expect(h.requests(to: "/auth/v1/verify").isEmpty)
+    expectSecretsCleared(h.model)
+}
+
+@Test @MainActor func existingShortPasswordsStillSignIn() async {
+    let h = makeHarness()
+    defer { try? FileManager.default.removeItem(at: h.directory) }
+    h.model.email = "new@example.com"
+    h.model.password = "old6ch"
+    await h.model.signIn()
+    // The rule applies to new passwords only: the old password reaches the server.
+    #expect(h.requests(to: "/auth/v1/token").first?["password"] as? String == "old6ch")
+}
+
+@Test @MainActor func recoveryWithAnEightDigitCodeSavesThePassword() async {
+    let h = makeHarness()
+    defer { try? FileManager.default.removeItem(at: h.directory) }
+    await h.model.requestPasswordReset(email: "new@example.com")
+    await h.model.completePasswordReset(code: "12345678", newPassword: "brand new secret 9")
+    #expect(h.model.ownerID == UUID(uuidString: newAccountID))
+    #expect(h.model.status == "Password updated. You're signed in.")
+    #expect(h.requests(to: "/auth/v1/logout").isEmpty)
+}
+
+@Test @MainActor func failedRecoveryPasswordSignsOutAndAsksToStartAgain() async {
+    let h = makeHarness()
+    defer { try? FileManager.default.removeItem(at: h.directory) }
+    h.model.start()
+    await h.model.requestPasswordReset(email: "new@example.com")
+    // The synthetic server accepts the code but rejects this password as weak.
+    await h.model.completePasswordReset(code: validCode, newPassword: "guessable 12")
+    for _ in 0..<20 { await Task.yield() }
+
+    #expect(h.model.ownerID == nil)
+    #expect(h.model.signedInEmail == nil)
+    #expect(h.client.auth.currentSession == nil)
+    #expect(h.requests(to: "/auth/v1/logout").count == 1)
+    #expect(h.model.authStep == .forgotPassword)
+    #expect(h.model.email == "new@example.com")
+    #expect(h.model.errorMessage?.hasPrefix("Your new password was not saved: Choose a stronger password.") == true)
+    #expect(h.model.errorMessage?.hasSuffix("Start again to get a new code.") == true)
+    expectSecretsCleared(h.model)
+}
+
+@Test @MainActor func abandonedRecoverySignsOutOnThisMac() async {
+    let h = makeHarness()
+    defer { try? FileManager.default.removeItem(at: h.directory) }
+    h.model.start()
+    await h.model.requestPasswordReset(email: "new@example.com")
+    let model = h.model
+    let reset = Task { await model.completePasswordReset(code: validCode, newPassword: "slow secret 123") }
+    RecoveryInterruption.shared.register(host: h.host, reset)
+    await reset.value
+    for _ in 0..<20 { await Task.yield() }
+
+    #expect(h.requests(to: "/auth/v1/verify").count == 1)
+    #expect(h.model.ownerID == nil)
+    #expect(h.client.auth.currentSession == nil)
+    #expect(h.model.authStep == .forgotPassword)
+    #expect(h.model.errorMessage == "The password reset was interrupted and your new password was not saved. Start again to get a new code.")
 }

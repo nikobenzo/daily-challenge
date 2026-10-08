@@ -255,7 +255,7 @@ import Testing
     func fetchChallenge(ownerID: UUID) async throws -> ChallengeRecord? { header }
     func insertChallenge(_ record: ChallengeRecord) async throws { header = record }
     func upload(_ events: [ChallengeEvent], ownerID: UUID) async throws {}
-    func fetchEvents(ownerID: UUID, challengeID: UUID) async throws -> [ChallengeEvent] { events }
+    func fetchEvents(ownerID: UUID, challengeID: UUID) async throws -> RemoteEvents { .init(events: events) }
 }
 
 @Test @MainActor func trackerEditsAndIncomingSyncedCompletionReconcileTodaysTotalNotSelectedHistory() async throws {

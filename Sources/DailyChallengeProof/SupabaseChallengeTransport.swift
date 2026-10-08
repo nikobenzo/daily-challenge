@@ -52,18 +52,40 @@ import Supabase
         }
     }
 
-    func fetchEvents(ownerID: UUID, challengeID: UUID) async throws -> [ChallengeEvent] {
-        var result: [ChallengeEvent] = []
+    func fetchEvents(ownerID: UUID, challengeID: UUID) async throws -> RemoteEvents {
+        var result = RemoteEvents(events: [])
         var offset = 0
         while true {
             try await validate(ownerID)
-            let page: [ChallengeEvent] = try await client.from("challenge_events")
+            let page: [ServerRow<ChallengeEvent>] = try await client.from("challenge_events")
                 .select("id,owner_id,challenge_id,activity,received_at")
                 .eq("owner_id", value: ownerID.uuidString).eq("challenge_id", value: challengeID.uuidString)
                 .order("id", ascending: true).range(from: offset, to: offset + 499).execute().value
-            result.append(contentsOf: page)
+            let readable = page.compactMap(\.value)
+            result.events.append(contentsOf: readable)
+            result.skipped += page.count - readable.count
+            // Pages are counted in server rows, so a skipped row never ends paging early.
             if page.count < 500 { return result }
             offset += page.count
         }
     }
+}
+
+/// One server row decoded on its own. A row this app can't read (written before the
+/// server checks existed, or by a newer client) is nil instead of failing its page,
+/// so one bad row can't stop sync for the whole account. Only rows that decoded can
+/// acknowledge a pending upload.
+struct ServerRow<Value: Decodable>: Decodable {
+    let value: Value?
+    init(from decoder: any Decoder) throws {
+        value = try? decoder.singleValueContainer().decode(Value.self)
+    }
+}
+
+/// Reported in the sync status, not as a failure: everything else still synced.
+func skippedRowsNotice(_ count: Int) -> String? {
+    guard count > 0 else { return nil }
+    return count == 1
+        ? "1 entry from the server could not be read and was skipped"
+        : "\(count) entries from the server could not be read and were skipped"
 }

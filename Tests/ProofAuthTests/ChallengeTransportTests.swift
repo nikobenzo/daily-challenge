@@ -26,6 +26,8 @@ private final class WireFixture: @unchecked Sendable {
         /// A server the owner has not yet given the timezone migration.
         var unmigrated = false
         var challengeSelects: [String] = []
+        /// Event IDs stored as rows this app can't read, like rows written before the server checks.
+        var unreadableIDs: Set<String> = []
     }
     private var states: [String: State] = [:]
     func change<T>(_ host: String, _ work: (inout State) throws -> T) rethrows -> T {
@@ -98,6 +100,9 @@ private final class ChallengeWireProtocol: URLProtocol {
                             }
                             if !state.events.contains(where: { $0["id"] as? String == event["id"] as? String }) {
                                 event["received_at"] = "2026-10-08T12:00:00+00:00"
+                                if let id = event["id"] as? String, state.unreadableIDs.contains(id.lowercased()) {
+                                    event["activity"] = ["shape": "from a future client"]
+                                }
                                 state.events.append(event)
                             }
                         }
@@ -159,7 +164,9 @@ private final class ChallengeWireProtocol: URLProtocol {
     }
     try await transport.upload(events, ownerID: session.user.id)
     try await transport.upload(events, ownerID: session.user.id)
-    let remote = try await transport.fetchEvents(ownerID: session.user.id, challengeID: header.id)
+    let fetched = try await transport.fetchEvents(ownerID: session.user.id, challengeID: header.id)
+    let remote = fetched.events
+    #expect(fetched.skipped == 0)
     #expect(remote.count == 501)
     #expect(Dictionary(uniqueKeysWithValues: remote.map { ($0.id, $0.activity) }) == Dictionary(uniqueKeysWithValues: events.map { ($0.id, $0.activity) }))
     WireFixture.shared.change(host) { state in
@@ -253,6 +260,50 @@ private final class ChallengeWireProtocol: URLProtocol {
     #expect(try Data(contentsOf: file) == before)
     WireFixture.shared.change(host) { state in
         #expect(state.header == nil && state.events.isEmpty)
+        #expect(!state.invalidWire)
+    }
+}
+
+/// One good and one unreadable row on the same page: the good row syncs and is
+/// acknowledged, the bad one is skipped and reported, and its local copy stays pending.
+@Test @MainActor func unreadableServerRowIsSkippedAndNeverAcknowledged() async throws {
+    let host = "\(UUID().uuidString.lowercased()).invalid"
+    let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    defer { WireFixture.shared.remove(host); try? FileManager.default.removeItem(at: directory) }
+    let client = wireClient(host: host)
+    let session = try await client.auth.signIn(email: "fixture@example.invalid", password: "synthetic-only")
+    let now = Date(timeIntervalSince1970: 1_791_460_800)
+    var store = try ChallengeStore(ownerID: session.user.id, directory: directory)
+    try store.start(on: now, timeZone: TimeZone(identifier: "Europe/Jersey")!)
+    try store.record(.pour(900), on: now, at: now)
+    try store.record(.pour(450), on: now, at: now.addingTimeInterval(60))
+    let pours = store.pending
+    #expect(pours.count == 2)
+    let good = pours[0], bad = pours[1]
+    WireFixture.shared.change(host) { $0.unreadableIDs = [bad.id.uuidString.lowercased()] }
+
+    let transport = SupabaseChallengeTransport(client: client)
+    let model = TrackerModel(directory: directory, clock: { now })
+    model.configureSync(transport)
+    model.activate(ownerID: session.user.id)
+    await model.sync(force: true)
+
+    #expect(model.syncError == nil)
+    #expect(model.skippedRows == 1)
+    // The skipped row's local copy is still waiting, and the status says why.
+    #expect(model.syncStatus == "Saved locally · 1 pending · 1 entry from the server could not be read and was skipped")
+    #expect(model.skippedNotice == "1 entry from the server could not be read and was skipped")
+    #expect(skippedRowsNotice(0) == nil)
+    #expect(skippedRowsNotice(3) == "3 entries from the server could not be read and were skipped")
+    #expect(model.store?.pending.map(\.id) == [bad.id])
+    #expect(try ChallengeStore(ownerID: session.user.id, directory: directory).pending.map(\.id) == [bad.id])
+
+    let remote = try await transport.fetchEvents(ownerID: session.user.id, challengeID: try #require(store.record).id)
+    #expect(remote.events.map(\.id) == [good.id])
+    #expect(remote.skipped == 1)
+    WireFixture.shared.change(host) { state in
+        #expect(state.events.count == 2)
+        #expect(state.pageSizes == [2, 2])
         #expect(!state.invalidWire)
     }
 }

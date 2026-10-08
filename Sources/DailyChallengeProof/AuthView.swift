@@ -14,9 +14,9 @@ extension AuthStep {
     var subtitle: String {
         switch self {
         case .signIn: "Use your Daily Challenge email and password. The same account works on all your Macs."
-        case .createAccount: "Choose the email and password you'll use on every Mac. We'll email you a 6-digit code to confirm it's yours."
-        case .forgotPassword: "Enter the email you signed up with and we'll send you a 6-digit code."
-        case .confirmSignUp, .resetPassword: "The code expires after an hour. Check your spam folder if it hasn't arrived."
+        case .createAccount: "Choose the email and password you'll use on every Mac. We'll email you a code to confirm it's yours."
+        case .forgotPassword: "Enter the email you signed up with and we'll send you a code."
+        case .confirmSignUp, .resetPassword: "Codes expire, so use the one in the newest email. Check your spam folder if it hasn't arrived."
         }
     }
 
@@ -143,7 +143,7 @@ struct AuthView: View {
             HStack {
                 Button("Confirm", action: submitConfirmation)
                     .keyboardShortcut(.defaultAction)
-                    .disabled(model.code.count != ProofModel.codeLength)
+                    .disabled(!ProofModel.isCompleteCode(model.code))
                 Spacer()
                 resendControl
             }
@@ -200,14 +200,14 @@ struct AuthView: View {
     }
 
     private var codeField: some View {
-        TextField("6-digit code", text: $model.code)
+        TextField("Code from the email", text: $model.code)
             .textFieldStyle(.roundedBorder)
             .textContentType(.oneTimeCode)
             .font(.title3.monospacedDigit())
             .focused($focus, equals: .code)
-            .accessibilityLabel("6-digit code from the email")
+            .accessibilityLabel("Code from the email")
             .onChange(of: model.code) { _, value in
-                let digits = String(value.filter(\.isNumber).filter(\.isASCII).prefix(ProofModel.codeLength))
+                let digits = String(value.filter(\.isNumber).filter(\.isASCII).prefix(ProofModel.codeLengths.upperBound))
                 if digits != value { model.code = digits }
             }
     }
@@ -251,18 +251,19 @@ struct AuthView: View {
     private func passwordHint(_ password: String, _ confirmation: String) -> some View {
         if !confirmation.isEmpty, password != confirmation {
             Text("The passwords don't match yet.").font(.caption).foregroundStyle(.orange)
-        } else if !password.isEmpty, password.count < ProofModel.minimumPasswordLength {
-            Text("Use at least \(ProofModel.minimumPasswordLength) characters.").font(.caption).foregroundStyle(.secondary)
+        } else if let problem = ProofModel.passwordProblem(password) {
+            Text(problem).font(.caption).foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
     private var canCreateAccount: Bool {
-        !model.email.isEmpty && model.password.count >= ProofModel.minimumPasswordLength
+        !model.email.isEmpty && ProofModel.passwordProblem(model.password) == nil
             && model.password == model.passwordConfirmation
     }
 
     private var canReset: Bool {
-        model.code.count == ProofModel.codeLength && model.newPassword.count >= ProofModel.minimumPasswordLength
+        ProofModel.isCompleteCode(model.code) && ProofModel.passwordProblem(model.newPassword) == nil
             && model.newPassword == model.passwordConfirmation
     }
 
@@ -284,7 +285,7 @@ struct AuthView: View {
     }
 
     private func submitConfirmation() {
-        guard model.code.count == ProofModel.codeLength else { return }
+        guard ProofModel.isCompleteCode(model.code) else { return }
         Task { await model.confirmSignUp(code: model.code) }
     }
 

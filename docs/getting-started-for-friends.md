@@ -21,8 +21,8 @@ A small water-drop icon appears at the top right of your screen, next to the clo
 ## 4. Create your account
 
 1. Click the drop, then **Create an account**.
-2. Enter your email, choose a password (at least 6 characters) and type it again. Click **Create account**.
-3. Check your email for a message from Daily Challenge with a 6-digit code. Type the code into the app and click **Confirm**. If it hasn't arrived after a minute, check your spam folder, then click **Resend code**.
+2. Enter your email, choose a password (at least 10 characters, including a letter and a number) and type it again. Click **Create account**.
+3. Check your email for a message from Daily Challenge with a code. Type the code into the app and click **Confirm**. If it hasn't arrived after a minute, check your spam folder, then click **Resend code**.
 
 You are now signed in. Use the same email and password if you install the app on another Mac.
 
@@ -58,7 +58,7 @@ Click the drop, press **+450 ml** for each glass, and tick workout, walk, diet a
 
 ## Forgot your password?
 
-Click the drop, then **Forgot password?**. Enter your email and click **Send code**. Type the 6-digit code from the email, choose a new password, and click **Save password and sign in**.
+Click the drop, then **Forgot password?**. Enter your email and click **Send code**. Type the code from the email, choose a new password, and click **Save password and sign in**.
 
 ## If something goes wrong
 

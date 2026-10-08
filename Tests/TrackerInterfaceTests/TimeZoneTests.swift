@@ -21,7 +21,7 @@ private func zone(_ identifier: String) -> TimeZone { Challenge.canonicalTimeZon
                                          receivedAt: event.activity.recordedAt.ISO8601Format()))
         }
     }
-    func fetchEvents(ownerID: UUID, challengeID: UUID) async throws -> [ChallengeEvent] { events }
+    func fetchEvents(ownerID: UUID, challengeID: UUID) async throws -> RemoteEvents { .init(events: events) }
 }
 
 @MainActor private final class ZoneRecordingCenter: WaterNotificationCenter {

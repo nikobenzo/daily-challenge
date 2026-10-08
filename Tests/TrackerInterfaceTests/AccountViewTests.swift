@@ -19,7 +19,7 @@ import Testing
     func upload(_ incoming: [ChallengeEvent], ownerID: UUID) async throws {
         events += incoming.map { ChallengeEvent(ownerID: ownerID, challengeID: $0.challengeID, activity: $0.activity, receivedAt: receivedAt) }
     }
-    func fetchEvents(ownerID: UUID, challengeID: UUID) async throws -> [ChallengeEvent] { events }
+    func fetchEvents(ownerID: UUID, challengeID: UUID) async throws -> RemoteEvents { .init(events: events) }
 }
 
 @MainActor private final class SilentWaterCenter: WaterNotificationCenter {

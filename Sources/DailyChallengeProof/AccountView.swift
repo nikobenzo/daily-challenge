@@ -118,6 +118,10 @@ struct AccountView: View {
                 Label(warning, systemImage: "clock.badge.exclamationmark")
                     .font(.caption).foregroundStyle(.secondary)
             }
+            if let skipped = tracker.skippedNotice {
+                Label(skipped, systemImage: "exclamationmark.icloud")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
         }
     }
 
@@ -185,8 +189,9 @@ struct AccountView: View {
                 .onSubmit(savePassword)
             if !auth.passwordConfirmation.isEmpty, auth.newPassword != auth.passwordConfirmation {
                 Text("The passwords don't match yet.").font(.caption).foregroundStyle(.orange)
-            } else if !auth.newPassword.isEmpty, auth.newPassword.count < ProofModel.minimumPasswordLength {
-                Text("Use at least \(ProofModel.minimumPasswordLength) characters.").font(.caption).foregroundStyle(.secondary)
+            } else if let problem = ProofModel.passwordProblem(auth.newPassword) {
+                Text(problem).font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             if let passwordError {
                 Label(passwordError, systemImage: "exclamationmark.triangle.fill")
@@ -209,7 +214,7 @@ struct AccountView: View {
     }
 
     private var canSavePassword: Bool {
-        auth.newPassword.count >= ProofModel.minimumPasswordLength && auth.newPassword == auth.passwordConfirmation
+        ProofModel.passwordProblem(auth.newPassword) == nil && auth.newPassword == auth.passwordConfirmation
     }
 
     private func openPasswordForm() {

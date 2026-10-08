@@ -1,6 +1,6 @@
 # Self sign-up and password reset
 
-The signed-out popup offers three screens: **Sign in**, **Create account** and **Forgot password?**. A new account is confirmed with a 6-digit code emailed through custom SMTP (Resend). A forgotten password is reset with a 6-digit code too. The code is typed into the popup, so there are no links, no browser round trip and no custom URL scheme. Fixture renders of every screen, Light and Dark, are in [screenshots/sign-up](screenshots/sign-up/).
+The signed-out popup offers three screens: **Sign in**, **Create account** and **Forgot password?**. A new account is confirmed with an 8-digit code emailed through custom SMTP (Resend). A forgotten password is reset with a code too. The app accepts any code of 6 to 10 digits, every length Supabase can be set to send, so the dashboard's code length can never again leave someone holding a code the app refuses. The code is typed into the popup, so there are no links, no browser round trip and no custom URL scheme. Fixture renders of every screen, Light and Dark, are in [screenshots/sign-up](screenshots/sign-up/).
 
 Until the owner completes the dashboard steps below, existing sign-in keeps working unchanged. Create account shows "New accounts are switched off for this app right now…" while sign-ups are disabled. If sign-ups are enabled before custom SMTP works, Supabase's built-in sender refuses to email non-team addresses and the app says "The app can't send email to that address yet…".
 
@@ -12,8 +12,10 @@ Until the owner completes the dashboard steps below, existing sign-in keeps work
 | Confirm your email | `auth.verifyOTP(email:token:type: .signup)` | Returns a session; the person is signed in and sees challenge setup |
 | Resend code (sign-up) | `auth.resend(email:type: .signup)` | New code; the link shows the 60-second wait instead of a dead button |
 | Forgot password? | `auth.resetPasswordForEmail(_:)` | Same answer whether or not the address has an account |
-| Choose a new password | `auth.verifyOTP(email:token:type: .recovery)`, then `auth.update(user: UserAttributes(password:))` | The recovery code signs the person in, then the new password is saved for that session |
+| Choose a new password | `auth.verifyOTP(email:token:type: .recovery)`, then `auth.update(user: UserAttributes(password:))` | One step: the code and the new password are entered together. The recovery session is kept only once the new password is saved; if saving fails or is interrupted, the app signs out on this Mac and asks the person to start again |
 | Account → Change password | `ProofModel.changePassword(new:)` → `auth.update(user:)` | Requires a signed-in session; the inline form clears both fields on save, failure or Cancel |
+
+New passwords (Create account, Choose a new password, Change password) need at least 10 characters with at least one letter and one number; the hint under the field says so before anything is sent. Existing accounts with shorter passwords keep signing in: the rule is checked only when a password is chosen.
 
 The existing rules still hold: password fields (`password`, `passwordConfirmation`, `newPassword`) and the code are cleared after every attempt, success or failure, and when switching screens. Passwords are sent only to Supabase Auth and never stored. Sessions stay in the existing Keychain item. Sign-out stays local-scope. Email addresses are trimmed the same way as sign-in. Error text is plain English for the cases a person can act on and the server's own message otherwise.
 
@@ -64,7 +66,7 @@ Open **Authentication → Emails → Templates**. Edit only these two; leave the
 <h2>Welcome to Daily Challenge</h2>
 <p>Your code is:</p>
 <p style="font-size: 28px; font-weight: bold; letter-spacing: 4px;">{{ .Token }}</p>
-<p>Type it into the Daily Challenge menu-bar app to finish creating your account. It expires in one hour.</p>
+<p>Type it into the Daily Challenge menu-bar app to finish creating your account. It expires in 15 minutes.</p>
 <p>If you didn't ask for this, you can ignore this email.</p>
 ```
 
@@ -77,7 +79,7 @@ Open **Authentication → Emails → Templates**. Edit only these two; leave the
 <h2>Reset your Daily Challenge password</h2>
 <p>Your code is:</p>
 <p style="font-size: 28px; font-weight: bold; letter-spacing: 4px;">{{ .Token }}</p>
-<p>Type it into the Daily Challenge menu-bar app, then choose a new password. It expires in one hour.</p>
+<p>Type it into the Daily Challenge menu-bar app, then choose a new password. It expires in 15 minutes.</p>
 <p>If you didn't ask for this, you can ignore this email. Your password has not changed.</p>
 ```
 
@@ -87,8 +89,9 @@ Remove `{{ .ConfirmationURL }}` from both templates. The app has no use for a li
 
 Open **Authentication → Sign In / Providers**, then the **Email** provider.
 
-- **Email OTP length**: `6`. The app accepts exactly six digits.
-- **Email OTP expiration**: `3600` seconds. The app and the templates say the code expires after an hour.
+- **Email OTP length**: `8`. Eight digits make guessing a code within Supabase's limit of 30 checks per 5 minutes per IP address impractical. The app accepts any length from 6 to 10, so this setting and the app can never disagree again. Builds from before this change accept exactly six digits: change this setting only once every Mac that uses the app runs a build that accepts 6 to 10 digits.
+- **Email OTP expiration**: `900` seconds (15 minutes). The email templates in step 3 say 15 minutes; the app itself names no time, so it stays correct if this changes. Change the templates and this setting together.
+- **Minimum password length**: `10`. **Password requirements**: **Letters and digits**. The app enforces the same rule before sending a new password (`ProofModel.minimumPasswordLength` and `ProofModel.passwordProblem`), counting letters and digits as plain A–Z, a–z and 0–9 like Supabase does. Existing users with shorter passwords keep signing in; Supabase checks these settings only when a password is set.
 - **Secure password change**: check it is **off**. If it is on, in-app Change password fails for sessions older than 24 hours with "For security, sign out and use Forgot password…". Password reset by code is not affected.
 - **Require current password when updating** (if shown): leave it **off**. The SDK's password update does not send the current password, so Change password would fail.
 
@@ -107,12 +110,14 @@ Use an address you control that is **not** the existing account, for example a G
 
 - [ ] Preferably on a Mac that is not signed in to the real account. If you use your own Mac, wait for a synced challenge footer first, then **Sign out on this Mac**. Local data for each account is kept separately and returns when you sign back in.
 - [ ] **Create account** → the code arrives from `Daily Challenge <no-reply@mail.nextsyntesys.com>` within a minute (check spam). Resend → **Emails** shows it as delivered.
+- [ ] The emailed code has 8 digits, and the email says it expires in 15 minutes.
+- [ ] A password without a number, or shorter than 10 characters, keeps **Create account** disabled and the hint says why.
 - [ ] Wrong code → "That code is wrong or has expired…". **Resend code** shows a countdown, then sends a new code. Correct code → signed in, challenge setup appears.
 - [ ] Account → **Change password** → new password → "Changed". Sign out and sign in with it.
 - [ ] Sign out, **Forgot password?** → code arrives → new password → signed in. Sign out and sign in with the new password.
 - [ ] Create account again with the same address → "An account with this email already exists, try signing in."
 - [ ] Sign back in to the real account and check the challenge, water and history are unchanged.
-- [ ] VoiceOver and keyboard: Tab moves through the fields, Return submits, the code field announces "6-digit code from the email", errors are read as "Error: …".
+- [ ] VoiceOver and keyboard: Tab moves through the fields, Return submits, the code field announces "Code from the email", errors are read as "Error: …".
 
 ### 7. Optional hardening: only invited addresses can sign up
 
@@ -178,8 +183,8 @@ Signs: friends' codes stop arriving, Resend shows unfamiliar recipients, or the 
 - **Wrong and expired codes look the same.** Supabase answers both with `otp_expired` ("Token has expired or is invalid"), so the app says "That code is wrong or has expired. Check the latest email, or request a new code."
 - **Signing up again before confirming keeps the first password.** Supabase resends the code but does not update the stored password. If unsure, use Forgot password after confirming.
 - **Signing in before confirming** goes straight to the code step with Resend code available.
-- **Reset saves the password after signing in.** If the code is accepted but saving the new password fails (for example the connection drops between the two calls), the person stays signed in and is told the password was not saved and to use Forgot password again.
-- **Rate limits.** A second code within 60 seconds is refused; the app shows the wait. Supabase also limits code checks to 30 per 5 minutes per IP address.
+- **Reset signs in only once the new password is saved.** Verifying a recovery code creates a session, and the new password is saved in the same step. If the code is accepted but saving fails or is interrupted (for example the connection drops between the two calls), the app signs that session out on this Mac and returns to Forgot password with "Start again to get a new code". If the app quits in the instant between the two calls, the recovery session may be restored at next launch; Sign out ends it.
+- **Rate limits.** A second code within 60 seconds is refused; the app shows the wait. Supabase also limits code checks to 30 per 5 minutes per IP address; with 8-digit codes valid for 15 minutes, that leaves a negligible chance of guessing one.
 - **Deleting an account is not offered.** `challenges.owner_id` has no `on delete cascade`, so deleting a user who started a challenge fails in the dashboard until a migration adds it. A test user that never started a challenge can be deleted.
 
 ## Local verification
@@ -189,4 +194,4 @@ swift test --filter ProofAuthTests
 DAILY_CHALLENGE_SNAPSHOT_DIR=/tmp/daily-challenge-auth swift test --filter signedOutAuthScreensHaveOpaqueAdaptiveBacking
 ```
 
-`Tests/ProofAuthTests/SignUpFlowTests.swift` drives the real SDK against an intercepted, stateless synthetic Auth server: sign-up without a session, confirmation, an existing account (decoy user and `user_already_exists`), wrong or expired codes, the 60-second resend limit, recovery and its resend, password update and `same_password`, sign-in before confirming, and field clearing after every attempt. Sessions live in an in-memory store. No real credentials, Keychain, network or email sends are involved. The fixture renders are never-shown native windows, so buttons look inactive; they prove layout and adaptive backing, not real-popup behaviour.
+`Tests/ProofAuthTests/SignUpFlowTests.swift` drives the real SDK against an intercepted, stateless synthetic Auth server: sign-up without a session, confirmation with 6, 8 and 10-digit codes, an existing account (decoy user and `user_already_exists`), wrong or expired codes, the 60-second resend limit, recovery and its resend, a recovery whose password is not saved (failed or interrupted) signing out on this Mac, the new-password rule, password update and `same_password`, sign-in before confirming, and field clearing after every attempt. Sessions live in an in-memory store. No real credentials, Keychain, network or email sends are involved. The fixture renders are never-shown native windows, so buttons look inactive; they prove layout and adaptive backing, not real-popup behaviour.

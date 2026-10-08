@@ -35,11 +35,11 @@ import Testing
         }
         if loseUploadResponse { throw URLError(.networkConnectionLost) }
     }
-    func fetchEvents(ownerID: UUID, challengeID: UUID) async throws -> [ChallengeEvent] {
+    func fetchEvents(ownerID: UUID, challengeID: UUID) async throws -> RemoteEvents {
         try check()
         let result = Array(events[ownerID, default: [:]].values)
         let hook = eventsHook; eventsHook = nil; hook?()
-        return result
+        return .init(events: result)
     }
 }
 

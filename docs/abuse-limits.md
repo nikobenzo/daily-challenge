@@ -6,7 +6,7 @@ The publishable key inside every release is public by design, and sign-ups are o
 | --- | --- |
 | Event size | `activity` at most 1,024 bytes as stored text. The largest real event, an undo with every key, is about 250 bytes; the longest `deviceID` the schema allows brings it to about 340. |
 | Event keys | Only `id`, `day`, `recordedAt`, `action`, `undonePourID` and `deviceID`. |
-| Action kind | Exactly one of `pour`, `undoLatestPour`, `setHabit`, `setDiet`. A malformed row would otherwise break decoding for that account on every Mac. |
+| Action kind | Exactly one of `pour`, `undoLatestPour`, `setHabit`, `setDiet`. A malformed row would otherwise be unreadable for that account on every Mac (the app skips such a row and reports it in the sync status). |
 | Event dates | `day` and `recordedAt` between 0 and 3.2e9 seconds after 2001-01-01, so 2001 to 2102. |
 | Challenge settings | `start_time` between 2020-01-01 and 2100-01-01 (Unix seconds); a year-1 start would hang streak derivation. `time_zone` at most 64 characters; IANA names are at most about 32. |
 | Row caps | 10,000 `challenge_events` and 200 `sync_probe_entries` per owner. A 75-day challenge produces a few thousand events at most. |

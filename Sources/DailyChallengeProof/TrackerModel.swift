@@ -94,6 +94,8 @@ final class TrackerModel {
     private(set) var setupChecked = false
     private(set) var syncError: String?
     private(set) var lastSync: Date?
+    /// Server rows the last successful sync could not read.
+    private(set) var skippedRows = 0
     private(set) var retryAfter: Date?
     @ObservationIgnored private var failures = 0
     @ObservationIgnored private var generation = UUID()
@@ -109,7 +111,9 @@ final class TrackerModel {
         guard let lastSync else { return .awaitingCheck }
         return .synced(at: lastSync, clockWarning: store?.hasClockWarning ?? false)
     }
-    var syncStatus: String { syncState.footerText }
+    /// Unreadable server rows are a note beside whatever the state is, never a failure.
+    var skippedNotice: String? { syncError == nil ? skippedRowsNotice(skippedRows) : nil }
+    var syncStatus: String { [syncState.footerText, skippedNotice].compactMap { $0 }.joined(separator: " · ") }
 
     /// Fixtures configure a transport without launching timers/network monitoring.
     func configureSync(_ transport: any ChallengeTransport, automatic: Bool = false) {
@@ -146,6 +150,7 @@ final class TrackerModel {
         isSyncing = true
         defer { if generation == token { isSyncing = false } }
         do {
+            var skipped = 0
             var remote = try await transport.fetchChallenge(ownerID: ownerID)
             guard generation == token else { return }
             if remote == nil, let record = store?.record {
@@ -161,14 +166,17 @@ final class TrackerModel {
                 let pending = store?.pending ?? []
                 try await transport.upload(pending, ownerID: ownerID)
                 guard generation == token else { return }
-                let events = try await transport.fetchEvents(ownerID: ownerID, challengeID: remote.id)
+                let fetched = try await transport.fetchEvents(ownerID: ownerID, challengeID: remote.id)
                 guard generation == token, var current = store else { return }
-                try current.merge(record: remote, events: events)
+                // Only events that decoded are merged, so only they acknowledge pending uploads.
+                try current.merge(record: remote, events: fetched.events)
                 store = current
+                skipped = fetched.skipped
             }
             setupChecked = true
             syncError = nil
             lastSync = clock()
+            skippedRows = skipped
             failures = 0
             retryAfter = nil
         } catch {
@@ -217,6 +225,7 @@ final class TrackerModel {
         setupChecked = false
         syncError = nil
         lastSync = nil
+        skippedRows = 0
         retryAfter = nil
         failures = 0
         self.ownerID = ownerID

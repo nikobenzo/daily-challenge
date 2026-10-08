@@ -73,10 +73,18 @@ public struct ChallengeEvent: Codable, Sendable {
     }
 }
 
+/// An account's fetched event history. Server rows the app could not read are
+/// counted and left out rather than failing the whole fetch.
+public struct RemoteEvents: Sendable {
+    public var events: [ChallengeEvent]
+    public var skipped: Int
+    public init(events: [ChallengeEvent], skipped: Int = 0) { self.events = events; self.skipped = skipped }
+}
+
 /// Transport seam shared by the SDK adapter and deterministic offline fixtures.
 @MainActor public protocol ChallengeTransport {
     func fetchChallenge(ownerID: UUID) async throws -> ChallengeRecord?
     func insertChallenge(_ record: ChallengeRecord) async throws
     func upload(_ events: [ChallengeEvent], ownerID: UUID) async throws
-    func fetchEvents(ownerID: UUID, challengeID: UUID) async throws -> [ChallengeEvent]
+    func fetchEvents(ownerID: UUID, challengeID: UUID) async throws -> RemoteEvents
 }
