@@ -78,6 +78,50 @@ struct AppearanceTests {
         }
     }
 
+    /// Every signed-out auth screen on the production root, Light and Dark. Offline
+    /// fixtures only: no SDK client, Keychain, network or real account.
+    @Test func signedOutAuthScreensHaveOpaqueAdaptiveBacking() throws {
+        try withPreferences { appearance, _ in
+            let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+            defer { try? FileManager.default.removeItem(at: directory) }
+            let now = ISO8601DateFormatter().date(from: "2026-10-08T12:00:00Z")!
+            let model = TrackerModel(directory: directory, clock: { now })
+            let address = "friend@example.com"
+            let screens: [(String, ProofModel)] = [
+                ("auth-sign-in", ProofModel(fixtureOwnerID: nil, directory: directory)),
+                ("auth-create-account", ProofModel(fixtureOwnerID: nil, directory: directory, authStep: .createAccount)),
+                ("auth-forgot-password", ProofModel(fixtureOwnerID: nil, directory: directory, authStep: .forgotPassword)),
+                ("auth-confirm-code", ProofModel(
+                    fixtureOwnerID: nil, directory: directory, authStep: .confirmSignUp(email: address),
+                    notice: "We emailed a 6-digit code to \(address). Enter it to finish creating your account.",
+                    resendAvailableAt: Date().addingTimeInterval(42)
+                )),
+                ("auth-confirm-expired", ProofModel(
+                    fixtureOwnerID: nil, directory: directory, authStep: .confirmSignUp(email: address),
+                    errorMessage: "That code is wrong or has expired. Check the latest email, or request a new code."
+                )),
+                ("auth-reset-password", ProofModel(
+                    fixtureOwnerID: nil, directory: directory, authStep: .resetPassword(email: address),
+                    notice: "If \(address) has an account, we emailed it a 6-digit code. Enter it with your new password.",
+                    resendAvailableAt: Date().addingTimeInterval(42)
+                )),
+                ("auth-account-exists", ProofModel(
+                    fixtureOwnerID: nil, directory: directory,
+                    errorMessage: "An account with this email already exists, try signing in."
+                ))
+            ]
+            for (name, auth) in screens {
+                if auth.authStep != .forgotPassword { auth.email = name == "auth-sign-in" ? "" : address }
+                if name == "auth-create-account" {
+                    auth.password = "secret-1"
+                    auth.passwordConfirmation = "secret-2"
+                }
+                try renderLiveModes(TrackerPopup(model: model, auth: auth, appearance: appearance), name: name, appearance: appearance)
+                #expect(auth.ownerID == nil)
+            }
+        }
+    }
+
     private func assertFilledEdges(_ bitmap: NSBitmapImageRep, name: String) {
         // Native rounded-corner compositing is a captain check. In-process,
         // every backing pixel at the window boundary must be opaque.

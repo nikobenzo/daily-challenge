@@ -34,43 +34,29 @@ struct ProofView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "arrow.triangle.2.circlepath.icloud")
-                Text("Sign in").font(.headline)
+                Text(model.authStep.title).font(.headline)
                 Spacer()
                 if model.isBusy { ProgressView().controlSize(.small) }
             }
-            Text("Sign in to unlock your local tracker.")
+            Text(model.authStep.subtitle)
                 .font(.caption).foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
 
             if model.configurationReady {
-                signInContent
+                AuthView(model: model)
             }
 
             Divider()
             AppearanceSettings()
             LaunchAtLoginSettings()
-            Text(model.status).font(.caption)
-            if let error = model.errorMessage {
-                Text(error).font(.caption).foregroundStyle(.red)
-                    .textSelection(.enabled)
+            // AuthView shows its own guidance and errors beside the form.
+            if !model.configurationReady {
+                Text(model.status).font(.caption)
+                if let error = model.errorMessage {
+                    Text(error).font(.caption).foregroundStyle(.red)
+                        .textSelection(.enabled)
+                }
             }
-        }
-    }
-
-    private var signInContent: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Use the same app email and password on both Macs. No email link or code is required.")
-                .font(.caption).foregroundStyle(.secondary)
-            TextField("App account email", text: $model.email)
-                .textFieldStyle(.roundedBorder)
-                .disabled(model.isBusy)
-            SecureField("App account password", text: $model.password)
-                .textFieldStyle(.roundedBorder)
-                .disabled(model.isBusy)
-                .onSubmit { Task { await model.signIn() } }
-            Button("Sign in") { Task { await model.signIn() } }
-                .disabled(model.isBusy || model.email.isEmpty || model.password.isEmpty)
-            Text("Create or update a confirmed Auth user first. This is not your Supabase dashboard password.")
-                .font(.caption).foregroundStyle(.secondary)
         }
     }
 }

@@ -12,6 +12,10 @@ The owner must follow the [exact hosted migration/install steps](docs/production
 
 Appearance backing and the device-local setting remain implemented; [appearance verification](docs/appearance-verification.md) still distinguishes in-process renders from real-popup acceptance. Automated testing must never quit or replace the running app.
 
+## Self sign-up and password reset (8 October)
+
+The signed-out popup (`AuthView.swift`) offers Sign in, Create account and Forgot password, each code step with a 60-second Resend code countdown. `ProofModel` adds `signUp`, `confirmSignUp`, `requestPasswordReset`, `completePasswordReset`, `resendCode` and `changePassword(new:)` (for the Account tab's Change password row). A nil session after sign-up means "code required". [Owner checklist, SDK mapping and known behaviour](docs/sign-up-setup.md); [friends guide](docs/getting-started-for-friends.md). Tests are intercepted-transport only; **no hosted sign-up, dashboard change or real email send was performed**. Owner acceptance is the checklist's step 6.
+
 ## Water reminders implementation (8 October)
 
 Water-only reminders are implemented. See [README usage](README.md) and the [scheduling contract, limitations and owner checks](docs/water-reminders.md), including target-day eligibility for midnight slots.
@@ -108,7 +112,7 @@ The build script embeds **public** configuration from `.env.local`; standalone `
 
 Supabase replaced CloudKit because the Apple Developer membership is inactive and the Macs use different iCloud accounts. Both Macs will use the same app login. Public client configuration lives in `.env.local` (template `.env.example`); no admin key/password is needed by the app.
 
-- Password login works on the first Mac. SMTP/OTP was abandoned after email delivery/template restrictions; retain the current password flow and existing Auth user. Passwords are not persisted; sessions use Keychain.
+- Password login works on the first Mac. The 2025 SMTP/OTP attempt failed on an unverified Resend domain; in-app sign-up and password reset by 6-digit code are now implemented over custom SMTP but need the [owner dashboard steps](docs/sign-up-setup.md#owner-only-dashboard-setup). Retain the existing Auth user. Passwords are not persisted; sessions use Keychain.
 - Proof table `public.sync_probe_entries`: authenticated owner-only SELECT/INSERT, anonymous denied, client UPDATE/DELETE denied. Local RLS checks and a prior hosted anonymous-denial check passed; an actual uploaded test message was confirmed.
 - Both Macs are **Apple Silicon, macOS 27.0.1 (26A434)**. Work policy permits the app. Home-Mac/two-Mac verification was explicitly deferred by the user, not passed.
 - Keychain persistence after real relaunch, true offline recovery, all-interface/accessibility acceptance, and real two-Mac reconciliation remain manual/unproven.

@@ -9,11 +9,26 @@ private struct ProofConfiguration: Decodable {
     let publishableKey: String
 }
 
+/// Which signed-out screen is showing. Code steps carry the address the code was sent to.
+enum AuthStep: Equatable {
+    case signIn, createAccount, forgotPassword
+    case confirmSignUp(email: String)
+    case resetPassword(email: String)
+}
+
 @MainActor @Observable
 final class ProofModel {
+    static let resendInterval: TimeInterval = 60
+    static let minimumPasswordLength = 6
+    static let codeLength = 6
+
     var email = ""
     var password = ""
+    var passwordConfirmation = ""
+    var newPassword = ""
+    var code = ""
     var message = ""
+    var authStep = AuthStep.signIn
     var pauseSync = false
     private(set) var signedInEmail: String?
     private(set) var ownerID: UUID?
@@ -22,7 +37,11 @@ final class ProofModel {
     private(set) var status = "Restoring session…"
     private(set) var errorMessage: String?
     private(set) var configurationReady = false
+    /// Guidance for the current sign-up or reset step, such as where a code was sent.
+    private(set) var notice: String?
+    private(set) var resendAvailableAt: Date?
 
+    @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private var client: SupabaseClient?
     @ObservationIgnored private var started = false
     @ObservationIgnored private var lastSync: Date?
@@ -36,6 +55,7 @@ final class ProofModel {
     }
 
     init() {
+        now = Date.init
         directory = URL.applicationSupportDirectory
             .appendingPathComponent("DailyChallengeProof", isDirectory: true)
             .appendingPathComponent("ujyvvyrugenknhjodfhc", isDirectory: true)
@@ -67,8 +87,17 @@ final class ProofModel {
     }
 
     /// Offline UI fixtures: no SDK client, Keychain, network, or production paths.
-    init(fixtureOwnerID: UUID?, directory: URL) {
+    init(
+        fixtureOwnerID: UUID?, directory: URL, authStep: AuthStep = .signIn,
+        notice: String? = nil, errorMessage: String? = nil, resendAvailableAt: Date? = nil,
+        now: @escaping () -> Date = Date.init
+    ) {
+        self.now = now
         self.directory = directory
+        self.authStep = authStep
+        self.notice = notice
+        self.errorMessage = errorMessage
+        self.resendAvailableAt = resendAvailableAt
         self.ownerID = fixtureOwnerID
         self.signedInEmail = fixtureOwnerID == nil ? nil : "fixture@example.invalid"
         self.configurationReady = true
@@ -76,7 +105,8 @@ final class ProofModel {
     }
 
     /// Allows tests to exercise the real SDK login path without a real account or Keychain.
-    init(client: SupabaseClient, directory: URL) {
+    init(client: SupabaseClient, directory: URL, now: @escaping () -> Date = Date.init) {
+        self.now = now
         self.client = client
         self.directory = directory
         self.configurationReady = true
@@ -136,29 +166,304 @@ final class ProofModel {
 
     func signIn() async {
         guard !isBusy, let client else { return }
-        let address = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        let address = normalizedEmail(email)
         guard address.contains("@"), !password.isEmpty else {
             errorMessage = "Enter your app account email and password."
             return
         }
-        isBusy = true
-        errorMessage = nil
-        status = "Signing in…"
-        defer {
-            // Passwords are sent only to Supabase Auth, never saved in configuration,
-            // the local queue, or Keychain. Only session tokens are persisted.
-            password = ""
-            isBusy = false
-        }
+        beginAttempt("Signing in…")
+        defer { endAttempt() }
         do {
             let session = try await client.auth.signIn(email: address, password: password)
             activate(session)
             if journal != nil {
                 status = "Signed in. Use Sync now to check the server."
             }
+        } catch let error as AuthError where error.errorCode == .emailNotConfirmed {
+            // The account exists but its sign-up code was never entered.
+            show(.confirmSignUp(email: address))
+            notice = "Confirm your email to finish creating your account. Enter the 6-digit code we sent to \(address), or send a new one."
+            status = "Email not confirmed yet"
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = describe(error)
             status = "Sign-in failed"
+        }
+    }
+
+    /// Switches signed-out screens. Never carries a typed password or code across screens.
+    func show(_ step: AuthStep) {
+        authStep = step
+        code = ""
+        clearSecrets()
+        notice = nil
+        errorMessage = nil
+        resendAvailableAt = nil
+    }
+
+    /// With Confirm email on, Supabase returns no session until the emailed code is entered.
+    func signUp(email: String, password: String) async {
+        guard !isBusy, let client else { return }
+        let address = normalizedEmail(email)
+        self.email = address
+        guard address.contains("@") else {
+            clearSecrets()
+            errorMessage = "Enter your email address."
+            return
+        }
+        guard password.count >= Self.minimumPasswordLength else {
+            clearSecrets()
+            errorMessage = "Choose a password of at least \(Self.minimumPasswordLength) characters."
+            return
+        }
+        beginAttempt("Creating account…")
+        defer { endAttempt() }
+        do {
+            let response = try await client.auth.signUp(email: address, password: password)
+            if let session = response.session {
+                activate(session)
+                status = "Account created. You're signed in."
+                return
+            }
+            // An already-confirmed address gets an obfuscated user with no identities
+            // and no email, so the server does not reveal which addresses exist.
+            if response.user.identities?.isEmpty == true {
+                show(.signIn)
+                errorMessage = Self.accountExists
+                status = "Account already exists"
+                return
+            }
+            show(.confirmSignUp(email: address))
+            resendAvailableAt = now().addingTimeInterval(Self.resendInterval)
+            notice = "We emailed a 6-digit code to \(address). Enter it to finish creating your account."
+            status = "Check your email for a code"
+        } catch {
+            errorMessage = describe(error)
+            status = "Account not created"
+            if let code = (error as? AuthError)?.errorCode, [.userAlreadyExists, .emailExists].contains(code) {
+                show(.signIn)
+                errorMessage = Self.accountExists
+            }
+        }
+    }
+
+    func confirmSignUp(code: String) async {
+        guard !isBusy, let client, case .confirmSignUp(let address) = authStep else { return }
+        guard let token = validCode(code) else { return }
+        beginAttempt("Checking code…")
+        defer { endAttempt() }
+        do {
+            let response = try await client.auth.verifyOTP(email: address, token: token, type: .signup)
+            show(.signIn)
+            if let session = response.session {
+                activate(session)
+                status = "Email confirmed. You're signed in."
+            } else {
+                email = address
+                notice = "Your email is confirmed. Sign in with your password."
+                status = "Email confirmed"
+            }
+        } catch {
+            errorMessage = describe(error)
+            status = "Code not accepted"
+        }
+    }
+
+    /// Supabase answers the same way whether or not the address has an account.
+    func requestPasswordReset(email: String) async {
+        guard !isBusy, let client else { return }
+        let address = normalizedEmail(email)
+        self.email = address
+        guard address.contains("@") else {
+            errorMessage = "Enter the email address you signed up with."
+            return
+        }
+        beginAttempt("Sending code…")
+        defer { endAttempt() }
+        do {
+            try await client.auth.resetPasswordForEmail(address)
+            show(.resetPassword(email: address))
+            resendAvailableAt = now().addingTimeInterval(Self.resendInterval)
+            notice = "If \(address) has an account, we emailed it a 6-digit code. Enter it with your new password."
+            status = "Check your email for a code"
+        } catch {
+            errorMessage = describe(error)
+            status = "Code not sent"
+            if (error as? AuthError)?.errorCode == .overEmailSendRateLimit {
+                resendAvailableAt = now().addingTimeInterval(Self.resendInterval)
+            }
+        }
+    }
+
+    /// Verifying a recovery code signs the user in; the new password is then saved for that session.
+    func completePasswordReset(code: String, newPassword: String) async {
+        guard !isBusy, let client, case .resetPassword(let address) = authStep else { return }
+        guard let token = validCode(code) else {
+            clearSecrets()
+            return
+        }
+        guard newPassword.count >= Self.minimumPasswordLength else {
+            clearSecrets()
+            errorMessage = "Choose a password of at least \(Self.minimumPasswordLength) characters."
+            return
+        }
+        beginAttempt("Checking code…")
+        defer { endAttempt() }
+        let session: Session
+        do {
+            guard let verified = try await client.auth.verifyOTP(email: address, token: token, type: .recovery).session else {
+                errorMessage = "That code could not sign you in. Request a new one."
+                status = "Code not accepted"
+                return
+            }
+            session = verified
+        } catch {
+            errorMessage = describe(error)
+            status = "Code not accepted"
+            return
+        }
+        show(.signIn)
+        activate(session)
+        do {
+            try await client.auth.update(user: UserAttributes(password: newPassword))
+            status = "Password updated. You're signed in."
+        } catch let error as AuthError where error.errorCode == .samePassword {
+            status = "That was already your password. You're signed in."
+        } catch {
+            errorMessage = "You're signed in, but the new password was not saved: \(describe(error)) Sign out and use Forgot password to try again."
+            status = "Password not changed"
+        }
+    }
+
+    /// Sends a fresh code for the current code step, at most once per resend interval.
+    func resendCode() async {
+        guard !isBusy, let client, canResend else { return }
+        beginAttempt("Sending a new code…")
+        defer { endAttempt() }
+        do {
+            switch authStep {
+            case .confirmSignUp(let address):
+                try await client.auth.resend(email: address, type: .signup)
+                notice = "We sent a new 6-digit code to \(address)."
+            case .resetPassword(let address):
+                try await client.auth.resetPasswordForEmail(address)
+                notice = "If \(address) has an account, we sent it a new 6-digit code."
+            case .signIn, .createAccount, .forgotPassword:
+                return
+            }
+            resendAvailableAt = now().addingTimeInterval(Self.resendInterval)
+            status = "Check your email for a code"
+        } catch {
+            errorMessage = describe(error)
+            status = "Code not sent"
+            if (error as? AuthError)?.errorCode == .overEmailSendRateLimit {
+                resendAvailableAt = now().addingTimeInterval(Self.resendInterval)
+            }
+        }
+    }
+
+    var canResend: Bool { resendWait(at: now()) == 0 }
+
+    /// Whole seconds until another code may be requested; 0 when it can be sent now.
+    func resendWait(at date: Date) -> Int {
+        guard let resendAvailableAt else { return 0 }
+        return max(0, Int(resendAvailableAt.timeIntervalSince(date).rounded(.up)))
+    }
+
+    /// Changes the password of the signed-in account. Returns whether it was saved.
+    @discardableResult
+    func changePassword(new: String) async -> Bool {
+        guard !isBusy, let client else { return false }
+        guard ownerID != nil else {
+            clearSecrets()
+            errorMessage = "Sign in before changing your password."
+            return false
+        }
+        guard new.count >= Self.minimumPasswordLength else {
+            clearSecrets()
+            errorMessage = "Choose a password of at least \(Self.minimumPasswordLength) characters."
+            return false
+        }
+        beginAttempt("Changing password…")
+        defer { endAttempt() }
+        do {
+            try await client.auth.update(user: UserAttributes(password: new))
+            status = "Password changed. Use it next time you sign in."
+            return true
+        } catch {
+            errorMessage = describe(error)
+            status = "Password not changed"
+            return false
+        }
+    }
+
+    private func beginAttempt(_ label: String) {
+        isBusy = true
+        errorMessage = nil
+        status = label
+    }
+
+    private func endAttempt() {
+        // Passwords are sent only to Supabase Auth, never saved in configuration,
+        // the local queue, or Keychain. Only session tokens are persisted.
+        clearSecrets()
+        code = ""
+        isBusy = false
+    }
+
+    private func clearSecrets() {
+        password = ""
+        passwordConfirmation = ""
+        newPassword = ""
+    }
+
+    private func normalizedEmail(_ value: String) -> String {
+        value.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func validCode(_ value: String) -> String? {
+        let digits = value.filter { !$0.isWhitespace }
+        guard digits.count == Self.codeLength, digits.allSatisfy(\.isASCII), digits.allSatisfy(\.isNumber) else {
+            code = ""
+            errorMessage = "Enter the 6-digit code from the email."
+            return nil
+        }
+        return digits
+    }
+
+    private static let accountExists = "An account with this email already exists, try signing in."
+
+    /// Plain-English text for the auth errors a person can act on; anything else keeps the server's own words.
+    private func describe(_ error: Error) -> String {
+        if error is URLError { return "Can't reach the server. Check your internet connection and try again." }
+        guard let error = error as? AuthError else { return error.localizedDescription }
+        switch error.errorCode {
+        case .otpExpired:
+            return "That code is wrong or has expired. Check the latest email, or request a new code."
+        case .userAlreadyExists, .emailExists:
+            return Self.accountExists
+        case .invalidCredentials:
+            return "That email and password don't match an account. Try again, or use Forgot password."
+        case .overEmailSendRateLimit:
+            return "Too many emails were requested. Wait a minute, then try again."
+        case .overRequestRateLimit:
+            return "Too many attempts. Wait a few minutes, then try again."
+        case .weakPassword:
+            if case .weakPassword(let message, _) = error { return "Choose a stronger password. \(message)" }
+            return "Choose a stronger password."
+        case .samePassword:
+            return "That is already your password. Choose a different one."
+        case .signupDisabled:
+            return "New accounts are switched off for this app right now. Ask the person who shared it with you."
+        case .emailAddressNotAuthorized:
+            return "The app can't send email to that address yet. Ask the person who shared it with you to finish its email setup."
+        case .emailProviderDisabled:
+            return "Email accounts are switched off for this app. Ask the person who shared it with you."
+        case .sessionNotFound, .sessionExpired:
+            return "Your session has ended. Sign in again, then try once more."
+        case .reauthenticationNeeded:
+            return "For security, sign out and use Forgot password to set a new password."
+        default:
+            return error.message
         }
     }
 
@@ -229,7 +534,7 @@ final class ProofModel {
             // Local scope must not sign the other Mac out.
             try await client.auth.signOut(scope: .local)
             activate(nil)
-            password = ""
+            show(.signIn)
             message = ""
             errorMessage = nil
         } catch {
