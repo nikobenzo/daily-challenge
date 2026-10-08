@@ -99,10 +99,15 @@ enum TimeZoneChoices {
 
     static func groups(matching query: String) -> [Group] {
         let words = query.split(whereSeparator: \.isWhitespace).map(String.init)
-        let matches = all.filter { zone in words.allSatisfy { word in searchText(zone).contains { $0.localizedStandardContains(word) } } }
+        let matches = searchable.filter { _, texts in
+            words.allSatisfy { word in texts.contains { $0.localizedStandardContains(word) } }
+        }.map(\.zone)
         return Dictionary(grouping: matches, by: region).sorted { $0.key < $1.key }
             .map { Group(region: $0.key, zones: $0.value) }
     }
+
+    /// Localized zone names are looked up once, not on every keystroke.
+    private static let searchable: [(zone: TimeZone, texts: [String])] = all.map { ($0, searchText($0)) }
 
     private static func region(_ zone: TimeZone) -> String {
         let parts = zone.identifier.split(separator: "/")
