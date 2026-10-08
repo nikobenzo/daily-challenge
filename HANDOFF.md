@@ -52,7 +52,8 @@ Fixture tests cover validation, round trips, undo, derived recalculation, backup
 | `Sources/DailyChallengeProof/TrackerView.swift` | Root navigation/setup, Today, water/habit controls; visible-window/midnight/wake refresh |
 | `Sources/DailyChallengeProof/WaterJugView.swift`, `TrackerMotion.swift`, `CompletionEffect.swift`, `PopupVisibility.swift` | Finite motion schedules, local celebration ledger, noninteractive effects and native visibility gating |
 | `Sources/DailyChallengeProof/HistoryTrackerView.swift` | Calendar, correction unlock, audit |
-| `Sources/DailyChallengeProof/DailyChallengeProofApp.swift` | App entry, MenuBarExtra, retained account/diagnostics view |
+| `Sources/DailyChallengeProof/DailyChallengeProofApp.swift` | App entry, MenuBarExtra, signed-out sign-in view (`ProofView`) |
+| `Sources/DailyChallengeProof/AccountView.swift`, `AdvancedDiagnosticsView.swift` | Signed-in Account tab as a grouped settings list; sync line rephrases `TrackerModel.syncState` (same source as the footer); test-message diagnostics moved unchanged behind a collapsed Advanced disclosure |
 | `Sources/DailyChallengeProof/ProofModel.swift` | Supabase password auth, Keychain sessions, proof queue/polling; not production challenge sync |
 | `Sources/ProbeCore/ProbeJournal.swift` | Durable independent test-message queue, retry IDs, validated remote acknowledgments |
 | `supabase/migrations/`, `supabase/tests/` | Proof + production append-only schema and local role/RLS/child-ownership tests |

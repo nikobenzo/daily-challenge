@@ -19,13 +19,13 @@ struct TrackerView: View {
                 if model.dayNumber > 0 { Text("Day \(model.dayNumber)").font(.caption).foregroundStyle(.secondary) }
             }
             if auth.ownerID == nil {
-                ProofView(model: auth, reminders: model.reminders, tracker: model)
+                ProofView(model: auth)
             } else {
                 Picker("Section", selection: $section) {
                     ForEach(TrackerSection.allCases, id: \.self) { Text($0.rawValue).tag($0) }
                 }.pickerStyle(.segmented)
                 if section == .account {
-                    ScrollView { ProofView(model: auth, reminders: model.reminders, tracker: model) }.frame(height: 480)
+                    ScrollView { AccountView(auth: auth, tracker: model).padding(.trailing, 12) }.frame(height: 480)
                 } else if model.store == nil {
                     ContentUnavailableView {
                         Label("History unavailable", systemImage: "exclamationmark.triangle")

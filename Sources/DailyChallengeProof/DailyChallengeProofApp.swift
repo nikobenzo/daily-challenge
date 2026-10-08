@@ -29,31 +29,25 @@ struct DailyChallengeProofApp: App {
 
 struct ProofView: View {
     @Bindable var model: ProofModel
-    var reminders: WaterReminderController? = nil
-    var tracker: TrackerModel? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "arrow.triangle.2.circlepath.icloud")
-                Text(model.ownerID == nil ? "Sign in" : "Account · Sync diagnostics").font(.headline)
+                Text("Sign in").font(.headline)
                 Spacer()
                 if model.isBusy { ProgressView().controlSize(.small) }
             }
-            Text(model.ownerID == nil ? "Sign in to unlock your local tracker." : "Diagnostics sync test messages only, not your challenge activity.")
+            Text("Sign in to unlock your local tracker.")
                 .font(.caption).foregroundStyle(.secondary)
 
-            if model.ownerID != nil {
-                signedInContent
-            } else if model.configurationReady {
+            if model.configurationReady {
                 signInContent
             }
 
             Divider()
             AppearanceSettings()
             LaunchAtLoginSettings()
-            if let tracker { BackupSettingsView(model: tracker) }
-            if let reminders { WaterReminderSettingsView(model: reminders) }
             Text(model.status).font(.caption)
             if let error = model.errorMessage {
                 Text(error).font(.caption).foregroundStyle(.red)
@@ -77,59 +71,6 @@ struct ProofView: View {
                 .disabled(model.isBusy || model.email.isEmpty || model.password.isEmpty)
             Text("Create or update a confirmed Auth user first. This is not your Supabase dashboard password.")
                 .font(.caption).foregroundStyle(.secondary)
-        }
-    }
-
-    private var signedInContent: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(model.signedInEmail ?? "Signed in").font(.caption).textSelection(.enabled)
-            HStack {
-                Label("\(model.pendingCount) pending", systemImage: "tray.and.arrow.up")
-                Spacer()
-                Text(model.lastSyncLabel).foregroundStyle(.secondary)
-            }.font(.caption)
-
-            TextField("Optional test message", text: $model.message)
-                .textFieldStyle(.roundedBorder)
-                .onSubmit { model.addEntry() }
-            HStack {
-                Button("Add test entry") { model.addEntry() }
-                    .disabled(model.isBusy || model.journal == nil)
-                Button("Sync now") { Task { await model.sync() } }
-                    .disabled(model.isBusy || model.pauseSync || model.journal == nil)
-                Spacer()
-            }
-            Toggle("Pause sync (test offline queue)", isOn: $model.pauseSync)
-                .disabled(model.isBusy)
-                .onChange(of: model.pauseSync) { _, paused in
-                    if !paused { Task { await model.sync() } }
-                }
-                .font(.caption)
-
-            if model.entries.isEmpty {
-                Text("No test entries yet. Add one on either Mac.")
-                    .font(.caption).foregroundStyle(.secondary)
-            } else {
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 10) {
-                        ForEach(model.entries) { entry in
-                            HStack(alignment: .top) {
-                                Image(systemName: model.isPending(entry.id) ? "clock" : "checkmark.circle")
-                                    .accessibilityLabel(model.isPending(entry.id) ? "Pending upload" : "Confirmed on server")
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(entry.message).textSelection(.enabled)
-                                    Text(String(entry.id.uuidString.prefix(8)))
-                                        .font(.caption2).foregroundStyle(.secondary)
-                                }
-                                Spacer()
-                            }
-                        }
-                    }.padding(.vertical, 4)
-                }.frame(height: 180)
-            }
-            Button("Sign out on this Mac") { Task { await model.signOut() } }
-                .disabled(model.isBusy)
-                .font(.caption)
         }
     }
 }

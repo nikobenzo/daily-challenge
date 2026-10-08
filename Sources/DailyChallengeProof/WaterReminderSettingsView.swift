@@ -4,9 +4,15 @@ import SwiftUI
 struct WaterReminderSettingsView: View {
     @Bindable var model: WaterReminderController
 
+    static let details = """
+        Times are Jersey time, within one day; the end must be at or after the start, and reminders start when the window opens. \
+        This setting stays on this Mac and does not sync. The app must be running and awake; missed reminders are not replayed. \
+        Finishing your water on another Mac stops reminders here once it syncs. Turning reminders on for both Macs can send duplicates. \
+        Manage permission in System Settings > Notifications > Daily Challenge.
+        """
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Divider()
             Toggle("Water reminders on this Mac", isOn: setting(\.enabled))
             Stepper("Every \(model.settings.intervalMinutes) minutes", value: setting(\.intervalMinutes), in: 15...240, step: 15)
             HStack {
@@ -15,11 +21,15 @@ struct WaterReminderSettingsView: View {
             }
             .environment(\.timeZone, WaterReminderPlanner.calendar.timeZone)
             .environment(\.calendar, WaterReminderPlanner.calendar)
-            Text("Europe/Jersey · Same-day window; end must be at or after start. Slots start at the window opening.")
             Text(model.status)
             if let error = model.errorMessage { Text(error).foregroundStyle(.red) }
-            Text("Choose just one Mac to remind you. This setting does not sync. The app must be running and awake. No missed reminders are replayed.")
-            Text("Other-Mac completion stops reminders after it syncs here. Enabling both Macs can produce duplicates. Manage permission in System Settings > Notifications > Daily Challenge.")
+            HStack(spacing: 4) {
+                Text("Turn this on for just one Mac.").foregroundStyle(.secondary)
+                Image(systemName: "questionmark.circle").foregroundStyle(.secondary)
+                    .accessibilityLabel("More about water reminders")
+                    .accessibilityHint(Self.details)
+            }
+            .help(Self.details)
         }
         .font(.caption)
     }

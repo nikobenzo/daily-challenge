@@ -3,6 +3,47 @@ import Foundation
 import Observation
 import Network
 
+enum SyncState: Equatable {
+    case localOnly
+    case unavailable(pending: Int, error: String)
+    case checking(pending: Int)
+    case savedLocally(pending: Int)
+    case awaitingCheck
+    case synced(at: Date, clockWarning: Bool)
+
+    var footerText: String {
+        switch self {
+        case .localOnly: return "Local only · Not synced"
+        case let .unavailable(pending, error): return "Sync unavailable · \(pending) pending · \(error)"
+        case let .checking(pending): return "Checking sync · \(pending) pending"
+        case let .savedLocally(pending): return "Saved locally · \(pending) pending"
+        case .awaitingCheck: return "Waiting for server check"
+        case let .synced(date, clockWarning):
+            let checked = "Synced · \(date.formatted(date: .omitted, time: .shortened))"
+            return clockWarning ? checked + " · Clock/delivery delay > 5 min" : checked
+        }
+    }
+
+    /// Plain words for the Account tab; never adds information the footer lacks.
+    var plainText: String {
+        switch self {
+        case .localOnly: return "Saved on this Mac only, not connected to the server"
+        case .unavailable: return "Can't reach the server, your entries are safe"
+        case let .checking(pending): return pending > 0 ? "Syncing, \(Self.changes(pending)) waiting" : "Syncing"
+        case let .savedLocally(pending): return "Saved on this Mac, \(Self.changes(pending)) waiting"
+        case .awaitingCheck: return "Saved on this Mac, checking the server shortly"
+        case let .synced(date, _): return "Up to date, checked \(date.formatted(date: .omitted, time: .shortened))"
+        }
+    }
+
+    var clockWarningText: String? {
+        guard case .synced(_, true) = self else { return nil }
+        return "Some entries arrived late; check your Mac's clock if this keeps happening"
+    }
+
+    private static func changes(_ count: Int) -> String { count == 1 ? "1 change" : "\(count) changes" }
+}
+
 /// One serialized writer for the active app account. Real challenge data never
 /// enters the probe queue. Clock injection lets the UI's date/edit paths be tested.
 @MainActor @Observable
@@ -55,16 +96,17 @@ final class TrackerModel {
     @ObservationIgnored private var generation = UUID()
 
     var canStartChallenge: Bool { !syncActive || (setupChecked && !isSyncing && syncError == nil) }
-    var syncStatus: String {
-        guard syncActive else { return "Local only · Not synced" }
+    /// The one sync state. The footer and the Account tab are two wordings of it.
+    var syncState: SyncState {
+        guard syncActive else { return .localOnly }
         let pending = store?.pendingCount ?? 0
-        if let syncError { return "Sync unavailable · \(pending) pending · \(syncError)" }
-        if isSyncing { return "Checking sync · \(pending) pending" }
-        if pending > 0 { return "Saved locally · \(pending) pending" }
-        guard let lastSync else { return "Waiting for server check" }
-        let checked = "Synced · \(lastSync.formatted(date: .omitted, time: .shortened))"
-        return (store?.hasClockWarning ?? false) ? checked + " · Clock/delivery delay > 5 min" : checked
+        if let syncError { return .unavailable(pending: pending, error: syncError) }
+        if isSyncing { return .checking(pending: pending) }
+        if pending > 0 { return .savedLocally(pending: pending) }
+        guard let lastSync else { return .awaitingCheck }
+        return .synced(at: lastSync, clockWarning: store?.hasClockWarning ?? false)
     }
+    var syncStatus: String { syncState.footerText }
 
     /// Fixtures configure a transport without launching timers/network monitoring.
     func configureSync(_ transport: any ChallengeTransport, automatic: Bool = false) {

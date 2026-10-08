@@ -62,9 +62,11 @@ Automated fixture coverage includes round trips, rejection/preservation, backup 
 
 ## Account / sync-diagnostics checks
 
+The signed-in Account tab is one plain-language grouped list: You (email, day count and start date), Sync (the footer's status in plain words, with Sync now), Reminders, Appearance & startup, Your data, Account (Change password, coming soon; Sign out), About (version) and a collapsed **Advanced** disclosure holding the test-message diagnostics below. See [fixture renders](docs/screenshots/account-tab/).
+
 1. Quit any running older proof app before reopening the rebuilt app.
 2. Enter the manually provisioned app user's email and password and click **Sign in**. No email link/code is sent. The password field clears after each attempt; only session tokens persist in Keychain.
-3. Add a test entry. Click Sync now if needed; the entry should change from pending to confirmed.
+3. Open **Advanced** at the bottom of Account and add a test entry. Click Sync now if needed; the entry should change from pending to confirmed.
 4. Quit and reopen; confirm the session and history return. Session storage is explicitly Keychain-backed; local entries contain no tokens.
 5. Turn on **Pause sync**, add an entry, quit, and reopen. Pause is a temporary test toggle and resets on relaunch; immediately pause again if you want to keep testing without uploads. The durable pending entry should still exist. For a real offline test, disconnect the network before relaunch.
 6. Reconnect/resume and sync. The pending entry should be confirmed once without duplication. If an upload succeeds but the response is lost, the stable entry ID makes retry safe.
