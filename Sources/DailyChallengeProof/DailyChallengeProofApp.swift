@@ -6,6 +6,7 @@ struct DailyChallengeProofApp: App {
     @State private var model: ProofModel
     @State private var tracker: TrackerModel
     @State private var appearance = AppAppearance()
+    @State private var updates: SoftwareUpdates
 
     init() {
         let auth = ProofModel()
@@ -17,11 +18,14 @@ struct DailyChallengeProofApp: App {
         auth.start()
         _model = State(initialValue: auth)
         _tracker = State(initialValue: tracker)
+        // The app's single Sparkle updater; it checks daily once started.
+        _updates = State(initialValue: SoftwareUpdates())
     }
 
     var body: some Scene {
         MenuBarExtra("Daily Challenge", systemImage: "drop.circle") {
             TrackerPopup(model: tracker, auth: model, appearance: appearance)
+                .environment(updates)
         }
         .menuBarExtraStyle(.window)
     }

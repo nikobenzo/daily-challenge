@@ -8,14 +8,21 @@ let package = Package(
         .executable(name: "DailyChallengeProof", targets: ["DailyChallengeProof"])
     ],
     dependencies: [
-        .package(url: "https://github.com/supabase/supabase-swift.git", exact: "2.55.3")
+        .package(url: "https://github.com/supabase/supabase-swift.git", exact: "2.55.3"),
+        .package(url: "https://github.com/sparkle-project/Sparkle.git", exact: "2.10.0")
     ],
     targets: [
         .target(name: "ProbeCore"),
         .target(name: "ChallengeCore"),
         .executableTarget(
             name: "DailyChallengeProof",
-            dependencies: ["ProbeCore", "ChallengeCore", .product(name: "Supabase", package: "supabase-swift")]
+            dependencies: [
+                "ProbeCore", "ChallengeCore",
+                .product(name: "Supabase", package: "supabase-swift"),
+                .product(name: "Sparkle", package: "Sparkle")
+            ],
+            // scripts/build-proof.sh embeds Sparkle.framework in Contents/Frameworks.
+            linkerSettings: [.unsafeFlags(["-Xlinker", "-rpath", "-Xlinker", "@executable_path/../Frameworks"])]
         ),
         .testTarget(name: "ProbeCoreTests", dependencies: ["ProbeCore"]),
         .testTarget(name: "ChallengeCoreTests", dependencies: ["ChallengeCore"]),

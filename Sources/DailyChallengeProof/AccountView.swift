@@ -9,6 +9,7 @@ struct AccountView: View {
     var version: String? = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
     @Environment(\.trackerReduceMotionOverride) private var reduceMotionOverride
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @Environment(SoftwareUpdates.self) private var updates: SoftwareUpdates?
     @State var showsAdvanced = false
     @State private var signOutError: String?
     @State var changingPassword = false
@@ -37,6 +38,7 @@ struct AccountView: View {
                     Text(version.map { "Version \($0)" } ?? "Development build").foregroundStyle(.secondary)
                 }
                 .accessibilityElement(children: .combine)
+                SoftwareUpdateSettings(updates: updates)
             }
             Divider()
             DisclosureGroup(isExpanded: Binding(

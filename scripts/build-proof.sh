@@ -27,6 +27,21 @@ env_local() {
 SIGNING_IDENTITY="${SIGNING_IDENTITY:-$(env_local SIGNING_IDENTITY)}"
 NOTARY_PROFILE="${NOTARY_PROFILE:-$(env_local NOTARY_PROFILE)}"
 NOTARY_PROFILE="${NOTARY_PROFILE:-dc-notary}"
+# Sparkle automatic updates: the appcast URL and the EdDSA public key printed by
+# Sparkle's generate_keys (docs/releases.md). Both are public values.
+SPARKLE_FEED_URL="${SPARKLE_FEED_URL:-$(env_local SPARKLE_FEED_URL)}"
+SPARKLE_PUBLIC_ED_KEY="${SPARKLE_PUBLIC_ED_KEY:-$(env_local SPARKLE_PUBLIC_ED_KEY)}"
+if [[ -z "$SPARKLE_FEED_URL" || -z "$SPARKLE_PUBLIC_ED_KEY" ]]; then
+  if (( ! ADHOC )); then
+    echo 'SPARKLE_FEED_URL and SPARKLE_PUBLIC_ED_KEY must both be set (environment or .env.local);' >&2
+    echo 'a shared build without them could never update itself. See docs/releases.md, or pass --adhoc.' >&2
+    exit 1
+  fi
+  echo 'Notice: SPARKLE_FEED_URL or SPARKLE_PUBLIC_ED_KEY is not set; this build has automatic updates turned off.' >&2
+  SPARKLE_FEED_URL=''
+  SPARKLE_PUBLIC_ED_KEY=''
+fi
+export SPARKLE_FEED_URL SPARKLE_PUBLIC_ED_KEY
 if (( ! ADHOC )); then
   if [[ -z "$SIGNING_IDENTITY" ]]; then
     echo 'No SIGNING_IDENTITY set (environment or .env.local), so this build cannot be shared.' >&2
@@ -48,8 +63,17 @@ ZIP="$ROOT/build/DailyChallenge.zip"
 # Start from a clean bundle so no stale signature or stapled ticket survives, and
 # never leave a shareable zip that does not match this build.
 rm -rf "$APP" "$ZIP"
-mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$APP/Contents/Frameworks"
 cp "$BIN/DailyChallengeProof" "$APP/Contents/MacOS/DailyChallengeProof"
+# SwiftPM also records rpaths into its own build folders; a shipped app must only
+# find Sparkle in Contents/Frameworks.
+otool -l "$APP/Contents/MacOS/DailyChallengeProof" | awk '$1 == "path" && $2 ~ /^\// && $2 !~ /^\/usr\/lib\// { print $2 }' |
+  while read -r rpath; do install_name_tool -delete_rpath "$rpath" "$APP/Contents/MacOS/DailyChallengeProof"; done
+# ditto keeps the framework's symlinks. The Downloader and Installer XPC services
+# are only for sandboxed apps (Sparkle's sandboxing guide), so they are not shipped.
+SPARKLE="$APP/Contents/Frameworks/Sparkle.framework"
+ditto "$BIN/Sparkle.framework" "$SPARKLE"
+rm -rf "$SPARKLE/XPCServices" "$SPARKLE/Versions/B/XPCServices"
 # Pack the committed iconset (regenerate it with scripts/make-app-icon.sh). Never ship without the icon.
 if ! iconutil -c icns "$ROOT/Resources/AppIcon.iconset" -o "$APP/Contents/Resources/AppIcon.icns"; then
   echo 'iconutil failed to pack Resources/AppIcon.iconset; refusing to build a bundle without the app icon.' >&2
@@ -62,7 +86,8 @@ for bundle in "$BIN"/*.bundle; do
 done
 python3 - "$ROOT" "$APP" <<'PY'
 from pathlib import Path
-import json, plistlib, sys
+from urllib.parse import urlparse
+import base64, json, os, plistlib, sys
 root, app = map(Path, sys.argv[1:])
 values = dict(line.split('=', 1) for line in (root / '.env.local').read_text().splitlines()
               if line.strip() and not line.lstrip().startswith('#'))
@@ -92,20 +117,37 @@ info = {
     'LSUIElement': True,
     'NSHighResolutionCapable': True,
 }
+feed, public_key = os.environ['SPARKLE_FEED_URL'], os.environ['SPARKLE_PUBLIC_ED_KEY']
+if feed:
+    host = urlparse(feed).hostname or ''
+    if not feed.startswith('https://') and not (feed.startswith('http://') and host in ('127.0.0.1', 'localhost')):
+        raise SystemExit('SPARKLE_FEED_URL must be an https:// URL (http:// is accepted only for 127.0.0.1 testing).')
+    try:
+        key_bytes = base64.b64decode(public_key, validate=True)
+    except ValueError:
+        key_bytes = b''
+    if len(key_bytes) != 32:
+        raise SystemExit('SPARKLE_PUBLIC_ED_KEY must be the base64 public key printed by generate_keys.')
+    # Checks daily without asking first; downloading and installing still asks (SUAutomaticallyUpdate defaults to NO).
+    info.update({'SUFeedURL': feed, 'SUPublicEDKey': public_key,
+                 'SUEnableAutomaticChecks': True, 'SUScheduledCheckInterval': 86400})
 with (app / 'Contents/Info.plist').open('wb') as file:
     plistlib.dump(info, file)
 PY
+# Sparkle's helpers, innermost first, then the framework (never --deep).
+SPARKLE_NESTED=("$SPARKLE/Versions/B/Autoupdate" "$SPARKLE/Versions/B/Updater.app" "$SPARKLE")
 if (( ADHOC )); then
+  for nested in "${SPARKLE_NESTED[@]}"; do codesign --force --sign - "$nested"; done
   codesign --force --sign - "$APP"
   codesign --verify --strict "$APP"
   printf '\nBuilt: %s\nLaunch: open "%s"\n' "$APP" "$APP"
   echo '!!! AD-HOC BUILD: for this Mac only, NOT shareable; Gatekeeper blocks it on other Macs. Omit --adhoc to build a notarized copy. !!!' >&2
   exit 0
 fi
-# Nested code first (SwiftPM resource bundles, any frameworks), then the app itself.
-# No entitlements: the app uses no JIT, camera, microphone or sandbox.
+# Nested code first (Sparkle's helpers and framework, SwiftPM resource bundles), then
+# the app itself. No entitlements: the app uses no JIT, camera, microphone or sandbox.
 sign() { codesign --force --options runtime --timestamp --sign "$SIGNING_IDENTITY" "$1"; }
-for nested in "$APP"/Contents/Resources/*.bundle "$APP"/Contents/Frameworks/*.framework; do
+for nested in "${SPARKLE_NESTED[@]}" "$APP"/Contents/Resources/*.bundle; do
   [[ -e "$nested" ]] || continue
   sign "$nested"
 done

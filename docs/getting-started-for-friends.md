@@ -14,7 +14,7 @@ In Downloads, double-click the zip. A **Daily Challenge** app appears. Drag it i
 
 ## 3. Open it
 
-Double-click **Daily Challenge** in Applications. Your Mac says it was downloaded from the internet and names the developer. Click **Open**. If you later install a newer copy, you may see the same message once; click **Open** again. [Screenshot: the "downloaded from the internet" dialog]
+Double-click **Daily Challenge** in Applications. Your Mac says it was downloaded from the internet and names the developer. Click **Open**. [Screenshot: the "downloaded from the internet" dialog]
 
 A small water-drop icon appears at the top right of your screen, next to the clock. There is no Dock icon; that is normal. [Screenshot: menu bar with the drop icon circled]
 
@@ -41,6 +41,12 @@ Click **Account**:
 - Turn on **Water reminders on this Mac** if you want nudges, and click **Allow** when your Mac asks about notifications.
 
 [Screenshot: Account tab]
+
+## Updates
+
+You only install by hand once. Daily Challenge checks for new versions once a day. When there is one, a **Software Update** window appears: click **Install Update**, and the app replaces itself and reopens. Your account, history and settings stay as they are. You can also check at any time: click the drop, then **Account**, and under **About** click **Check for updates**. If a new version was found while you were busy, the About section says so; click **Install update**.
+
+If you installed a copy before automatic updates were added (version 0.2.0 or earlier), install the new download from Niko once in the same way as above, replacing the old app; after that, updates arrive by themselves.
 
 ## Every day
 

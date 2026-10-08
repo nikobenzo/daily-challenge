@@ -70,6 +70,25 @@ struct AccountViewTests {
         #expect(AccountView.progress(day: 80, startDate: start, bestStreak: 30) == "Day 80 · started Sun 27 Sep")
     }
 
+    @Test func updatesNeedBothFeedKeys() {
+        let key = "FDHqOv6JLXUwHrPD+gIPAntg5PxObLU3Y3RhVGx279g="
+        #expect(SoftwareUpdates.isConfigured(["SUFeedURL": "https://example.com/appcast.xml", "SUPublicEDKey": key]))
+        #expect(!SoftwareUpdates.isConfigured(["SUFeedURL": "https://example.com/appcast.xml"]))
+        #expect(!SoftwareUpdates.isConfigured(["SUPublicEDKey": key]))
+        #expect(!SoftwareUpdates.isConfigured(["SUFeedURL": "", "SUPublicEDKey": key]))
+        #expect(!SoftwareUpdates.isConfigured([:]))
+    }
+
+    /// A bundle without a feed (here the test runner) must never start Sparkle.
+    @Test func unconfiguredBuildNeverStartsTheUpdater() {
+        let updates = SoftwareUpdates(bundle: Bundle(for: SoftwareUpdates.self))
+        #expect(!updates.isConfigured)
+        #expect(updates.updater == nil)
+        #expect(!updates.canCheck)
+        updates.checkForUpdates()
+        #expect(updates.availableVersion == nil)
+    }
+
     @Test func accountAndFooterShareOneSyncSource() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -121,11 +140,13 @@ struct AccountViewTests {
         let auth = ProofModel(fixtureOwnerID: owner, directory: directory)
         let appearance = AppAppearance(defaults: defaults)
         let version = try Self.shippedVersion()
+        let updates = SoftwareUpdates(fixtureAvailableVersion: nil)
 
         for expanded in [false, true] {
             let view = AccountView(auth: auth, tracker: model, version: version, showsAdvanced: expanded)
                 .padding(16).frame(width: 420)
                 .environment(appearance)
+                .environment(updates)
                 .environment(\.calendar, JerseyDates.calendar)
                 .environment(\.timeZone, JerseyDates.calendar.timeZone)
                 .trackerSurface()
@@ -137,13 +158,23 @@ struct AccountViewTests {
         let passwordForm = AccountView(auth: auth, tracker: model, version: version, changingPassword: true)
             .padding(16).frame(width: 420)
             .environment(appearance)
+            .environment(updates)
             .environment(\.calendar, JerseyDates.calendar)
             .environment(\.timeZone, JerseyDates.calendar.timeZone)
             .trackerSurface()
         try render(passwordForm, name: "account-tab-change-password", appearance: appearance)
+        // A background check found a version Sparkle left waiting in About.
+        let updateWaiting = AccountView(auth: auth, tracker: model, version: version)
+            .padding(16).frame(width: 420)
+            .environment(appearance)
+            .environment(SoftwareUpdates(fixtureAvailableVersion: "0.3.0"))
+            .environment(\.calendar, JerseyDates.calendar)
+            .environment(\.timeZone, JerseyDates.calendar.timeZone)
+            .trackerSurface()
+        try render(updateWaiting, name: "account-tab-update-available", appearance: appearance)
         auth.newPassword = ""
         auth.passwordConfirmation = ""
-        try render(TrackerPopup(model: model, auth: auth, appearance: appearance, section: .account),
+        try render(TrackerPopup(model: model, auth: auth, appearance: appearance, section: .account).environment(updates),
                    name: "account-tab-popup", appearance: appearance)
     }
 

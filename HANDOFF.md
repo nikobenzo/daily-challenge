@@ -12,6 +12,12 @@ The owner must follow the [exact hosted migration/install steps](docs/production
 
 Appearance backing and the device-local setting remain implemented; [appearance verification](docs/appearance-verification.md) still distinguishes in-process renders from real-popup acceptance. Automated testing must never quit or replace the running app.
 
+## Automatic updates implementation (9 October)
+
+Sparkle 2.10.0 (pinned) gives installed copies daily update checks and in-app installs; **Account › About › Check for updates** checks on demand. `SoftwareUpdates.swift` owns the single `SPUStandardUpdaterController`, activates the Dock-less app before Sparkle shows a window, and leaves later background finds in About ("Version X is available", **Install update**) rather than taking focus. It never starts when Info.plist lacks `SUFeedURL`/`SUPublicEDKey`. `scripts/build-proof.sh` writes those from `.env.local` `SPARKLE_FEED_URL`/`SPARKLE_PUBLIC_ED_KEY` (required unless `--adhoc`), embeds `Sparkle.framework` without the sandbox-only XPC services, strips SwiftPM's build-folder rpaths and signs Sparkle's nested code explicitly before the app. `scripts/release.sh` stages `releases/appcast.xml` plus the version-named zip for upload and uploads nothing. [Owner steps](docs/releases.md); [evidence](docs/update-verification.md).
+
+**Open owner decisions and steps:** choose the HTTPS feed host (the repository is private), run `generate_keys` once (the private key stays in the login keychain), put the feed URL and public key in `.env.local`, and hand-install the first update-capable build on every Mac (0.2.0 has no updater). The worker used only a throwaway file key and a 127.0.0.1 feed; **no key was added to any keychain, nothing was uploaded except to Apple's notary service, and the running app was not touched.**
+
 ## Self sign-up and password reset (8 October)
 
 The signed-out popup (`AuthView.swift`) offers Sign in, Create account and Forgot password, each code step with a 60-second Resend code countdown. `ProofModel` adds `signUp`, `confirmSignUp`, `requestPasswordReset`, `completePasswordReset`, `resendCode` and `changePassword(new:)`, which backs the Account tab's Change password row (inline form, fixture `docs/screenshots/account-tab/account-tab-change-password-*.png`). A nil session after sign-up means "code required". [Owner checklist, SDK mapping and known behaviour](docs/sign-up-setup.md); [friends guide](docs/getting-started-for-friends.md). Tests are intercepted-transport only; **no hosted sign-up, dashboard change or real email send was performed**. Owner acceptance is the checklist's step 6.
@@ -58,6 +64,7 @@ Fixture tests cover validation, round trips, undo, derived recalculation, backup
 | `Sources/DailyChallengeProof/HistoryTrackerView.swift` | Calendar, correction unlock, audit |
 | `Sources/DailyChallengeProof/DailyChallengeProofApp.swift` | App entry, MenuBarExtra, signed-out sign-in view (`ProofView`) |
 | `Sources/DailyChallengeProof/AccountView.swift`, `AdvancedDiagnosticsView.swift` | Signed-in Account tab as a grouped settings list; sync line rephrases `TrackerModel.syncState` (same source as the footer); test-message diagnostics moved unchanged behind a collapsed Advanced disclosure |
+| `Sources/DailyChallengeProof/SoftwareUpdates.swift` | Sparkle updater, Dock-less window activation, About-group update row |
 | `Sources/DailyChallengeProof/ProofModel.swift` | Supabase password auth, Keychain sessions, proof queue/polling; not production challenge sync |
 | `Sources/ProbeCore/ProbeJournal.swift` | Durable independent test-message queue, retry IDs, validated remote acknowledgments |
 | `supabase/migrations/`, `supabase/tests/` | Proof + production append-only schema and local role/RLS/child-ownership tests |
@@ -80,6 +87,7 @@ See [appearance verification](docs/appearance-verification.md#automated-verifica
 swift test
 bash scripts/test-sync-security.sh
 bash scripts/build-proof.sh
+bash scripts/test-update-fixture.sh --ed-key-file <throwaway key>  # isolated Sparkle probe, see docs/update-verification.md
 # Quit the running older app first, then:
 open "build/Daily Challenge.app"
 ```
@@ -97,7 +105,7 @@ After a changed build, refresh the transferable archive if needed:
 ditto -c -k --sequesterRsrc --keepParent "build/Daily Challenge.app" build/DailyChallenge.zip
 ```
 
-The build script embeds **public** configuration from `.env.local`; standalone `swift run` is not the supported configured launch path. The package uses Swift 6, macOS 14 minimum, and pinned `supabase-swift` 2.55.3.
+The build script embeds **public** configuration from `.env.local`; standalone `swift run` is not the supported configured launch path. The package uses Swift 6, macOS 14 minimum, pinned `supabase-swift` 2.55.3 and pinned Sparkle 2.10.0.
 
 ## Product invariants
 
@@ -116,7 +124,7 @@ Supabase replaced CloudKit because the Apple Developer membership was inactive a
 - Proof table `public.sync_probe_entries`: authenticated owner-only SELECT/INSERT, anonymous denied, client UPDATE/DELETE denied. Local RLS checks and a prior hosted anonymous-denial check passed; an actual uploaded test message was confirmed.
 - Both Macs are **Apple Silicon, macOS 27.0.1 (26A434)**. Work policy permits the app. Home-Mac/two-Mac verification was explicitly deferred by the user, not passed.
 - Keychain persistence after real relaunch, true offline recovery, all-interface/accessibility acceptance, and real two-Mac reconciliation remain manual/unproven.
-- `scripts/build-proof.sh` builds are **Developer ID signed (team `L644Y3WX5T`), hardened runtime, notarized and stapled** by default, read `SIGNING_IDENTITY`/`NOTARY_PROFILE` (default keychain profile `dc-notary`) from the environment or `.env.local`, and refuse to fall back to ad-hoc; `--adhoc` is the explicit local-only path. No entitlements are used. [Verification](docs/notarization-verification.md). Preserve security controls. Paid memberships/subscriptions or deployment-policy bypasses require user approval. Keep credentials out of chat/docs; do not request service-role keys or delete Auth users to work around login issues.
+- `scripts/build-proof.sh` builds are **Developer ID signed (team `L644Y3WX5T`), hardened runtime, notarized and stapled** by default, read `SIGNING_IDENTITY`/`NOTARY_PROFILE` (default keychain profile `dc-notary`) from the environment or `.env.local`, and refuse to fall back to ad-hoc; `--adhoc` is the explicit local-only path. Shareable builds also require `SPARKLE_FEED_URL` and `SPARKLE_PUBLIC_ED_KEY` ([releases](docs/releases.md)). No entitlements are used. [Verification](docs/notarization-verification.md). Preserve security controls. Paid memberships/subscriptions or deployment-policy bypasses require user approval. Keep credentials out of chat/docs; do not request service-role keys or delete Auth users to work around login issues.
 
 ## Roadmap and remaining acceptance
 

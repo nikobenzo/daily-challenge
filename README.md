@@ -42,10 +42,13 @@ The default build is the shareable one: Developer ID signed with the hardened ru
 
 - `SIGNING_IDENTITY`, the Developer ID Application certificate name from `security find-identity -v -p codesigning` (public, not a secret).
 - `NOTARY_PROFILE`, the `notarytool` keychain profile holding the notarization credential (default `dc-notary`). The owner stores it once with `xcrun notarytool store-credentials dc-notary --apple-id <id> --team-id L644Y3WX5T`; the app-specific password lives only in that keychain item, never in the repo or `.env.local`.
+- `SPARKLE_FEED_URL` and `SPARKLE_PUBLIC_ED_KEY`, the `https://` appcast URL and the public key printed by Sparkle's `generate_keys`, written into Info.plist for automatic updates. The private key stays in the owner's login keychain.
 
-The script stops with a message if either is missing; it never silently falls back to ad-hoc. It finishes by requiring `spctl` to report `accepted` with `source=Notarized Developer ID`. Share `build/DailyChallenge.zip` and the [friends guide](docs/getting-started-for-friends.md): a friend unzips, drags the app to Applications, opens it and clicks **Open** on macOS's "downloaded from the internet" dialog, with no System Settings steps, now or for later updates. `--skip-notarize` stops after Developer ID signing and verification (not shareable; no zip is written).
+The script stops with a message if any of these is missing; it never silently falls back to ad-hoc. It finishes by requiring `spctl` to report `accepted` with `source=Notarized Developer ID`. Share `build/DailyChallenge.zip` and the [friends guide](docs/getting-started-for-friends.md): a friend unzips, drags the app to Applications, opens it and clicks **Open** on macOS's "downloaded from the internet" dialog, with no System Settings steps, now or for later updates. `--skip-notarize` stops after Developer ID signing and verification (not shareable; no zip is written).
 
-For local development, `bash scripts/build-proof.sh --adhoc` keeps the old ad-hoc signature and prints a notice that the result is **not shareable**: Gatekeeper blocks it on other Macs, and it may need Login Items approval. Do not disable Gatekeeper or bypass company controls.
+The build embeds Sparkle 2 (`Contents/Frameworks/Sparkle.framework`, signed item by item before the app), so installed copies check daily for updates and offer them in Sparkle's window; **Account › About › Check for updates** checks on demand. To publish a version: bump `VERSION`, run `bash scripts/build-proof.sh`, then `bash scripts/release.sh`, which stages `releases/appcast.xml` and the zip for upload without uploading anything. The feed host is still to be chosen. See [releases](docs/releases.md) for the one-time key setup and the full steps.
+
+For local development, `bash scripts/build-proof.sh --adhoc` keeps the old ad-hoc signature (the Sparkle values are optional; without them updates are off) and prints a notice that the result is **not shareable**: Gatekeeper blocks it on other Macs, and it may need Login Items approval. Do not disable Gatekeeper or bypass company controls.
 
 The first launch after switching between an ad-hoc and a Developer ID build (or the reverse) changes the app's code identity, so macOS may ask once whether Daily Challenge may use its saved Keychain item; choose **Always Allow**, or sign in again if the session does not restore. The Keychain identifiers themselves are unchanged.
 
@@ -71,7 +74,7 @@ Automated fixture coverage includes round trips, rejection/preservation, backup 
 
 ## Account / sync-diagnostics checks
 
-The signed-in Account tab is one plain-language grouped list: You (email, day count and start date), Sync (the footer's status in plain words, with Sync now), Reminders, Appearance & startup, Your data, Account (Change password, which opens an inline new-password form; Sign out), About (version) and a collapsed **Advanced** disclosure holding the test-message diagnostics below. See [fixture renders](docs/screenshots/account-tab/).
+The signed-in Account tab is one plain-language grouped list: You (email, day count and start date), Sync (the footer's status in plain words, with Sync now), Reminders, Appearance & startup, Your data, Account (Change password, which opens an inline new-password form; Sign out), About (version and Check for updates) and a collapsed **Advanced** disclosure holding the test-message diagnostics below. See [fixture renders](docs/screenshots/account-tab/).
 
 1. Quit any running older proof app before reopening the rebuilt app.
 2. Enter the manually provisioned app user's email and password and click **Sign in**. No email link/code is sent. The password field clears after each attempt; only session tokens persist in Keychain.
