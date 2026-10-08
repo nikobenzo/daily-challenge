@@ -51,6 +51,8 @@ final class TrackerModel {
     private(set) var ownerID: UUID?
     private(set) var store: ChallengeStore? {
         didSet {
+            // Starting or adopting a challenge can change the zone that bounds days.
+            selectedDay = followsToday ? today : dates.calendar.startOfDay(for: selectedDay)
             refreshReminders()
             observeCompletion()
         }
@@ -69,12 +71,13 @@ final class TrackerModel {
 
     func refreshReminders() {
         let date = clock()
-        let nextDay = WaterReminderPlanner.calendar.date(byAdding: .day, value: 1, to: date)!
+        let nextDay = dates.calendar.date(byAdding: .day, value: 1, to: date)!
         func water(on day: Date) -> Int? {
             let summary = challenge?.summary(on: day, asOf: date)
             return summary?.status == .outsideChallenge ? nil : summary?.waterMillilitres
         }
-        reminders?.refresh(waterMillilitres: water(on: date), nextDayWaterMillilitres: water(on: nextDay))
+        reminders?.refresh(waterMillilitres: water(on: date), nextDayWaterMillilitres: water(on: nextDay),
+                           timeZone: dates.timeZone)
     }
     private(set) var now: Date
     private(set) var selectedDay: Date
@@ -186,17 +189,20 @@ final class TrackerModel {
         self.clock = clock
         let now = clock()
         self.now = now
-        self.selectedDay = JerseyDates.calendar.startOfDay(for: now)
+        self.selectedDay = ChallengeDates(timeZone: .current).calendar.startOfDay(for: now)
     }
 
     var challenge: Challenge? { store?.challenge }
+    /// The challenge's own zone. Before setup there is no challenge day yet; the
+    /// Mac's zone only places the navigation date until one is chosen or adopted.
+    var dates: ChallengeDates { ChallengeDates(timeZone: challenge?.timeZone ?? .current) }
     var summary: Challenge.DailySummary? { challenge?.summary(on: selectedDay, asOf: now) }
     var streaks: Challenge.StreakSummary? { challenge?.streaks(asOf: now) }
     var history: [Challenge.Activity] { challenge?.history(on: selectedDay).reversed() ?? [] }
-    var today: Date { JerseyDates.calendar.startOfDay(for: now) }
+    var today: Date { dates.calendar.startOfDay(for: now) }
     var dayNumber: Int {
         guard let challenge else { return 0 }
-        return max(0, (JerseyDates.calendar.dateComponents([.day], from: challenge.startDate, to: today).day ?? 0) + 1)
+        return max(0, (dates.calendar.dateComponents([.day], from: challenge.startDate, to: today).day ?? 0) + 1)
     }
     var canEdit: Bool {
         guard let summary, summary.status != .future, summary.status != .outsideChallenge else { return false }
@@ -246,7 +252,7 @@ final class TrackerModel {
 
     func selectHistoryDay(_ date: Date) {
         refresh()
-        let day = JerseyDates.calendar.startOfDay(for: date)
+        let day = dates.calendar.startOfDay(for: date)
         guard let challenge, day >= challenge.startDate, day <= today else { return }
         followsToday = false
         selectedDay = day
@@ -257,19 +263,20 @@ final class TrackerModel {
     func enableCorrections() { isEditingHistory = true }
     func dismissError() { errorMessage = nil }
 
-    func startChallenge(on date: Date) {
+    func startChallenge(on date: Date, timeZone: TimeZone) {
         refresh()
         guard canStartChallenge else {
             errorMessage = "Check the server before setup. Existing local history can still be used offline."
             return
         }
-        guard JerseyDates.calendar.startOfDay(for: date) <= today else {
+        let calendar = ChallengeDates(timeZone: timeZone).calendar
+        guard calendar.startOfDay(for: date) <= calendar.startOfDay(for: now) else {
             errorMessage = "Choose today or an earlier start date."
             return
         }
         guard var candidate = store else { return }
         do {
-            try candidate.start(on: date)
+            try candidate.start(on: date, timeZone: timeZone)
             store = candidate
             errorMessage = nil
             showToday()

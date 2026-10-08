@@ -99,8 +99,8 @@ func waterMotionRetargetsRapidUndoAndSuccessivePours(target: Int) {
     defer { try? FileManager.default.removeItem(at: directory) }
     let file = directory.appendingPathComponent("celebrations.json")
     let ledger = CelebrationLedger(file: file), id = UUID()
-    let today = JerseyDates.calendar.startOfDay(for: motionDate)
-    let yesterday = JerseyDates.calendar.date(byAdding: .day, value: -1, to: today)!
+    let today = ChallengeDates.jersey.calendar.startOfDay(for: motionDate)
+    let yesterday = ChallengeDates.jersey.calendar.date(byAdding: .day, value: -1, to: today)!
     var challenge = Challenge(ownerID: UUID(), startDate: yesterday)
     try complete(&challenge, on: today, at: motionDate)
     #expect(ledger.observe(challenge, challengeID: id, now: motionDate, localCompletionDay: today) == .daily)
@@ -112,7 +112,7 @@ func waterMotionRetargetsRapidUndoAndSuccessivePours(target: Int) {
     #expect(ledger.observe(challenge, challengeID: id, now: motionDate, localCompletionDay: today) == nil)
     try complete(&challenge, on: yesterday, at: motionDate)
     #expect(ledger.observe(challenge, challengeID: id, now: motionDate, localCompletionDay: yesterday) == nil)
-    let tomorrow = JerseyDates.calendar.date(byAdding: .day, value: 1, to: today)!
+    let tomorrow = ChallengeDates.jersey.calendar.date(byAdding: .day, value: 1, to: today)!
     #expect(ledger.observe(challenge, challengeID: id, now: tomorrow, localCompletionDay: today) == nil)
     try complete(&challenge, on: tomorrow, at: tomorrow)
     #expect(ledger.observe(challenge, challengeID: id, now: tomorrow, localCompletionDay: tomorrow) == .daily)
@@ -126,11 +126,11 @@ func waterMotionRetargetsRapidUndoAndSuccessivePours(target: Int) {
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: directory) }
     let ledger = CelebrationLedger(file: directory.appendingPathComponent("seen.json")), id = UUID()
-    let today = JerseyDates.calendar.startOfDay(for: motionDate)
-    let start = JerseyDates.calendar.date(byAdding: .day, value: -74, to: today)!
+    let today = ChallengeDates.jersey.calendar.startOfDay(for: motionDate)
+    let start = ChallengeDates.jersey.calendar.date(byAdding: .day, value: -74, to: today)!
     var challenge = Challenge(ownerID: UUID(), startDate: start)
     for offset in 0..<74 {
-        try complete(&challenge, on: JerseyDates.calendar.date(byAdding: .day, value: offset, to: start)!, at: motionDate)
+        try complete(&challenge, on: ChallengeDates.jersey.calendar.date(byAdding: .day, value: offset, to: start)!, at: motionDate)
     }
     #expect(ledger.observe(challenge, challengeID: id, now: motionDate) == nil)
     try complete(&challenge, on: today, at: motionDate)
@@ -153,7 +153,7 @@ func waterMotionRetargetsRapidUndoAndSuccessivePours(target: Int) {
     try Data("not json".utf8).write(to: file)
     var challenge = Challenge(ownerID: UUID(), startDate: motionDate)
     try complete(&challenge, on: motionDate, at: motionDate)
-    let today = JerseyDates.calendar.startOfDay(for: motionDate)
+    let today = ChallengeDates.jersey.calendar.startOfDay(for: motionDate)
     #expect(CelebrationLedger(file: file).observe(challenge, challengeID: UUID(), now: motionDate, localCompletionDay: today) == nil)
     #expect(CelebrationLedger(file: file.appendingPathComponent("impossible")).observe(challenge, challengeID: UUID(), now: motionDate, localCompletionDay: today) == nil)
 }

@@ -35,7 +35,17 @@ grant usage on schema public, auth to anon, authenticated;
 grant execute on function auth.uid() to anon, authenticated;
 SQL
 for migration in "$ROOT"/supabase/migrations/*.sql; do
+  # Rows that already exist when a migration is applied, as on the hosted project.
+  seed="$ROOT/supabase/tests/before-migration/$(basename "$migration")"
+  if [[ -f "$seed" ]]; then "${PSQL[@]}" -f "$seed"; fi
   "${PSQL[@]}" -f "$migration"
+done
+# A second run of any migration must fail without changing anything.
+for migration in "$ROOT"/supabase/migrations/*.sql; do
+  if "${PSQL[@]}" -q -f "$migration" >/dev/null 2>&1; then
+    echo "FAIL: $(basename "$migration") ran twice" >&2
+    exit 1
+  fi
 done
 for test in "$ROOT"/supabase/tests/*.sql; do
   "${PSQL[@]}" -f "$test"

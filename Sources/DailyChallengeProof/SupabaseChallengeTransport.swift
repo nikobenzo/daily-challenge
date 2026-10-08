@@ -15,15 +15,27 @@ import Supabase
 
     func fetchChallenge(ownerID: UUID) async throws -> ChallengeRecord? {
         try await validate(ownerID)
+        // "*" rather than a column list: a server without the timezone migration
+        // returns no time_zone, which decodes as Jersey instead of failing the read.
         let rows: [ChallengeRecord] = try await client.from("challenges")
-            .select("id,owner_id,start_time").eq("owner_id", value: ownerID.uuidString).execute().value
+            .select("*").eq("owner_id", value: ownerID.uuidString).execute().value
         guard rows.count <= 1 else { throw ChallengeSyncError.conflictingChallenge }
         return rows.first
     }
 
     func insertChallenge(_ record: ChallengeRecord) async throws {
         try await validate(record.ownerID)
-        try await client.from("challenges").upsert(record, onConflict: "owner_id", ignoreDuplicates: true).execute()
+        do {
+            try await client.from("challenges").upsert(record, onConflict: "owner_id", ignoreDuplicates: true).execute()
+        } catch let error as PostgrestError where Self.isMissingTimeZoneColumn(error) {
+            throw ChallengeSyncError.serverNeedsTimeZoneUpdate
+        }
+    }
+
+    /// PostgREST reports an unknown payload column as PGRST204; PostgreSQL itself
+    /// as 42703. Either means the owner has not applied the timezone migration.
+    static func isMissingTimeZoneColumn(_ error: PostgrestError) -> Bool {
+        ["PGRST204", "42703"].contains(error.code) && error.message.contains("time_zone")
     }
 
     func upload(_ events: [ChallengeEvent], ownerID: UUID) async throws {

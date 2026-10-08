@@ -90,13 +90,14 @@ struct AccountView: View {
 
     private var progress: String {
         guard let challenge = tracker.challenge else { return "Challenge not started yet" }
-        return Self.progress(day: tracker.dayNumber, startDate: challenge.startDate, bestStreak: tracker.streaks?.best ?? 0)
+        return Self.progress(day: tracker.dayNumber, startDate: challenge.startDate, bestStreak: tracker.streaks?.best ?? 0,
+                             dates: tracker.dates)
     }
 
     /// "Day 12 of 75 · started Sat 27 Sep". Past 75 the day count keeps going, as
     /// tracking does; "75 reached" only appears once a 75-day streak has happened.
-    static func progress(day: Int, startDate: Date, bestStreak: Int) -> String {
-        let started = "started \(JerseyDates.label(startDate, format: "EEE d MMM"))"
+    static func progress(day: Int, startDate: Date, bestStreak: Int, dates: ChallengeDates) -> String {
+        let started = "started \(dates.label(startDate, format: "EEE d MMM"))"
         guard day > 75 else { return "Day \(day) of 75 · \(started)" }
         return "Day \(day)\(bestStreak >= 75 ? " · 75 reached" : "") · \(started)"
     }

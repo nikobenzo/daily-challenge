@@ -90,17 +90,42 @@ public struct Challenge: Codable, Sendable {
         public let milestones: [Date]
     }
 
+    /// Challenges created before each challenge chose its own timezone were all
+    /// Jersey days. Only legacy data (snapshots, records, exports without a zone) uses it.
+    public static let legacyTimeZoneIdentifier = "Europe/Jersey"
+    public static var legacyTimeZone: TimeZone { TimeZone(identifier: legacyTimeZoneIdentifier)! }
+
+    /// A zone is accepted only in its canonical spelling (for example "GMT", not
+    /// "UTC"), so comparing identifiers compares zones: settings stay comparable.
+    public static func canonicalTimeZone(_ identifier: String) -> TimeZone? {
+        guard let zone = TimeZone(identifier: identifier), zone.identifier == identifier else { return nil }
+        return zone
+    }
+
     public let ownerID: UUID
     public let startDate: Date
+    /// Every challenge day is a calendar date in this zone, bounded by its midnights.
+    public let timeZone: TimeZone
+    public let calendar: Calendar
     private var activities: [Activity] = []
 
-    public init(ownerID: UUID, startDate: Date) {
+    public init(ownerID: UUID, startDate: Date, timeZone: TimeZone) {
         self.ownerID = ownerID
-        self.startDate = Self.day(startDate)
+        self.timeZone = timeZone
+        calendar = Self.calendar(for: timeZone)
+        self.startDate = calendar.startOfDay(for: startDate)
     }
 
     private enum CodingKeys: String, CodingKey {
-        case ownerID, startDate, activities
+        case ownerID, startDate, timeZone, activities
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var values = encoder.container(keyedBy: CodingKeys.self)
+        try values.encode(ownerID, forKey: .ownerID)
+        try values.encode(startDate, forKey: .startDate)
+        try values.encode(timeZone.identifier, forKey: .timeZone)
+        try values.encode(activities, forKey: .activities)
     }
 
     /// Loading a snapshot must obey the same rules as recording live activity.
@@ -109,7 +134,13 @@ public struct Challenge: Codable, Sendable {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         let owner = try values.decode(UUID.self, forKey: .ownerID)
         let start = try values.decode(Date.self, forKey: .startDate)
-        guard start.timeIntervalSince1970.isFinite, Self.day(start) == start else {
+        let identifier = try values.decodeIfPresent(String.self, forKey: .timeZone) ?? Self.legacyTimeZoneIdentifier
+        guard let zone = Self.canonicalTimeZone(identifier) else {
+            throw DecodingError.dataCorruptedError(
+                forKey: .timeZone, in: values, debugDescription: "Unknown challenge timezone"
+            )
+        }
+        guard start.timeIntervalSince1970.isFinite, Self.calendar(for: zone).startOfDay(for: start) == start else {
             throw DecodingError.dataCorruptedError(
                 forKey: .startDate, in: values, debugDescription: "Invalid challenge start day"
             )
@@ -120,7 +151,7 @@ public struct Challenge: Codable, Sendable {
                 forKey: .activities, in: values, debugDescription: "Duplicate activity IDs"
             )
         }
-        self.init(ownerID: owner, startDate: start)
+        self.init(ownerID: owner, startDate: start, timeZone: zone)
         if saved.contains(where: { $0.deviceID != nil }) {
             try merge(saved)
             return
@@ -128,7 +159,7 @@ public struct Challenge: Codable, Sendable {
         for activity in saved {
             guard activity.day.timeIntervalSince1970.isFinite,
                   activity.recordedAt.timeIntervalSince1970.isFinite,
-                  Self.day(activity.day) == activity.day else {
+                  day(activity.day) == activity.day else {
                 throw DecodingError.dataCorruptedError(
                     forKey: .activities, in: values, debugDescription: "Invalid activity date"
                 )
@@ -147,12 +178,12 @@ public struct Challenge: Codable, Sendable {
         _ action: Action, on date: Date, at now: Date, id: UUID = UUID(), deviceID: String? = nil
     ) throws -> UUID? {
         if let existing = activities.first(where: { $0.id == id }) {
-            guard existing.day == Self.day(date), existing.recordedAt == now, existing.action == action else {
+            guard existing.day == day(date), existing.recordedAt == now, existing.action == action else {
                 throw ChallengeError.conflictingActivity
             }
             return id
         }
-        guard Self.day(date) >= startDate, Self.day(date) <= Self.day(now) else {
+        guard day(date) >= startDate, day(date) <= day(now) else {
             throw ChallengeError.dateOutsideChallenge
         }
         let target: UUID?
@@ -168,7 +199,7 @@ public struct Challenge: Codable, Sendable {
             guard let last = summary(on: date, asOf: now).activePours.last else { return nil }
             target = last.id
         }
-        let record = Activity(id: id, day: Self.day(date), recordedAt: now, action: action, undonePourID: target, deviceID: deviceID)
+        let record = Activity(id: id, day: day(date), recordedAt: now, action: action, undonePourID: target, deviceID: deviceID)
         if deviceID != nil { try merge([record]) } else { activities.append(record) }
         return record.id
     }
@@ -188,8 +219,8 @@ public struct Challenge: Codable, Sendable {
         for event in known.values {
             guard event.day.timeIntervalSince1970.isFinite,
                   event.recordedAt.timeIntervalSince1970.isFinite,
-                  Self.day(event.day) == event.day, event.day >= startDate,
-                  event.day <= Self.day(event.recordedAt) else { throw ChallengeError.dateOutsideChallenge }
+                  day(event.day) == event.day, event.day >= startDate,
+                  event.day <= day(event.recordedAt) else { throw ChallengeError.dateOutsideChallenge }
             switch event.action {
             case .pour(let amount):
                 guard amount > 0, event.undonePourID == nil else { throw ChallengeError.invalidWaterAmount }
@@ -213,7 +244,7 @@ public struct Challenge: Codable, Sendable {
     }
 
     public func history(on date: Date) -> [Activity] {
-        let selected = Self.day(date)
+        let selected = day(date)
         return activities.filter { $0.day == selected }
     }
 
@@ -234,8 +265,8 @@ public struct Challenge: Codable, Sendable {
             case .pour, .undoLatestPour: break
             }
         }
-        let selected = Self.day(date)
-        let today = Self.day(now)
+        let selected = day(date)
+        let today = day(now)
         let allMet = pours.reduce(0) { $0 + $1.millilitres } >= 4_000
             && completed.count == Habit.allCases.count && diet == .clean
         let status: DayStatus
@@ -245,13 +276,13 @@ public struct Challenge: Codable, Sendable {
         else if selected < today { status = .missed }
         else { status = .inProgress }
         return DailySummary(
-            interval: Self.calendar.dateInterval(of: .day, for: selected)!,
+            interval: calendar.dateInterval(of: .day, for: selected)!,
             activePours: pours, completedHabits: completed, diet: diet, status: status
         )
     }
 
     public func streaks(asOf now: Date) -> StreakSummary {
-        let today = Self.day(now)
+        let today = day(now)
         var date = startDate
         var run = 0
         var best = 0
@@ -268,18 +299,19 @@ public struct Challenge: Codable, Sendable {
                 current = 0
             }
             // Pending today preserves the sequence ending yesterday.
-            date = Self.calendar.date(byAdding: .day, value: 1, to: date)!
+            date = calendar.date(byAdding: .day, value: 1, to: date)!
         }
         return StreakSummary(current: current, best: best, milestones: milestones)
     }
 
-    private static var calendar: Calendar {
+    /// The calendar every day boundary, reminder and display date uses for a zone.
+    public static func calendar(for timeZone: TimeZone) -> Calendar {
         var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "Europe/Jersey")!
+        calendar.timeZone = timeZone
         return calendar
     }
 
-    private static func day(_ date: Date) -> Date {
+    private func day(_ date: Date) -> Date {
         calendar.startOfDay(for: date)
     }
 }

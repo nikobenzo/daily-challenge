@@ -49,7 +49,8 @@ public struct ChallengeStore {
             // Validate before backing up. Never mutate/reset a corrupt file. The
             // exclusive copy preserves the exact original bytes before migration.
             try recoveryBackup()
-            var migrated = Challenge(ownerID: ownerID, startDate: saved.challenge.startDate)
+            var migrated = Challenge(ownerID: ownerID, startDate: saved.challenge.startDate,
+                                     timeZone: saved.challenge.timeZone)
             // Legacy records had only local append order. Stable migration tie
             // metadata preserves that order without changing IDs or timestamps.
             try migrated.merge(saved.challenge.allActivities.enumerated().map { index, a in
@@ -57,13 +58,18 @@ public struct ChallengeStore {
                                    undonePourID: a.undonePourID, deviceID: String(format: "legacy-%020d", index))
             })
             saved = Snapshot(version: 2, challenge: migrated,
-                             record: ChallengeRecord(ownerID: ownerID, startDate: migrated.startDate),
+                             record: ChallengeRecord(ownerID: ownerID, startDate: migrated.startDate,
+                                                     timeZone: migrated.timeZone),
                              deviceID: UUID().uuidString, pendingIDs: Set(migrated.allActivities.map(\.id)),
                              headerPending: true, clockWarning: false)
             try commit(saved)
         } else {
+            // A version-2 snapshot written before per-challenge timezones decodes
+            // both its challenge and record as Jersey. The zone is an additive
+            // field, so it is written on the next commit without a migration backup.
             guard let record = saved.record, record.ownerID == ownerID,
                   record.startDate == saved.challenge.startDate,
+                  record.timeZone == saved.challenge.timeZone.identifier,
                   saved.deviceID?.isEmpty == false, let pending = saved.pendingIDs,
                   pending.isSubset(of: Set(saved.challenge.allActivities.map(\.id))),
                   saved.headerPending != nil, saved.clockWarning != nil,
@@ -74,11 +80,13 @@ public struct ChallengeStore {
         }
     }
 
-    public mutating func start(on date: Date) throws {
+    public mutating func start(on date: Date, timeZone: TimeZone) throws {
         guard challenge == nil else { throw ChallengeStoreError.alreadyStarted }
-        let challenge = Challenge(ownerID: ownerID, startDate: date)
+        guard Challenge.canonicalTimeZone(timeZone.identifier) != nil else { throw ChallengeSyncError.invalidRecord }
+        let challenge = Challenge(ownerID: ownerID, startDate: date, timeZone: timeZone)
         try commit(Snapshot(version: 2, challenge: challenge,
-                            record: ChallengeRecord(ownerID: ownerID, startDate: challenge.startDate),
+                            record: ChallengeRecord(ownerID: ownerID, startDate: challenge.startDate,
+                                                    timeZone: challenge.timeZone),
                             deviceID: UUID().uuidString, pendingIDs: [], headerPending: true, clockWarning: false))
     }
 
@@ -103,12 +111,9 @@ public struct ChallengeStore {
 
     public mutating func merge(record remote: ChallengeRecord, events: [ChallengeEvent]) throws {
         guard remote.ownerID == ownerID else { throw ChallengeSyncError.wrongOwner }
-        guard remote.startTime.isFinite,
-              Challenge(ownerID: ownerID, startDate: remote.startDate).startDate == remote.startDate else {
-            throw ChallengeSyncError.invalidRecord
-        }
+        guard let adopted = remote.emptyChallenge else { throw ChallengeSyncError.invalidRecord }
         if let record, record != remote { throw ChallengeSyncError.conflictingChallenge }
-        var next = snapshot ?? Snapshot(version: 2, challenge: Challenge(ownerID: ownerID, startDate: remote.startDate),
+        var next = snapshot ?? Snapshot(version: 2, challenge: adopted,
                                         record: remote, deviceID: UUID().uuidString, pendingIDs: [],
                                         headerPending: false, clockWarning: false)
         for event in events {

@@ -24,7 +24,7 @@ import Testing
         if failPermission { throw URLError(.noPermissionsToReadFile) }
     }
     func cancel() { pending = [] }
-    func schedule(at date: Date) async throws {
+    func schedule(at date: Date, timeZone: TimeZone) async throws {
         if failSchedule { throw URLError(.unknown) }
         let hook = scheduleHook; scheduleHook = nil; hook?()
         await Task.yield()

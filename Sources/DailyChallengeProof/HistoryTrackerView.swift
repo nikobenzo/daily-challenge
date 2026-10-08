@@ -13,7 +13,7 @@ struct HistoryTrackerView: View {
                 Divider()
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(JerseyDates.label(model.selectedDay)).font(.headline)
+                        Text(model.dates.label(model.selectedDay)).font(.headline)
                         Label(statusName, systemImage: statusIcon).font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()
@@ -37,7 +37,7 @@ struct HistoryTrackerView: View {
                     ForEach(model.history) { activity in
                         VStack(alignment: .leading, spacing: 3) {
                             Text(description(activity)).font(.caption)
-                            Text("Edited \(JerseyDates.label(activity.recordedAt, format: "d MMM, HH:mm")) · Jersey")
+                            Text("Edited \(model.dates.label(activity.recordedAt, format: "d MMM, HH:mm")) · \(ChallengeDates.city(model.dates.timeZone))")
                                 .font(.caption2).foregroundStyle(.secondary)
                         }.frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 4)
                     }
@@ -57,7 +57,7 @@ struct HistoryTrackerView: View {
                     .disabled(month <= monthStart(model.challenge?.startDate ?? model.today))
                     .accessibilityLabel("Previous month")
                 Spacer()
-                Text(JerseyDates.label(month, format: "MMMM yyyy")).font(.headline)
+                Text(model.dates.label(month, format: "MMMM yyyy")).font(.headline)
                 Spacer()
                 Button { changeMonth(1) } label: { Image(systemName: "chevron.right") }
                     .disabled(month >= monthStart(model.today)).accessibilityLabel("Next month")
@@ -78,27 +78,27 @@ struct HistoryTrackerView: View {
     }
 
     private var leadingBlanks: Int {
-        (JerseyDates.calendar.component(.weekday, from: month) - JerseyDates.calendar.firstWeekday + 7) % 7
+        (model.dates.calendar.component(.weekday, from: month) - model.dates.calendar.firstWeekday + 7) % 7
     }
 
     private var daysInMonth: [Date] {
-        guard let range = JerseyDates.calendar.range(of: .day, in: .month, for: month) else { return [] }
-        return range.compactMap { JerseyDates.calendar.date(byAdding: .day, value: $0 - 1, to: month) }
+        guard let range = model.dates.calendar.range(of: .day, in: .month, for: month) else { return [] }
+        return range.compactMap { model.dates.calendar.date(byAdding: .day, value: $0 - 1, to: month) }
     }
 
     private func dayCell(_ day: Date) -> some View {
         let state = model.challenge?.summary(on: day, asOf: model.now).status ?? .outsideChallenge
-        let selected = JerseyDates.calendar.isDate(day, inSameDayAs: model.selectedDay)
+        let selected = model.dates.calendar.isDate(day, inSameDayAs: model.selectedDay)
         let allowed = state != .outsideChallenge && state != .future
         return Button { model.selectHistoryDay(day) } label: {
             VStack(spacing: 2) {
-                Text("\(JerseyDates.calendar.component(.day, from: day))").font(.caption.monospacedDigit())
+                Text("\(model.dates.calendar.component(.day, from: day))").font(.caption.monospacedDigit())
                 Image(systemName: icon(state)).font(.system(size: 8)).foregroundStyle(state == .complete ? Color.green : Color.secondary)
             }.frame(maxWidth: .infinity, minHeight: 37)
                 .background(selected ? Color.accentColor.opacity(0.15) : Color.clear, in: RoundedRectangle(cornerRadius: 7))
                 .overlay(RoundedRectangle(cornerRadius: 7).stroke(selected ? Color.accentColor : .clear, lineWidth: 1))
         }.buttonStyle(.plain).disabled(!allowed)
-            .accessibilityLabel("\(JerseyDates.label(day, format: "d MMMM yyyy")), \(name(state))")
+            .accessibilityLabel("\(model.dates.label(day, format: "d MMMM yyyy")), \(name(state))")
             .accessibilityAddTraits(selected ? .isSelected : [])
             .help(name(state))
     }
@@ -123,10 +123,10 @@ struct HistoryTrackerView: View {
         }
     }
     private func monthStart(_ date: Date) -> Date {
-        JerseyDates.calendar.dateInterval(of: .month, for: date)!.start
+        model.dates.calendar.dateInterval(of: .month, for: date)!.start
     }
     private func changeMonth(_ offset: Int) {
-        month = JerseyDates.calendar.date(byAdding: .month, value: offset, to: month)!
+        month = model.dates.calendar.date(byAdding: .month, value: offset, to: month)!
     }
     private func description(_ activity: Challenge.Activity) -> String {
         switch activity.action {

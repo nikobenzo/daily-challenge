@@ -4,7 +4,7 @@ import Testing
 
 private func plan(_ date: String, settings: WaterReminderSettings = .init(enabled: true), water: Int? = 0) -> [Date] {
     let now = instant(date)
-    let end = WaterReminderPlanner.calendar.dateInterval(of: .day, for: now)!.end.addingTimeInterval(-1)
+    let end = Challenge.calendar(for: Challenge.legacyTimeZone).dateInterval(of: .day, for: now)!.end.addingTimeInterval(-1)
     return WaterReminderPlanner(clock: { now }).upcoming(settings: settings, through: end, waterMillilitres: { _ in water })
 }
 

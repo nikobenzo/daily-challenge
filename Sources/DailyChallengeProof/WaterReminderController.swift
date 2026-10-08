@@ -13,7 +13,7 @@ protocol WaterNotificationCenter: AnyObject {
     func permission() async -> WaterNotificationPermission
     func requestPermission() async throws
     func cancel()
-    func schedule(at date: Date) async throws
+    func schedule(at date: Date, timeZone: TimeZone) async throws
 }
 
 /// Owns just one identifier; never removes another feature's notifications.
@@ -49,14 +49,14 @@ final class NativeWaterNotificationCenter: NSObject, WaterNotificationCenter, UN
         center.removePendingNotificationRequests(withIdentifiers: [identifier])
     }
 
-    func schedule(at date: Date) async throws {
+    func schedule(at date: Date, timeZone: TimeZone) async throws {
         let content = UNMutableNotificationContent()
         content.title = "Water check-in"
         content.body = "Check today's water log. If you're below 4,000 ml, drink only what you still need toward your goal."
         content.sound = .default
-        var components = WaterReminderPlanner.calendar.dateComponents(
-            [.year, .month, .day, .hour, .minute, .second], from: date)
-        components.timeZone = WaterReminderPlanner.calendar.timeZone
+        let calendar = Challenge.calendar(for: timeZone)
+        var components = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: date)
+        components.timeZone = timeZone
         let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
         try await center.add(UNNotificationRequest(identifier: identifier, content: content, trigger: trigger))
     }
@@ -72,11 +72,14 @@ final class WaterReminderController {
     private(set) var permission: WaterNotificationPermission = .unknown
     private(set) var errorMessage: String?
     private(set) var scheduledDate: Date?
+    /// The challenge's zone: the reminder window is wall-clock time there.
+    private(set) var timeZone: TimeZone = .current
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored private let center: any WaterNotificationCenter
     @ObservationIgnored private let clock: () -> Date
     @ObservationIgnored private var waterByDay: [Date: Int] = [:]
-    private var water: Int? { waterByDay[WaterReminderPlanner.calendar.startOfDay(for: clock())] }
+    private var calendar: Calendar { Challenge.calendar(for: timeZone) }
+    private var water: Int? { waterByDay[calendar.startOfDay(for: clock())] }
     @ObservationIgnored private var asleep = false
     @ObservationIgnored private var revision = 0
     @ObservationIgnored private var requestAuthorization = false
@@ -117,14 +120,15 @@ final class WaterReminderController {
         changed()
     }
 
-    func refresh(waterMillilitres: Int?, nextDayWaterMillilitres: Int? = nil) {
-        let calendar = WaterReminderPlanner.calendar
+    func refresh(waterMillilitres: Int?, nextDayWaterMillilitres: Int? = nil, timeZone: TimeZone) {
+        let zoneChanged = self.timeZone != timeZone
+        self.timeZone = timeZone
         let day = calendar.startOfDay(for: clock())
         let nextDay = calendar.date(byAdding: .day, value: 1, to: day)!
         var totals: [Date: Int] = [:]
         totals[day] = waterMillilitres
         totals[nextDay] = nextDayWaterMillilitres
-        let totalsChanged = waterByDay != totals
+        let totalsChanged = waterByDay != totals || zoneChanged
         waterByDay = totals
         changed(cancel: totalsChanged)
     }
@@ -164,7 +168,8 @@ final class WaterReminderController {
             permission = await center.permission()
             guard token == revision else { continue }
             let now = clock()
-            let next = WaterReminderPlanner(clock: { now }).upcoming(
+            let zone = timeZone
+            let next = WaterReminderPlanner(timeZone: zone, clock: { now }).upcoming(
                 settings: settings, through: now.addingTimeInterval(60),
                 waterMillilitres: { waterByDay[$0] }).first
             let desired = !asleep && permission == .allowed ? next : nil
@@ -173,7 +178,7 @@ final class WaterReminderController {
                 scheduledDate = nil
                 if let desired {
                     do {
-                        try await center.schedule(at: desired)
+                        try await center.schedule(at: desired, timeZone: zone)
                         if token == revision { scheduledDate = desired; errorMessage = nil }
                     } catch { errorMessage = "Could not schedule water reminder: \(error.localizedDescription)" }
                 }

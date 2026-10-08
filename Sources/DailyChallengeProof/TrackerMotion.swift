@@ -53,7 +53,7 @@ struct CelebrationLedger {
         do {
             var seen: Set<String> = FileManager.default.fileExists(atPath: file.path)
                 ? try JSONDecoder().decode(Set<String>.self, from: Data(contentsOf: file)) : []
-            let today = JerseyDates.calendar.startOfDay(for: now)
+            let today = challenge.calendar.startOfDay(for: now)
             func key(_ kind: String, _ day: Date) -> String {
                 "\(challengeID.uuidString)/\(kind)/\(day.timeIntervalSince1970)"
             }

@@ -23,6 +23,9 @@ private final class WireFixture: @unchecked Sendable {
         var expireSession = false
         var invalidWire = false
         var pageSizes: [Int] = []
+        /// A server the owner has not yet given the timezone migration.
+        var unmigrated = false
+        var challengeSelects: [String] = []
     }
     private var states: [String: State] = [:]
     func change<T>(_ host: String, _ work: (inout State) throws -> T) rethrows -> T {
@@ -79,6 +82,11 @@ private final class ChallengeWireProtocol: URLProtocol {
                         state.invalidWire = true
                     }
                     let json = try JSONSerialization.jsonObject(with: body)
+                    if url.path == "/rest/v1/challenges", state.unmigrated,
+                       (json as? [String: Any])?["time_zone"] != nil {
+                        return (400, ["code": "PGRST204", "details": NSNull(), "hint": NSNull(),
+                                      "message": "Could not find the 'time_zone' column of 'challenges' in the schema cache"])
+                    }
                     if url.path == "/rest/v1/challenges" {
                         state.header = state.header ?? (json as? [String: Any])
                     } else if url.path == "/rest/v1/challenge_events", let events = json as? [[String: Any]] {
@@ -99,7 +107,12 @@ private final class ChallengeWireProtocol: URLProtocol {
                 if !query.contains(URLQueryItem(name: "owner_id", value: "eq.11111111-1111-4111-8111-111111111111")) {
                     state.invalidWire = true
                 }
-                if url.path == "/rest/v1/challenges" { return (200, state.header.map { [$0] } ?? []) }
+                if url.path == "/rest/v1/challenges" {
+                    state.challengeSelects.append(query.first(where: { $0.name == "select" })?.value ?? "")
+                    var header = state.header
+                    if state.unmigrated { header?.removeValue(forKey: "time_zone") }
+                    return (200, header.map { [$0] } ?? [])
+                }
                 if url.path == "/rest/v1/challenge_events" {
                     let offset = Int(query.first(where: { $0.name == "offset" })?.value ?? "0") ?? 0
                     let limit = Int(query.first(where: { $0.name == "limit" })?.value ?? "500") ?? 500
@@ -181,5 +194,65 @@ private final class ChallengeWireProtocol: URLProtocol {
     WireFixture.shared.change(host) { state in
         #expect(state.refreshCalls > 0)
         #expect(state.restCalls == 0)
+    }
+}
+
+@Test @MainActor func sdkTransportWritesTheZoneAndReadsAnUnmigratedServerAsJersey() async throws {
+    let host = "\(UUID().uuidString.lowercased()).invalid"
+    defer { WireFixture.shared.remove(host) }
+    let client = wireClient(host: host)
+    let session = try await client.auth.signIn(email: "fixture@example.invalid", password: "synthetic-only")
+    let transport = SupabaseChallengeTransport(client: client)
+    let sydney = TimeZone(identifier: "Australia/Sydney")!
+    let start = Challenge(ownerID: session.user.id, startDate: Date(timeIntervalSince1970: 1_791_460_800), timeZone: sydney).startDate
+    let header = ChallengeRecord(ownerID: session.user.id, startDate: start, timeZone: sydney)
+    try await transport.insertChallenge(header)
+    #expect(try await transport.fetchChallenge(ownerID: session.user.id) == header)
+    WireFixture.shared.change(host) { state in
+        #expect(state.header?["time_zone"] as? String == "Australia/Sydney")
+        #expect(state.challengeSelects == ["*"])
+        // The same row read back from a server without the column.
+        state.unmigrated = true
+    }
+    let unmigrated = try #require(try await transport.fetchChallenge(ownerID: session.user.id))
+    #expect(unmigrated.timeZone == "Europe/Jersey")
+    #expect(unmigrated.id == header.id && unmigrated.startTime == header.startTime)
+    WireFixture.shared.change(host) { #expect(!$0.invalidWire) }
+}
+
+/// A friend's Mac installs the timezone build before the owner applies the
+/// migration: the insert is refused with a clear message and nothing local changes.
+@Test @MainActor func unmigratedServerRefusesSettingsWithAClearErrorAndKeepsLocalHistory() async throws {
+    let host = "\(UUID().uuidString.lowercased()).invalid"
+    let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    defer { WireFixture.shared.remove(host); try? FileManager.default.removeItem(at: directory) }
+    WireFixture.shared.change(host) { $0.unmigrated = true }
+    let client = wireClient(host: host)
+    let session = try await client.auth.signIn(email: "fixture@example.invalid", password: "synthetic-only")
+    let now = Date(timeIntervalSince1970: 1_791_460_800)
+    var store = try ChallengeStore(ownerID: session.user.id, directory: directory)
+    try store.start(on: now, timeZone: TimeZone(identifier: "America/New_York")!)
+    try store.record(.pour(900), on: now, at: now)
+    let file = directory.appendingPathComponent("challenge-\(session.user.id.uuidString.lowercased()).json")
+    let before = try Data(contentsOf: file)
+    let transport = SupabaseChallengeTransport(client: client)
+    do {
+        try await transport.insertChallenge(try #require(store.record))
+        Issue.record("An unmigrated server accepted the timezone")
+    } catch let error as ChallengeSyncError {
+        #expect(error == .serverNeedsTimeZoneUpdate)
+    }
+    let model = TrackerModel(directory: directory, clock: { now })
+    model.configureSync(transport)
+    model.activate(ownerID: session.user.id)
+    await model.sync(force: true)
+    #expect(model.syncError == ChallengeSyncError.serverNeedsTimeZoneUpdate.errorDescription)
+    #expect(model.syncError?.contains("docs/production-sync.md") == true)
+    #expect(model.summary?.waterMillilitres == 900)
+    #expect(model.store?.pendingCount == 2)
+    #expect(try Data(contentsOf: file) == before)
+    WireFixture.shared.change(host) { state in
+        #expect(state.header == nil && state.events.isEmpty)
+        #expect(!state.invalidWire)
     }
 }

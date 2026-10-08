@@ -26,7 +26,7 @@ import Testing
     func permission() async -> WaterNotificationPermission { .allowed }
     func requestPermission() async throws {}
     func cancel() {}
-    func schedule(at date: Date) async throws {}
+    func schedule(at date: Date, timeZone: TimeZone) async throws {}
 }
 
 @Suite(.serialized) @MainActor
@@ -63,11 +63,11 @@ struct AccountViewTests {
     }
 
     @Test func dayLineFollowsTheChallenge() {
-        let start = JerseyDates.calendar.date(from: DateComponents(year: 2026, month: 9, day: 27))!
-        #expect(AccountView.progress(day: 12, startDate: start, bestStreak: 11) == "Day 12 of 75 · started Sun 27 Sep")
-        #expect(AccountView.progress(day: 75, startDate: start, bestStreak: 75) == "Day 75 of 75 · started Sun 27 Sep")
-        #expect(AccountView.progress(day: 80, startDate: start, bestStreak: 75) == "Day 80 · 75 reached · started Sun 27 Sep")
-        #expect(AccountView.progress(day: 80, startDate: start, bestStreak: 30) == "Day 80 · started Sun 27 Sep")
+        let start = ChallengeDates.jersey.calendar.date(from: DateComponents(year: 2026, month: 9, day: 27))!
+        #expect(AccountView.progress(day: 12, startDate: start, bestStreak: 11, dates: .jersey) == "Day 12 of 75 · started Sun 27 Sep")
+        #expect(AccountView.progress(day: 75, startDate: start, bestStreak: 75, dates: .jersey) == "Day 75 of 75 · started Sun 27 Sep")
+        #expect(AccountView.progress(day: 80, startDate: start, bestStreak: 75, dates: .jersey) == "Day 80 · 75 reached · started Sun 27 Sep")
+        #expect(AccountView.progress(day: 80, startDate: start, bestStreak: 30, dates: .jersey) == "Day 80 · started Sun 27 Sep")
     }
 
     @Test func updatesNeedBothFeedKeys() {
@@ -128,7 +128,7 @@ struct AccountViewTests {
         let owner = UUID()
         let model = TrackerModel(directory: directory, clock: { clock })
         model.activate(ownerID: owner)
-        model.startChallenge(on: JerseyDates.calendar.date(from: DateComponents(year: 2026, month: 9, day: 27))!)
+        model.startChallenge(on: ChallengeDates.jersey.calendar.date(from: DateComponents(year: 2026, month: 9, day: 27))!)
         model.addWater()
         let reminders = WaterReminderController(defaults: defaults, center: SilentWaterCenter(), clock: { clock })
         model.reminders = reminders
@@ -147,8 +147,8 @@ struct AccountViewTests {
                 .padding(16).frame(width: 420)
                 .environment(appearance)
                 .environment(updates)
-                .environment(\.calendar, JerseyDates.calendar)
-                .environment(\.timeZone, JerseyDates.calendar.timeZone)
+                .environment(\.calendar, ChallengeDates.jersey.calendar)
+                .environment(\.timeZone, ChallengeDates.jersey.calendar.timeZone)
                 .trackerSurface()
             try render(view, name: expanded ? "account-tab-advanced" : "account-tab", appearance: appearance)
         }
@@ -159,8 +159,8 @@ struct AccountViewTests {
             .padding(16).frame(width: 420)
             .environment(appearance)
             .environment(updates)
-            .environment(\.calendar, JerseyDates.calendar)
-            .environment(\.timeZone, JerseyDates.calendar.timeZone)
+            .environment(\.calendar, ChallengeDates.jersey.calendar)
+            .environment(\.timeZone, ChallengeDates.jersey.calendar.timeZone)
             .trackerSurface()
         try render(passwordForm, name: "account-tab-change-password", appearance: appearance)
         // A background check found a version Sparkle left waiting in About.
@@ -168,8 +168,8 @@ struct AccountViewTests {
             .padding(16).frame(width: 420)
             .environment(appearance)
             .environment(SoftwareUpdates(fixtureAvailableVersion: "0.3.0"))
-            .environment(\.calendar, JerseyDates.calendar)
-            .environment(\.timeZone, JerseyDates.calendar.timeZone)
+            .environment(\.calendar, ChallengeDates.jersey.calendar)
+            .environment(\.timeZone, ChallengeDates.jersey.calendar.timeZone)
             .trackerSurface()
         try render(updateWaiting, name: "account-tab-update-available", appearance: appearance)
         auth.newPassword = ""

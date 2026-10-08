@@ -23,21 +23,19 @@ public struct WaterReminderSettings: Codable, Equatable, Sendable {
 
 /// Calendar slots anchored to the window start, inclusive of the end. Missing
 /// DST wall times are skipped; repeated wall times occur once (first occurrence).
+/// Wall times are in the challenge's own timezone, the zone that bounds its days.
 public struct WaterReminderPlanner {
     private let clock: () -> Date
-    public init(clock: @escaping () -> Date = Date.init) { self.clock = clock }
-
-    public static var calendar: Calendar {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "Europe/Jersey")!
-        return calendar
+    public let calendar: Calendar
+    public init(timeZone: TimeZone, clock: @escaping () -> Date = Date.init) {
+        calendar = Challenge.calendar(for: timeZone)
+        self.clock = clock
     }
 
     public func upcoming(settings: WaterReminderSettings, through horizon: Date,
                          waterMillilitres: (Date) -> Int?) -> [Date] {
         guard settings.enabled, settings.isValid else { return [] }
         let now = clock()
-        let calendar = Self.calendar
         var day = calendar.startOfDay(for: now)
         var dates: [Date] = []
         while day <= horizon {

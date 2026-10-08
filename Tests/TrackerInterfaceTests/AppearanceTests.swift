@@ -48,6 +48,19 @@ struct AppearanceTests {
             model.activate(ownerID: owner)
             let auth = ProofModel(fixtureOwnerID: owner, directory: directory)
             let signedOut = ProofModel(fixtureOwnerID: nil, directory: directory)
+            // Setup with an injected zone, so the render does not depend on this Mac's.
+            try renderLiveModes(
+                TrackerView(model: model, auth: auth, setupTimeZone: TimeZone(identifier: "America/New_York")!)
+                    .environment(appearance)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .trackerSurface(),
+                name: "setup-new-york", appearance: appearance
+            )
+            let york = TimeZone(identifier: "America/New_York")!
+            try renderLiveModes(TimeZoneList(selection: .constant(york), now: now, done: {}),
+                                name: "time-zone-list", appearance: appearance, oversizedHost: false)
+            try renderLiveModes(TimeZoneList(selection: .constant(york), now: now, done: {}, query: "syd"),
+                                name: "time-zone-search", appearance: appearance, oversizedHost: false)
             for setup in [true, false] {
                 if !setup {
                     model.startChallenge(on: now)

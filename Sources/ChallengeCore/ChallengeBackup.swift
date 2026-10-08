@@ -12,7 +12,10 @@ public enum ChallengeBackupError: LocalizedError {
 
 /// Portable personal data only: no auth state, device preferences or sync queue.
 public struct ChallengeBackup: Codable, Sendable {
-    public static let currentVersion = 1
+    /// Version 2 adds the challenge's timezone to its settings. Version-1 files
+    /// predate per-challenge zones and import as Jersey challenges.
+    public static let currentVersion = 2
+    public static let supportedVersions = 1...currentVersion
     public let formatVersion: Int
     public let settings: ChallengeRecord
     public let activities: [Challenge.Activity]
@@ -35,7 +38,7 @@ public struct ChallengeBackup: Codable, Sendable {
         guard let version = try? decoder.decode(Version.self, from: data) else {
             throw ChallengeBackupError.malformed
         }
-        guard version.formatVersion == currentVersion else { throw ChallengeBackupError.unsupportedVersion }
+        guard supportedVersions.contains(version.formatVersion) else { throw ChallengeBackupError.unsupportedVersion }
         do { return try decoder.decode(Self.self, from: data) }
         catch { throw ChallengeBackupError.malformed }
     }
@@ -49,15 +52,15 @@ public struct ChallengeBackup: Codable, Sendable {
 
     /// Validate the entire file and the union before any disk or UI mutation.
     public func plan(for record: ChallengeRecord, challenge: Challenge) throws -> Plan {
-        guard formatVersion == Self.currentVersion else { throw ChallengeBackupError.unsupportedVersion }
+        guard Self.supportedVersions.contains(formatVersion) else { throw ChallengeBackupError.unsupportedVersion }
         guard settings.ownerID == record.ownerID, challenge.ownerID == record.ownerID else {
             throw ChallengeSyncError.wrongOwner
         }
-        guard settings == record, challenge.startDate == record.startDate else {
+        guard settings == record, challenge.startDate == record.startDate,
+              challenge.timeZone.identifier == record.timeZone else {
             throw ChallengeSyncError.conflictingChallenge
         }
-        guard settings.startTime.isFinite,
-              Challenge(ownerID: settings.ownerID, startDate: settings.startDate).startDate == settings.startDate,
+        guard var standalone = settings.emptyChallenge,
               Set(activities.map(\.id)).count == activities.count,
               activities.allSatisfy({ activity in
                   guard let deviceID = activity.deviceID else { return false }
@@ -68,7 +71,6 @@ public struct ChallengeBackup: Codable, Sendable {
         }
         // Exports are complete histories, not arbitrary patches: dangling undo
         // targets must be rejected even if the current device has that pour.
-        var standalone = Challenge(ownerID: settings.ownerID, startDate: settings.startDate)
         try standalone.merge(activities)
         var merged = challenge
         try merged.merge(activities)

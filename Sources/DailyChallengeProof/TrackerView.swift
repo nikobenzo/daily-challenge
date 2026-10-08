@@ -9,6 +9,8 @@ struct TrackerView: View {
     @Bindable var auth: ProofModel
     @State var section = TrackerSection.today
     @State private var setupDate = Date()
+    /// Defaults to this Mac's zone; fixtures inject one for deterministic renders.
+    @State var setupTimeZone = TimeZone.current
     @State private var isVisible = false
 
     var body: some View {
@@ -81,8 +83,8 @@ struct TrackerView: View {
         .frame(width: 420)
         .environment(\.trackerPopupVisible, isVisible)
         .background { PopupVisibilityReader { isVisible = $0 } }
-        .environment(\.calendar, JerseyDates.calendar)
-        .environment(\.timeZone, JerseyDates.calendar.timeZone)
+        .environment(\.calendar, model.dates.calendar)
+        .environment(\.timeZone, model.dates.timeZone)
         .onAppear {
             auth.start()
             model.activate(ownerID: auth.ownerID)
@@ -108,7 +110,7 @@ struct TrackerView: View {
         .task {
             while !Task.isCancelled {
                 let current = Date()
-                let midnight = JerseyDates.calendar.dateInterval(of: .day, for: current)!.end
+                let midnight = model.dates.calendar.dateInterval(of: .day, for: current)!.end
                 let seconds = max(0.1, min(30, midnight.timeIntervalSince(current)))
                 do { try await Task.sleep(for: .seconds(seconds)) } catch { return }
                 if isVisible { model.refresh() }
@@ -119,7 +121,7 @@ struct TrackerView: View {
     private var setup: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Your next 75 days").font(.title2.bold())
-            Text("Start in Jersey time. Every day, complete all five:")
+            Text("Every day, midnight to midnight in \(ChallengeDates.city(setupTimeZone)) time, complete all five:")
                 .font(.subheadline).foregroundStyle(.secondary)
             VStack(alignment: .leading, spacing: 9) {
                 Label("4 litres of water", systemImage: "drop")
@@ -128,13 +130,21 @@ struct TrackerView: View {
                 Label("Clean diet · your own rules", systemImage: "leaf")
                 Label("10 Bible pages", systemImage: "book")
             }.font(.callout).labelStyle(FixedIconLabelStyle())
-            DatePicker("Start date", selection: $setupDate, in: ...model.now, displayedComponents: .date)
+            VStack(alignment: .leading, spacing: 6) {
+                DatePicker("Start date", selection: $setupDate, in: ...model.now, displayedComponents: .date)
+                TimeZonePicker(selection: $setupTimeZone, now: model.now)
+                Text("Days follow \(setupTimeZone.identifier), including daylight saving. The start date and time zone can't be changed after you start.")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .environment(\.timeZone, setupTimeZone)
+            .environment(\.calendar, ChallengeDates(timeZone: setupTimeZone).calendar)
             Text("Closed unfinished days break the streak. Earlier days need explicit entries. Tracking continues beyond 75.")
                 .font(.caption).foregroundStyle(.secondary)
             Text("Use the same app account on both Macs. Activity saves locally first, then syncs. Appearance stays on this Mac.")
                 .font(.caption).foregroundStyle(.secondary)
                 .padding(10).trackerCard(cornerRadius: 10)
-            Button("Start challenge") { model.startChallenge(on: setupDate) }
+            Button("Start challenge") { model.startChallenge(on: setupDate, timeZone: setupTimeZone) }
                 .buttonStyle(.borderedProminent)
         }.padding(.vertical, 8)
     }
@@ -162,7 +172,7 @@ struct TodayTrackerView: View {
     var body: some View {
         VStack(spacing: 12) {
             HStack {
-                Text(JerseyDates.label(model.now)).font(.subheadline).foregroundStyle(.secondary)
+                Text(model.dates.label(model.now)).font(.subheadline).foregroundStyle(.secondary)
                 Spacer()
                 if model.summary?.isComplete == true {
                     Label("Complete", systemImage: "checkmark.seal.fill").foregroundStyle(.green)
