@@ -127,7 +127,7 @@ struct TrackerView: View {
                 Label("45-minute walk", systemImage: "figure.walk")
                 Label("Clean diet · your own rules", systemImage: "leaf")
                 Label("10 Bible pages", systemImage: "book")
-            }.font(.callout)
+            }.font(.callout).labelStyle(FixedIconLabelStyle())
             DatePicker("Start date", selection: $setupDate, in: ...model.now, displayedComponents: .date)
             Text("Closed unfinished days break the streak. Earlier days need explicit entries. Tracking continues beyond 75.")
                 .font(.caption).foregroundStyle(.secondary)
@@ -137,6 +137,22 @@ struct TrackerView: View {
             Button("Start challenge") { model.startChallenge(on: setupDate) }
                 .buttonStyle(.borderedProminent)
         }.padding(.vertical, 8)
+    }
+}
+
+/// Puts every icon in one fixed-width column so the titles of a list of labels
+/// start at the same x, whatever the SF Symbol's own width.
+struct FixedIconLabelStyle: LabelStyle {
+    var iconWidth: CGFloat = 20
+
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 8) {
+            configuration.icon
+                .frame(width: iconWidth)
+                .accessibilityHidden(true)
+            configuration.title
+        }
+        .accessibilityElement(children: .combine)
     }
 }
 
