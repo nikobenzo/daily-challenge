@@ -38,7 +38,16 @@ open "build/Daily Challenge.app"
 
 Click the **drop-in-circle icon in the menu bar**. There is no Dock icon. The package's standalone `swift run` binary is not the supported launch path; the build script creates the app bundle and embeds public configuration.
 
-The build is locally ad-hoc signed, **not Developer ID signed or notarized**. Work-device policy may prohibit it. Do not disable Gatekeeper or bypass company controls; discuss an approved install route if blocked.
+The default build is the shareable one: Developer ID signed with the hardened runtime, notarized by Apple, stapled, and zipped to `build/DailyChallenge.zip`. It needs, in `.env.local` or the environment (see `.env.example`):
+
+- `SIGNING_IDENTITY`, the Developer ID Application certificate name from `security find-identity -v -p codesigning` (public, not a secret).
+- `NOTARY_PROFILE`, the `notarytool` keychain profile holding the notarization credential (default `dc-notary`). The owner stores it once with `xcrun notarytool store-credentials dc-notary --apple-id <id> --team-id L644Y3WX5T`; the app-specific password lives only in that keychain item, never in the repo or `.env.local`.
+
+The script stops with a message if either is missing; it never silently falls back to ad-hoc. It finishes by requiring `spctl` to report `accepted` with `source=Notarized Developer ID`. Share `build/DailyChallenge.zip` and the [friends guide](docs/getting-started-for-friends.md): a friend unzips, drags the app to Applications, opens it and clicks **Open** on macOS's "downloaded from the internet" dialog, with no System Settings steps, now or for later updates. `--skip-notarize` stops after Developer ID signing and verification (not shareable; no zip is written).
+
+For local development, `bash scripts/build-proof.sh --adhoc` keeps the old ad-hoc signature and prints a notice that the result is **not shareable**: Gatekeeper blocks it on other Macs, and it may need Login Items approval. Do not disable Gatekeeper or bypass company controls.
+
+The first launch after switching between an ad-hoc and a Developer ID build (or the reverse) changes the app's code identity, so macOS may ask once whether Daily Challenge may use its saved Keychain item; choose **Always Allow**, or sign in again if the session does not restore. The Keychain identifiers themselves are unchanged.
 
 The output is now `build/Daily Challenge.app` (version 0.2). The executable target, bundle identifier, Keychain service, and proof caches retain their old names to preserve identity. Quit the older proof before opening this app; do not run both. Old `Daily Challenge Proof.app` / `DailyChallengeProof.zip` artifacts are legacy proof builds.
 

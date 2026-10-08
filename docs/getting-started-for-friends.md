@@ -2,7 +2,7 @@
 
 Daily Challenge lives in your Mac's menu bar and tracks the five daily habits: 4 litres of water, a 45-minute workout, a 45-minute walk, a clean diet and 10 pages of Bible reading. It needs a Mac running macOS 14 or later.
 
-> **Note for whoever shares this guide:** step 3 is the current install route for the ad-hoc-signed build. Once the app is Developer ID signed and notarized, step 3 becomes "Double-click Daily Challenge in Applications and click **Open**", the Login Items note goes away, and this guide gets shorter.
+> **Note for whoever shares this guide:** send the notarized `build/DailyChallenge.zip` made by `bash scripts/build-proof.sh` (not an `--adhoc` build). The steps below assume that build.
 
 ## 1. Download
 
@@ -12,13 +12,9 @@ Open the link Niko sent you and download `DailyChallenge.zip`. [Screenshot: Safa
 
 In Downloads, double-click the zip. A **Daily Challenge** app appears. Drag it into your **Applications** folder. [Screenshot: dragging the app onto Applications]
 
-## 3. Open it (one-time security step)
+## 3. Open it
 
-1. Double-click **Daily Challenge** in Applications. Your Mac will say it "could not verify" the app. Click **Done**.
-2. Open **System Settings**, click **Privacy & Security**, and scroll down to the **Security** section.
-3. Click **Open Anyway** next to Daily Challenge. Enter your Mac password and click **Open**.
-
-Do this within an hour of the first attempt. You will need to do it again after each update. [Screenshot: the "not opened" dialog] [Screenshot: Privacy & Security with Open Anyway]
+Double-click **Daily Challenge** in Applications. Your Mac says it was downloaded from the internet and names the developer. Click **Open**. If you later install a newer copy, you may see the same message once; click **Open** again. [Screenshot: the "downloaded from the internet" dialog]
 
 A small water-drop icon appears at the top right of your screen, next to the clock. There is no Dock icon; that is normal. [Screenshot: menu bar with the drop icon circled]
 
@@ -41,7 +37,7 @@ Pick your start date (today is fine) and click **Start challenge**. You will see
 
 Click **Account**:
 
-- Turn on **Launch at login on this Mac** so the app is always there. If it says "Requires approval", open **System Settings → General → Login Items** and allow Daily Challenge.
+- Turn on **Launch at login on this Mac** so the app is always there.
 - Turn on **Water reminders on this Mac** if you want nudges, and click **Allow** when your Mac asks about notifications.
 
 [Screenshot: Account tab]
@@ -56,4 +52,8 @@ Click the drop, then **Forgot password?**. Enter your email and click **Send cod
 
 ## If something goes wrong
 
-Send Niko a screenshot. Apart from the one-time Open Anyway step above, you never need to change any security settings.
+Send Niko a screenshot. You never need to change any security settings.
+
+## If you were given a development build
+
+Niko may occasionally send a test copy that is not notarized. Your Mac will then say it "could not verify" Daily Challenge: click **Done**, open **System Settings → Privacy & Security**, scroll to **Security**, click **Open Anyway** next to Daily Challenge, enter your Mac password and click **Open** (within an hour of the first attempt, and again after each such copy). If **Launch at login** says "Requires approval", allow Daily Challenge in **System Settings → General → Login Items**. Never turn off Gatekeeper or run Terminal commands to get around this; ask Niko for the regular download instead.

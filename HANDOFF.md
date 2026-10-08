@@ -110,13 +110,13 @@ The build script embeds **public** configuration from `.env.local`; standalone `
 
 ## Backend and outstanding acceptance
 
-Supabase replaced CloudKit because the Apple Developer membership is inactive and the Macs use different iCloud accounts. Both Macs will use the same app login. Public client configuration lives in `.env.local` (template `.env.example`); no admin key/password is needed by the app.
+Supabase replaced CloudKit because the Apple Developer membership was inactive at the time (it is now active, for Developer ID signing only) and the Macs use different iCloud accounts. Both Macs will use the same app login. Public client configuration lives in `.env.local` (template `.env.example`); no admin key/password is needed by the app.
 
 - Password login works on the first Mac. The 2025 SMTP/OTP attempt failed on an unverified Resend domain; in-app sign-up and password reset by 6-digit code are now implemented over custom SMTP but need the [owner dashboard steps](docs/sign-up-setup.md#owner-only-dashboard-setup). Retain the existing Auth user. Passwords are not persisted; sessions use Keychain.
 - Proof table `public.sync_probe_entries`: authenticated owner-only SELECT/INSERT, anonymous denied, client UPDATE/DELETE denied. Local RLS checks and a prior hosted anonymous-denial check passed; an actual uploaded test message was confirmed.
 - Both Macs are **Apple Silicon, macOS 27.0.1 (26A434)**. Work policy permits the app. Home-Mac/two-Mac verification was explicitly deferred by the user, not passed.
 - Keychain persistence after real relaunch, true offline recovery, all-interface/accessibility acceptance, and real two-Mac reconciliation remain manual/unproven.
-- Builds are **ad-hoc signed, not Developer ID signed/notarized**. Preserve security controls. Paid memberships/subscriptions or deployment-policy bypasses require user approval. Keep credentials out of chat/docs; do not request service-role keys or delete Auth users to work around login issues.
+- `scripts/build-proof.sh` builds are **Developer ID signed (team `L644Y3WX5T`), hardened runtime, notarized and stapled** by default, read `SIGNING_IDENTITY`/`NOTARY_PROFILE` (default keychain profile `dc-notary`) from the environment or `.env.local`, and refuse to fall back to ad-hoc; `--adhoc` is the explicit local-only path. No entitlements are used. [Verification](docs/notarization-verification.md). Preserve security controls. Paid memberships/subscriptions or deployment-policy bypasses require user approval. Keep credentials out of chat/docs; do not request service-role keys or delete Auth users to work around login issues.
 
 ## Roadmap and remaining acceptance
 
