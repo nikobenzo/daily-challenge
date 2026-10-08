@@ -1,0 +1,16 @@
+ProductName:		macOS
+ProductVersion:		27.0.1
+BuildVersion:		26A434
+MODE motion-disabled · cumulative getrusage CPU deltas
+START hidden visible=false
+RESULT hidden wall=10.631s cpu=0.0209s average=0.197% visible=false
+START idle-open visible=true
+RESULT idle-open wall=10.403s cpu=0.1311s average=1.261% visible=true
+START animating visible=true
+RESULT animating wall=10.298s cpu=0.1131s average=1.098% visible=true
+START settled visible=true
+DELTA settled-1 wall=31.910s cpu=0.0122s average=0.038%
+DELTA settled-2 wall=31.999s cpu=0.0008s average=0.003%
+RESULT settled wall=63.914s cpu=0.0141s average=0.022% visible=true
+START hidden-after visible=false
+RESULT hidden-after wall=10.034s cpu=0.0010s average=0.010% visible=false
