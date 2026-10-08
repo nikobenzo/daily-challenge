@@ -5,8 +5,12 @@ A personal daily challenge combining water, exercise, diet, and Bible reading. S
 ## Language
 
 **Challenge day**:
-A calendar date in Europe/Jersey, bounded by local midnights, including daylight-saving changes.
-_Avoid_: Rolling 24-hour window, fixed GMT day
+A calendar date in the challenge's own timezone, bounded by local midnights, including daylight-saving changes.
+_Avoid_: Rolling 24-hour window, fixed GMT day, the device's current timezone
+
+**Challenge timezone**:
+The IANA timezone (such as Europe/Jersey or America/New_York) chosen at setup whose midnights bound every challenge day. Like the start date, it cannot change after the challenge starts. Challenges started before timezones were chosen use Europe/Jersey.
+_Avoid_: Device timezone (it only pre-fills the setup choice)
 
 **Tracked day**:
 A challenge day on or after the selected start date and no later than today.

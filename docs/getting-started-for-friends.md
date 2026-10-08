@@ -31,7 +31,11 @@ You are now signed in. Use the same email and password if you install the app on
 
 ## 5. Start your challenge
 
-Pick your start date (today is fine) and click **Start challenge**. You will see the water jug and the five daily items. [Screenshot: Today tab]
+Pick your start date (today is fine). Check the **Time zone**: it starts as your Mac's, and each challenge day runs midnight to midnight there. To change it, click it and type your city. You can't change the start date or time zone later, so pick the place you'll mostly be. Then click **Start challenge**.
+
+![Setup screen](screenshots/time-zone/setup-new-york-light.png)
+
+You will see the water jug and the five daily items. [Screenshot: Today tab]
 
 ## 6. Optional, recommended
 

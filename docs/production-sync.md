@@ -16,15 +16,16 @@ Each sync checks Auth ownership, reads the account challenge, inserts missing lo
 - Undo records retain their exact target. Two independent undos of one pour subtract it once and remain in the audit log. Full event history is retained: stale/offline devices cannot resurrect removed activity.
 - Explicit habit/diet edits order by **client timestamp, device ID, event ID**, ascending; the last wins. Event IDs generated at identical local timestamps are ordered to retain local edit order. Receipt times never change ordering.
 - A receipt/client timestamp difference **strictly greater than five minutes**, in either direction, sets a durable clock warning. Exactly five minutes does not. No edits are quarantined or dropped. The warning says **Clock/delivery delay > 5 min** because offline delivery also creates this difference; it cannot prove a bad clock. Original event timestamps remain intact. The warning remains visible after subsequent successful syncs for this history.
-- The current shared challenge setting is its Jersey start date, immutable after setup. Appearance is intentionally device-local; reminders/diet-rule settings and a settings-edit UI are not part of this increment.
+- The shared challenge settings are its start date and its timezone (an IANA identifier such as `Europe/Jersey`), both immutable after setup. Every day boundary, streak, reminder window and displayed date uses that zone, not the Mac's. Records without `time_zone` (an unmigrated server, an older local snapshot or a version-1 export) are read as `Europe/Jersey`, the zone every earlier challenge used; identifiers must be canonical (`GMT`, not `UTC`) so comparing settings compares zones. Appearance is intentionally device-local; reminders/diet-rule settings and a settings-edit UI are not part of this increment.
 - A signed-in device without local history must successfully check the server before setup. It adopts an existing challenge instead of offering setup. Unreachable/missing-schema backends block *new setup*, not logging in an existing local challenge.
-- An existing local challenge uploads when the server has none. A unique owner constraint resolves a simultaneous insert race without overwriting either contender. If the local and server challenge identity/settings differ, synchronization stops with an error; the local history, server history, and pending records stay intact. There is no automatic merge/restart or resolution UI. Even identical start dates with different challenge identities are a conflict.
+- An existing local challenge uploads when the server has none. A unique owner constraint resolves a simultaneous insert race without overwriting either contender. If the local and server challenge identity/settings differ, synchronization stops with an error; the local history, server history, and pending records stay intact. There is no automatic merge/restart or resolution UI. Even identical start dates with different challenge identities are a conflict, and so are identical identities and start dates with different timezones.
+- Challenge reads select all columns, so a server without the timezone migration still syncs an existing Jersey challenge. Inserting new settings there fails because the column is missing; the app shows **The server needs the timezone update before this challenge can sync (see docs/production-sync.md)** and keeps all local history and pending work.
 
 Clock and setup policies were clarified by firstmate for this implementation on 8 October 2026. They resolve the open policy points in the sync/storage plan; they are not evidence of real-device acceptance.
 
 ## Local migration and durability
 
-`ChallengeStore` upgrades version 1 to version 2 in the **same account-scoped file**. It first validates the complete legacy snapshot, then creates an exclusive timestamped `challenge-<owner>.json.backup-<UTC timestamp>-<uuid>` copy alongside it. Only after that does it atomically write version 2. Failed backup/write operations throw; corrupt or unsupported files are never reset.
+`ChallengeStore` upgrades version 1 to version 2 in the **same account-scoped file**. A version-2 snapshot written before per-challenge timezones has no zone; it opens as Europe/Jersey and gains the zone on its next save. That is an additive field, not a format change, so it makes no migration backup. It first validates the complete legacy snapshot, then creates an exclusive timestamped `challenge-<owner>.json.backup-<UTC timestamp>-<uuid>` copy alongside it. Only after that does it atomically write version 2. Failed backup/write operations throw; corrupt or unsupported files are never reset.
 
 Migration retains start date, activity IDs, amounts, original timestamps, and specific undo targets. Legacy equal-timestamp append order is represented by deterministic `legacy-<ordinal>` origin metadata; new edits use a persisted random device ID. A new challenge identity and all pending IDs are committed together. The captain's start-today/two-450-ml-pour case is covered by a fixture, not by accessing real data. Version-2 reopens retain the identity and queue and do not create another migration backup.
 
@@ -50,11 +51,22 @@ The implementation worker must **not** perform these steps.
 
 Without the hosted migration, an existing local challenge keeps accepting local entries and shows a truthful sync error/pending count. A new empty device waits for a working server. This fallback is intentional.
 
+## Timezone update (owner only, once)
+
+`20261009000100_challenge_time_zone.sql` adds `challenges.time_zone` (`text not null default 'Europe/Jersey'`, non-empty) and lets authenticated owners include it when inserting. RLS policies, table SELECT and the UPDATE/DELETE denial are unchanged, so the zone is as immutable as the start date. The implementation worker must **not** apply it.
+
+1. Apply it **once, before installing the build that carries timezone setup** on any Mac. Open a new query at https://supabase.com/dashboard/project/ujyvvyrugenknhjodfhc/sql/new , copy the **complete** file and run it. It is transactional and deliberately fails, changing nothing, if the column already exists; on an error keep the text and arrange diagnosis rather than rerunning or dropping anything.
+2. The existing challenge row becomes `Europe/Jersey` automatically. Optionally confirm with `select owner_id, start_time, time_zone from public.challenges;` in the SQL Editor (administrative, read-only here). Do not run `supabase/tests/*.sql` in the hosted project.
+3. Install the new build as usual. The Mac with the real challenge needs no setup and shows no timezone picker; its start date, history, streaks and Jersey days are unchanged, and no new storage backup is made. The second Mac adopts the same challenge, including its zone, without setup.
+4. A friend who starts a new challenge chooses their own timezone at setup; their days follow it on every Mac they sign in to.
+
+If a build with timezone setup is installed first, an existing challenge keeps syncing (reads treat a missing zone as Jersey); only uploading a new challenge's settings waits, with the "server needs the timezone update" error, until step 1 is done.
+
 ## Two actual Macs: owner acceptance checklist
 
 Both are Apple Silicon, macOS 27.0.1. Installation policy and ad-hoc signing restrictions still apply; do not bypass OS/company controls. Record pass/fail on **each** Mac; automated fixture tests are not completion of these checks.
 
-- [ ] Same login restores after real relaunch; original Jersey start date and all existing entries survive migration. Timestamped pre-migration backup exists. No repeated setup on the second Mac.
+- [ ] Same login restores after real relaunch; original Jersey start date and timezone and all existing entries survive migration. Timestamped pre-migration backup exists. No repeated setup on the second Mac.
 - [ ] First Mac's original 900 ml plus subsequent real activity appears identically on both Macs; compare daily audit IDs/history and current/best streaks.
 - [ ] Add one distinct pour on each Mac offline. Relaunch while still offline, verify each local addition persists, reconnect, and verify both additions appear once on both Macs.
 - [ ] From a shared synchronized pour, disconnect both and undo that same pour on each; reconnect. One subtraction, both correction records, no resurrected pour after a later relaunch.

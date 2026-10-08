@@ -4,7 +4,7 @@
 
 The user approved connecting the local foundation to the native menu-bar popup.
 
-- Authenticated account → server adoption or explicit Jersey start-date setup; see [setup behavior](../README.md#first-mac-tracker-checks). All five requirements are explained.
+- Authenticated account → server adoption or explicit start-date and timezone setup (searchable picker defaulting to this Mac's zone; never shown when adopting); see [setup behavior](../README.md#first-mac-tracker-checks). All five requirements are explained.
 - Today → drawn 4 L jug, actual uncapped ml count, +450 ml, latest-pour undo, and validated custom amounts.
 - Workout (45 minutes, home/gym), walk (45 minutes), Bible (10 pages) → one-tap reversible marks.
 - Diet → pending/clean/missed cycle; right-click for direct selection. No invented food rules.
@@ -19,7 +19,7 @@ No Dock icon or ordinary main window. Supported system materials are used as the
 
 `TrackerModel` owns exactly one `ChallengeStore` for the current app account. Real activity is never added to `ProbeJournal` or the proof table. Signing out clears the visible account state but preserves its file; switching accounts loads only the new account's file.
 
-Each UI action refreshes the clock before choosing its target day. Today follows Jersey midnight. History selection stays fixed across midnight/wake, including when an edit is in progress; changing the selected date or returning to Today exits correction mode. Start-date setup never replaces an existing challenge.
+Each UI action refreshes the clock before choosing its target day. Today follows midnight in the challenge's timezone. History selection stays fixed across midnight/wake, including when an edit is in progress; changing the selected date or returning to Today exits correction mode. Start-date setup never replaces an existing challenge.
 
 Writes adopt the next UI state only after successful persistence. Save errors retain the previous amount/marks and show a message. Corrupt local history presents recovery/error UI, not setup or a reset. A fresh open, wake notification, visible-window refresh, and midnight refresh keep date/streak output current.
 
@@ -47,7 +47,7 @@ swift test
 bash scripts/test-sync-security.sh
 ```
 
-Interface tests cover appearance preference persistence/mapping and production-root backing/live inheritance, plus complete-day setup/relaunch, custom pours/undo/validation, correction locking and targeting, Jersey midnight, account switching/sign-out, failed saves, corrupt-file preservation, future-date/duplicate-setup rejection, and offscreen native layouts at popup width. Render fixtures use isolated temporary account data, not your actual challenge or credentials. Native views are captured from never-shown test windows; no screen-recording permission is needed.
+Interface tests cover appearance preference persistence/mapping and production-root backing/live inheritance, plus complete-day setup/relaunch, custom pours/undo/validation, correction locking and targeting, Jersey and Sydney midnight, zone-specific setup and reminders, account switching/sign-out, failed saves, corrupt-file preservation, future-date/duplicate-setup rejection, and offscreen native layouts at popup width. Render fixtures use isolated temporary account data, not your actual challenge or credentials. Native views are captured from never-shown test windows; no screen-recording permission is needed.
 
 To inspect the older Today/History layout fixtures (not the appearance regression):
 

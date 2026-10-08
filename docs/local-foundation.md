@@ -6,14 +6,14 @@ The user confirmed two test seams: challenge rules and durable local storage. `C
 
 ## Rules interface: Challenge
 
-A value containing one app account's challenge start date and append-only activity history.
+A value containing one app account's challenge start date, its timezone, and append-only activity history.
 
 - `record(_:on:at:id:)`: pour water, undo the latest active pour, change a habit mark, or change diet state. Dates/clock instants are supplied by the caller. A successful action returns its stable activity ID; undo with no active pour returns nil.
-- `summary(on:asOf:)`: active pours, true water total, habit marks, diet state, day status, and that Jersey day's interval.
+- `summary(on:asOf:)`: active pours, true water total, habit marks, diet state, day status, and that challenge day's interval.
 - `streaks(asOf:)`: current streak, best streak, and currently valid 75-day milestone dates.
 - `history(on:)`: read-only activity/correction history for a selected challenge day.
 
-`on` is an instant interpreted in Europe/Jersey, not the device timezone. `at` is the edit time; changing yesterday uses yesterday for `on` and the actual current instant for `at`. Start dates normalize to Jersey midnight. Callers should supply ordinary valid Date instants from setup/the clock.
+`on` is an instant interpreted in the challenge's own timezone (`Challenge.timeZone`, chosen at setup; `Europe/Jersey` for challenges and snapshots that predate it), not the device timezone. `at` is the edit time; changing yesterday uses yesterday for `on` and the actual current instant for `at`. Start dates normalize to midnight in that zone. Callers should supply ordinary valid Date instants from setup/the clock.
 
 All five requirements must be met on the same day. Workout, walk, and Bible reading are self-certified booleans; the UI will explain 45 minutes, 45 minutes, and 10 pages respectively. Diet is pending/clean/missed and requires no written rules text. Water uses positive integer millilitres with an exact 4,000 ml threshold; the main UI will supply 450 ml by default.
 
@@ -58,7 +58,7 @@ Use **one serialized writer per account per device**. This value-based snapshot 
 swift test --filter ChallengeCoreTests
 ```
 
-Tests (including parameterized cases) cover water threshold/overflow, undo audit history, same-ID retries, all five requirements, reversals, date restrictions, Jersey midnight and both DST transitions, historical gaps/corrections, diet failure timing, milestones beyond 75, complete storage round trips, account separation, corrupt-file rejection, and failure-safe writes. The write-failure test removes write permission from an isolated temporary directory and reopens the last saved state through the public store interface.
+Tests (including parameterized cases) cover water threshold/overflow, undo audit history, same-ID retries, all five requirements, reversals, date restrictions, midnight and both DST transitions in Europe/Jersey, America/New_York, Australia/Sydney and GMT, historical gaps/corrections, diet failure timing, milestones beyond 75, complete storage round trips, account separation, corrupt-file rejection, and failure-safe writes. The write-failure test removes write permission from an isolated temporary directory and reopens the last saved state through the public store interface.
 
 ## Next step
 

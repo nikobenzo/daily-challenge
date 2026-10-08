@@ -1,6 +1,6 @@
 # Daily Challenge — Agent Handoff
 
-Updated: 8 October 2026. Project: `the owner's clone`.
+Updated: 9 October 2026. Project: `the owner's clone`.
 
 ## Start here: production sync implemented; owner deployment and two-Mac acceptance next
 
@@ -11,6 +11,12 @@ Updated: 8 October 2026. Project: `the owner's clone`.
 The owner must follow the [exact hosted migration/install steps](docs/production-sync.md#owner-only-hosted-deployment) and [two-Mac acceptance checklist](docs/production-sync.md#two-actual-macs-owner-acceptance-checklist). Deploy the new migration once, sync the Mac containing the real challenge first, then let the second Mac adopt it. Preserve the existing login, start date, 900 ml plus later entries, and identifiers below. Never reset history to resolve a conflict. No cloud CI is configured.
 
 Appearance backing and the device-local setting remain implemented; [appearance verification](docs/appearance-verification.md) still distinguishes in-process renders from real-popup acceptance. Automated testing must never quit or replace the running app.
+
+## Per-challenge timezone (9 October)
+
+Each challenge now has an immutable IANA timezone, chosen at setup next to the start date and synced like it; every day boundary, streak, milestone, reminder window, midnight refresh and displayed date follows it instead of a fixed Europe/Jersey. Setup (`TrackerView.setup`, `TimeZonePicker.swift`) defaults to the Mac's zone with a searchable, region-grouped list showing each identifier and its current offset; adopting an existing challenge never shows it. `ChallengeDates.swift` (formerly `JerseyDates.swift`) is the per-challenge display/navigation helper. Europe/Jersey survives only as the default for legacy data: v2 snapshots and server rows without a zone, and version-1 exports (exports are now format 2). A zone-only settings difference is a conflict under the existing rule.
+
+**Owner step:** apply `20261009000100_challenge_time_zone.sql` once before installing this build ([timezone update](docs/production-sync.md#timezone-update-owner-only-once)); the existing row becomes Europe/Jersey. Until then an existing challenge still syncs, and only a new challenge's settings upload shows "the server needs the timezone update". Tests: zone-parameterised boundaries/DST/streaks (Jersey, New York, Sydney, GMT), record/snapshot/backup decoding across versions, zone-only conflicts, non-UK reminder planning, intercepted unmigrated-server SDK requests, and a PostgreSQL seed proving the default on a pre-existing row. Setup renders: `docs/screenshots/time-zone/`. **No hosted migration was applied and no running app, real data or Keychain was touched.** This ships to users only after automatic updates are live (firstmate's sequencing).
 
 ## Automatic updates implementation (9 October)
 
@@ -41,7 +47,7 @@ Fixture tests cover validation, round trips, undo, derived recalculation, backup
 ## What exists now
 
 - **Native SwiftUI menu-bar app**, no normal Dock icon/main window. Running bundle: `build/Daily Challenge.app`, version **0.2.0**. Archive: `build/DailyChallenge.zip`.
-- **Setup:** authenticated account, server adoption/preflight, explicit Jersey start-date choice only when no challenge exists, all five requirements explained. Setup cannot overwrite an existing challenge.
+- **Setup:** authenticated account, server adoption/preflight, explicit start-date and timezone choice only when no challenge exists, all five requirements explained. Setup cannot overwrite an existing challenge.
 - **Today:** drawn 4 L jug, uncapped actual ml count, +450 ml, latest-active-pour undo, custom positive whole-ml pours; reversible workout/walk/Bible marks; pending/clean/missed diet cycle and direct context-menu selection.
 - **Streaks:** current / 75, best, and valid milestone count. Tracking continues beyond 75.
 - **History:** monthly Monday-first calendar, day-state symbols, explicit **Edit this day** unlock, immediate selected-day corrections, and newest-first activity audit. Scroll to reach all controls/audit. Selection is not an edit; selecting another date exits correction mode.
@@ -59,7 +65,7 @@ Fixture tests cover validation, round trips, undo, derived recalculation, backup
 | `Sources/ChallengeCore/ChallengeSync.swift` | Immutable challenge settings/event wire records and injected transport seam |
 | `Sources/DailyChallengeProof/SupabaseChallengeTransport.swift` | Authenticated insert-ignore batches, owner-scoped paginated reads; proof-style transport |
 | `Sources/DailyChallengeProof/TrackerModel.swift` | Main-actor UI/sync coordinator, account generations, backoff, setup preflight and truthful status; one active writer |
-| `Sources/DailyChallengeProof/TrackerView.swift` | Root navigation/setup, Today, water/habit controls; visible-window/midnight/wake refresh |
+| `Sources/DailyChallengeProof/TrackerView.swift`, `TimeZonePicker.swift`, `ChallengeDates.swift` | Root navigation/setup and its timezone picker, Today, water/habit controls; visible-window/midnight/wake refresh; dates in the challenge's zone |
 | `Sources/DailyChallengeProof/WaterJugView.swift`, `TrackerMotion.swift`, `CompletionEffect.swift`, `PopupVisibility.swift` | Finite motion schedules, local celebration ledger, noninteractive effects and native visibility gating |
 | `Sources/DailyChallengeProof/HistoryTrackerView.swift` | Calendar, correction unlock, audit |
 | `Sources/DailyChallengeProof/DailyChallengeProofApp.swift` | App entry, MenuBarExtra, signed-out sign-in view (`ProofView`) |
@@ -110,11 +116,11 @@ The build script embeds **public** configuration from `.env.local`; standalone `
 ## Product invariants
 
 - All five daily requirements: **4,000 ml water, 45-minute workout (home/gym), 45-minute walk, clean diet, 10 Bible pages**. Non-water activities are self-certified; no rest-day exemptions or invented food rules.
-- Every day is defined by **Europe/Jersey**, including DST, independently of device timezone. Earlier-than-start and future dates cannot be completed. Unrecorded closed tracked dates are missed.
+- Every day is defined by the **challenge's own timezone** (chosen at setup; Europe/Jersey for challenges and data that predate it), including DST, independently of device timezone. Earlier-than-start and future dates cannot be completed. Unrecorded closed tracked dates are missed.
 - Incomplete or explicitly missed **today** preserves the consecutive complete run through yesterday until midnight. Add today when complete. Corrections recalculate current/best streaks and valid 75-day milestones from history.
 - Each pour has a stable ID; undo references a specific pour, not a mutable total. Keep correction history. Local command retries require the original ID and edit timestamp.
 - Local snapshot storage has one serialized writer per account/device. Production ordering is client timestamp → device ID → event ID; server receipt never reorders edits. A >5-minute receipt/client difference warns without dropping edits (offline delay also qualifies). Independent pours union; duplicate undos target one pour. Full immutable event history prevents resurrection.
-- Shared start-date settings are immutable. Empty devices check the server/adopt before setup; offline new setup waits. Different challenge identities/settings stop sync and preserve both histories. There is no conflict-resolution UI in this increment.
+- Shared settings (start date and timezone) are immutable. Empty devices check the server/adopt before setup; offline new setup waits. Different challenge identities/settings stop sync and preserve both histories. There is no conflict-resolution UI in this increment.
 
 ## Backend and outstanding acceptance
 

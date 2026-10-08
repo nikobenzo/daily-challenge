@@ -1,8 +1,9 @@
 # Water reminders
 
 Account settings, next to Appearance, contain an opt-in **Water reminders on this
-Mac** toggle, interval, and Jersey active window. Default: off, every 90 minutes,
-09:00–21:00 Europe/Jersey. Defaults yield 09:00, 10:30, 12:00, 13:30, 15:00,
+Mac** toggle, interval, and active window in the challenge's timezone. Default: off,
+every 90 minutes, 09:00–21:00 in that timezone (Europe/Jersey for challenges
+started before timezones were chosen). Defaults yield 09:00, 10:30, 12:00, 13:30, 15:00,
 16:30, 18:00, 19:30, 21:00. The end is inclusive only when it is an anchored slot.
 Intervals are configurable from 15 to 240 minutes (UI steps of 15); the window
 is same-day, with minute precision. Invalid/reversed windows are not saved.
@@ -17,15 +18,15 @@ toggle is not evidence that macOS authorized notification delivery.
 ## Scheduling and limits
 
 - Pure `ChallengeCore/WaterReminders.swift` injects a clock and computes strictly
-  future Jersey calendar slots through the scheduling horizon, independently of
-  device timezone. Eligibility uses each slot's day's locally known water total.
+  future calendar slots in the challenge's timezone through the scheduling
+  horizon, independently of device timezone. Eligibility uses each slot's day's locally known water total.
   A configured midnight slot can therefore be queued in the preceding minute,
   even when the preceding day is complete. DST missing times are skipped;
   repeated wall times are used once, first occurrence.
 - `WaterReminderController` uses a fakeable centre and a thin native adapter. It
   schedules **at most one request within the next minute**, checking every 15
   seconds independently of popup visibility. Requests use absolute date
-  components with Europe/Jersey, never repeating intervals. The app must be
+  components in the challenge's timezone, never repeating intervals. The app must be
   running and awake; this is not a background service or launch-at-login feature.
 - Local edits, incoming synced activity, account changes, periodic day rollover,
   settings/permission changes and wake reconcile the pending request. Sleep and
@@ -52,6 +53,7 @@ toggle is not evidence that macOS authorized notification delivery.
 
 `swift test` covers the pure planner (default slots, inclusive 21:00 boundary,
 custom windows/intervals, goal/undo, midnight, both Jersey DST transitions,
+New York and Sydney windows including Sydney's skipped hour,
 missing/repeated local times) and fake-centre reconciliation (grant/denial,
 authorization/add failures, preferences, completion/undo, sign-out, stale async
 add, sleep/wake, day rollover, history selection and actual incoming sync).
@@ -80,7 +82,7 @@ two writers. Keep the same app login and identifiers; never reset challenge data
   the native permission request if offered. If refused/denied, inspect System
   Settings > Notifications > Daily Challenge. Record real authorization state;
   do not bypass device policy or signing controls.
-- [ ] Keep the app running and awake through a future eligible Jersey slot;
+- [ ] Keep the app running and awake through a future eligible slot;
   confirm real delivery with permission allowed. Record Focus/system limitations
   separately; fake-centre success does not prove this check.
 - [ ] Change interval/window and verify only new future slots, including 21:00
@@ -90,7 +92,7 @@ two writers. Keep the same app login and identifiers; never reset challenge data
 - [ ] Complete on the other Mac, sync to the reminding Mac, and confirm
   cancellation. Repeat while offline to understand why cancellation must wait.
 - [ ] Sleep across slots, wake, and relaunch after missed slots: no burst. Check
-  outside-window behavior, next Jersey day, and DST when applicable; automated
+  outside-window behavior, the challenge's next day, and DST when applicable; automated
   tests cover transitions without changing the Mac's clock or timezone.
 - [ ] Relaunch preserves this Mac's settings, without enabling the other Mac.
   Denying/revoking permission is reported truthfully rather than as active delivery.
