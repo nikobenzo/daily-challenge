@@ -131,6 +131,18 @@ struct AccountViewTests {
                 .trackerSurface()
             try render(view, name: expanded ? "account-tab-advanced" : "account-tab", appearance: appearance)
         }
+        // The Change password row opened, with a mismatch the form explains.
+        auth.newPassword = "secret-1"
+        auth.passwordConfirmation = "secret-2"
+        let passwordForm = AccountView(auth: auth, tracker: model, version: version, changingPassword: true)
+            .padding(16).frame(width: 420)
+            .environment(appearance)
+            .environment(\.calendar, JerseyDates.calendar)
+            .environment(\.timeZone, JerseyDates.calendar.timeZone)
+            .trackerSurface()
+        try render(passwordForm, name: "account-tab-change-password", appearance: appearance)
+        auth.newPassword = ""
+        auth.passwordConfirmation = ""
         try render(TrackerPopup(model: model, auth: auth, appearance: appearance, section: .account),
                    name: "account-tab-popup", appearance: appearance)
     }

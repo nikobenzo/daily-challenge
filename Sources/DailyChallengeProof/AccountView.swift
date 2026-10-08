@@ -11,6 +11,9 @@ struct AccountView: View {
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @State var showsAdvanced = false
     @State private var signOutError: String?
+    @State var changingPassword = false
+    @State private var passwordError: String?
+    @State private var passwordSaved = false
 
     private var reduceMotion: Bool { reduceMotionOverride ?? systemReduceMotion }
 
@@ -49,6 +52,8 @@ struct AccountView: View {
         .onChange(of: auth.ownerID) { _, _ in
             showsAdvanced = false
             signOutError = nil
+            closePasswordForm()
+            passwordSaved = false
         }
     }
 
@@ -129,21 +134,24 @@ struct AccountView: View {
 
     private var account: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Placeholder for the change-password flow; enabled once it exists.
-            Button {} label: {
+            Button {
+                if changingPassword { closePasswordForm() } else { openPasswordForm() }
+            } label: {
                 HStack {
                     Text("Change password")
                     Spacer()
-                    Text("Coming soon").font(.caption)
-                    Image(systemName: "chevron.right").accessibilityHidden(true)
+                    if passwordSaved && !changingPassword {
+                        Text("Changed").font(.caption).foregroundStyle(.secondary)
+                    }
+                    Image(systemName: changingPassword ? "chevron.down" : "chevron.right").accessibilityHidden(true)
                 }
-                .foregroundStyle(.secondary)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .disabled(true)
-            .accessibilityHint("Coming soon")
-            .help("Changing your password from the app is coming soon.")
+            .disabled(auth.isBusy)
+            .accessibilityHint(changingPassword ? "Hides the new password form" : "Shows a form to choose a new password")
+            .help("Choose a new password for this account. Your other Macs stay signed in.")
+            if changingPassword { passwordForm }
             HStack {
                 Text("Sign out on this Mac")
                 Spacer()
@@ -159,6 +167,72 @@ struct AccountView: View {
             if let signOutError {
                 Text("Couldn't sign out. \(signOutError)").font(.caption).foregroundStyle(.red)
                     .textSelection(.enabled)
+            }
+        }
+    }
+
+    private var passwordForm: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SecureField("New password", text: $auth.newPassword)
+                .textFieldStyle(.roundedBorder)
+                .textContentType(.newPassword)
+            SecureField("Type the new password again", text: $auth.passwordConfirmation)
+                .textFieldStyle(.roundedBorder)
+                .textContentType(.newPassword)
+                .onSubmit(savePassword)
+            if !auth.passwordConfirmation.isEmpty, auth.newPassword != auth.passwordConfirmation {
+                Text("The passwords don't match yet.").font(.caption).foregroundStyle(.orange)
+            } else if !auth.newPassword.isEmpty, auth.newPassword.count < ProofModel.minimumPasswordLength {
+                Text("Use at least \(ProofModel.minimumPasswordLength) characters.").font(.caption).foregroundStyle(.secondary)
+            }
+            if let passwordError {
+                Label(passwordError, systemImage: "exclamationmark.triangle.fill")
+                    .font(.caption).foregroundStyle(.red)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .textSelection(.enabled)
+                    .accessibilityLabel("Error: \(passwordError)")
+            }
+            HStack {
+                Button("Save password", action: savePassword)
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(!canSavePassword)
+                Button("Cancel", action: closePasswordForm)
+                Spacer()
+                if auth.isBusy { ProgressView().controlSize(.small) }
+            }
+        }
+        .disabled(auth.isBusy)
+        .padding(.leading, 12)
+    }
+
+    private var canSavePassword: Bool {
+        auth.newPassword.count >= ProofModel.minimumPasswordLength && auth.newPassword == auth.passwordConfirmation
+    }
+
+    private func openPasswordForm() {
+        auth.newPassword = ""
+        auth.passwordConfirmation = ""
+        passwordError = nil
+        passwordSaved = false
+        changingPassword = true
+    }
+
+    /// Never leaves a typed password behind in the model.
+    private func closePasswordForm() {
+        auth.newPassword = ""
+        auth.passwordConfirmation = ""
+        passwordError = nil
+        changingPassword = false
+    }
+
+    private func savePassword() {
+        guard canSavePassword else { return }
+        Task {
+            if await auth.changePassword(new: auth.newPassword) {
+                closePasswordForm()
+                passwordSaved = true
+            } else {
+                passwordError = auth.errorMessage
             }
         }
     }

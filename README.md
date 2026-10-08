@@ -62,7 +62,7 @@ Automated fixture coverage includes round trips, rejection/preservation, backup 
 
 ## Account / sync-diagnostics checks
 
-The signed-in Account tab is one plain-language grouped list: You (email, day count and start date), Sync (the footer's status in plain words, with Sync now), Reminders, Appearance & startup, Your data, Account (Change password, coming soon; Sign out), About (version) and a collapsed **Advanced** disclosure holding the test-message diagnostics below. See [fixture renders](docs/screenshots/account-tab/).
+The signed-in Account tab is one plain-language grouped list: You (email, day count and start date), Sync (the footer's status in plain words, with Sync now), Reminders, Appearance & startup, Your data, Account (Change password, which opens an inline new-password form; Sign out), About (version) and a collapsed **Advanced** disclosure holding the test-message diagnostics below. See [fixture renders](docs/screenshots/account-tab/).
 
 1. Quit any running older proof app before reopening the rebuilt app.
 2. Enter the manually provisioned app user's email and password and click **Sign in**. No email link/code is sent. The password field clears after each attempt; only session tokens persist in Keychain.

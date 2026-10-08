@@ -14,7 +14,7 @@ Appearance backing and the device-local setting remain implemented; [appearance 
 
 ## Self sign-up and password reset (8 October)
 
-The signed-out popup (`AuthView.swift`) offers Sign in, Create account and Forgot password, each code step with a 60-second Resend code countdown. `ProofModel` adds `signUp`, `confirmSignUp`, `requestPasswordReset`, `completePasswordReset`, `resendCode` and `changePassword(new:)` (for the Account tab's Change password row). A nil session after sign-up means "code required". [Owner checklist, SDK mapping and known behaviour](docs/sign-up-setup.md); [friends guide](docs/getting-started-for-friends.md). Tests are intercepted-transport only; **no hosted sign-up, dashboard change or real email send was performed**. Owner acceptance is the checklist's step 6.
+The signed-out popup (`AuthView.swift`) offers Sign in, Create account and Forgot password, each code step with a 60-second Resend code countdown. `ProofModel` adds `signUp`, `confirmSignUp`, `requestPasswordReset`, `completePasswordReset`, `resendCode` and `changePassword(new:)`, which backs the Account tab's Change password row (inline form, fixture `docs/screenshots/account-tab/account-tab-change-password-*.png`). A nil session after sign-up means "code required". [Owner checklist, SDK mapping and known behaviour](docs/sign-up-setup.md); [friends guide](docs/getting-started-for-friends.md). Tests are intercepted-transport only; **no hosted sign-up, dashboard change or real email send was performed**. Owner acceptance is the checklist's step 6.
 
 ## Water reminders implementation (8 October)
 

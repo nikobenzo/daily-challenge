@@ -13,7 +13,7 @@ Until the owner completes the dashboard steps below, existing sign-in keeps work
 | Resend code (sign-up) | `auth.resend(email:type: .signup)` | New code; the link shows the 60-second wait instead of a dead button |
 | Forgot password? | `auth.resetPasswordForEmail(_:)` | Same answer whether or not the address has an account |
 | Choose a new password | `auth.verifyOTP(email:token:type: .recovery)`, then `auth.update(user: UserAttributes(password:))` | The recovery code signs the person in, then the new password is saved for that session |
-| Change password (Account tab, wired by the Account tab task) | `ProofModel.changePassword(new:)` → `auth.update(user:)` | Requires a signed-in session |
+| Account → Change password | `ProofModel.changePassword(new:)` → `auth.update(user:)` | Requires a signed-in session; the inline form clears both fields on save, failure or Cancel |
 
 The existing rules still hold: password fields (`password`, `passwordConfirmation`, `newPassword`) and the code are cleared after every attempt, success or failure, and when switching screens. Passwords are sent only to Supabase Auth and never stored. Sessions stay in the existing Keychain item. Sign-out stays local-scope. Email addresses are trimmed the same way as sign-in. Error text is plain English for the cases a person can act on and the server's own message otherwise.
 
@@ -108,6 +108,7 @@ Use an address you control that is **not** the existing account, for example a G
 - [ ] Preferably on a Mac that is not signed in to the real account. If you use your own Mac, wait for a synced challenge footer first, then **Sign out on this Mac**. Local data for each account is kept separately and returns when you sign back in.
 - [ ] **Create account** → the code arrives from `Daily Challenge <no-reply@mail.nextsyntesys.com>` within a minute (check spam). Resend → **Emails** shows it as delivered.
 - [ ] Wrong code → "That code is wrong or has expired…". **Resend code** shows a countdown, then sends a new code. Correct code → signed in, challenge setup appears.
+- [ ] Account → **Change password** → new password → "Changed". Sign out and sign in with it.
 - [ ] Sign out, **Forgot password?** → code arrives → new password → signed in. Sign out and sign in with the new password.
 - [ ] Create account again with the same address → "An account with this email already exists, try signing in."
 - [ ] Sign back in to the real account and check the challenge, water and history are unchanged.
