@@ -8,4 +8,21 @@ build/
 DerivedData/
 *.xcuserstate
 xcuserdata/
+
+# Release and signing artifacts: never commit these.
 releases/
+dist/
+*.zip
+*.dmg
+*.xcarchive
+*.p12
+*.p8
+*.pem
+*.key
+*.cer
+*.mobileprovision
+# Sparkle EdDSA private key exports (generate_keys -x <file>); the key stays in the Keychain.
+*private[-_]key*
+*private[-_]ed25519*
+sparkle_*private*
+.claude/settings.local.json

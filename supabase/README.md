@@ -6,6 +6,8 @@ The diagnostic proof and production challenge schema are separate. `202610080001
 
 Follow the [exact hosted migration/install steps and two-Mac checklist](../docs/production-sync.md#owner-only-hosted-deployment). In a new SQL Editor query at https://supabase.com/dashboard/project/ujyvvyrugenknhjodfhc/sql/new, the owner copies the complete `supabase/migrations/20261008000200_challenge_sync.sql` and runs it **once**, after the proof migration. Do not rerun the proof migration, drop tables, or apply test SQL to the hosted project. Stop and report any migration error. Automated workers must never apply migrations or use hosted credentials.
 
+`20261009000200_abuse_limits.sql` bounds event size, shape and dates and the challenge settings, and caps rows per account; apply it after the timezone migration, only through the [abuse limits checklist](../docs/abuse-limits.md#owner-only-hosted-steps), after calibrating against existing rows.
+
 Production SELECT/INSERT policies require the authenticated owner on both tables. Composite foreign keys and RLS protect event children and undo references; client UPDATE/DELETE and receipt-time forgery are denied. The local harness tests both schemas. Existing local tracking remains usable with pending/error status if production tables are not deployed; empty-device setup waits for a successful server check.
 
 The remaining sections describe the retained **diagnostic proof**, not production activity.
@@ -40,7 +42,7 @@ bash scripts/test-sync-security.sh
 
 Prerequisites: PostgreSQL's `initdb`, `pg_ctl`, and `psql` on PATH. The harness creates a temporary database on a private local Unix socket, applies the actual migration, runs role-based tests, and removes it afterward. Seeds in `supabase/tests/before-migration/<migration file name>` run just before that migration, so a test can check rows that already existed when it was applied; every migration is also re-run once and must fail without changes. No hosted credentials or Docker are needed.
 
-Tests cover both schemas: own-user access, cross-user isolation, forged ownership, challenge-child and undo ownership, anonymous denial, missing identity reads, prohibited update/delete, receipt-time forgery, invalid proof messages, duplicate insert retries, and the timezone column's default for existing rows, owner-only insert, immutability and unchanged policies. The local harness supplies a minimal stand-in for Supabase Auth; live JWT validation, email delivery, native session persistence, network retry/reconciliation, and work-Mac installation remain to be tested with the actual app.
+Tests cover both schemas and the abuse limits: own-user access, cross-user isolation, forged ownership, challenge-child and undo ownership, anonymous denial, missing identity reads, prohibited update/delete, receipt-time forgery, invalid proof messages, duplicate insert retries, and the timezone column's default for existing rows, owner-only insert, immutability and unchanged policies. The local harness supplies a minimal stand-in for Supabase Auth; live JWT validation, email delivery, native session persistence, network retry/reconciliation, and work-Mac installation remain to be tested with the actual app.
 
 ## Next gate
 

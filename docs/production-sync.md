@@ -62,6 +62,10 @@ Without the hosted migration, an existing local challenge keeps accepting local 
 
 If a build with timezone setup is installed first, an existing challenge keeps syncing (reads treat a missing zone as Jersey); only uploading a new challenge's settings waits, with the "server needs the timezone update" error, until step 1 is done.
 
+## Abuse limits (owner only, once, before going public)
+
+After the timezone update, and before the app or repository is public, the owner applies `20261009000200_abuse_limits.sql`, which bounds event size and shape, the challenge settings, and rows per account. Follow the calibrate-first [abuse limits checklist](abuse-limits.md#owner-only-hosted-steps), which also covers the Realtime public-access setting and the Security Advisor check. The implementation worker must **not** apply it.
+
 ## Two actual Macs: owner acceptance checklist
 
 Both are Apple Silicon, macOS 27.0.1. Installation policy and ad-hoc signing restrictions still apply; do not bypass OS/company controls. Record pass/fail on **each** Mac; automated fixture tests are not completion of these checks.

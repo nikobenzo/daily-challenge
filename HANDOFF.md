@@ -1,6 +1,6 @@
 # Daily Challenge — Agent Handoff
 
-Updated: 9 October 2026. Project: `the owner's clone`.
+Updated: 9 October 2026. Project: the owner's clone of this repository.
 
 ## Start here: production sync implemented; owner deployment and two-Mac acceptance next
 

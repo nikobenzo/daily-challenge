@@ -99,7 +99,7 @@ On **Authentication → Sign In / Providers**, in the **User Signups** section:
 1. **Confirm email**: keep it **on**. (Supabase's general-configuration doc still places this under the Email provider; the current dashboard shows it in User Signups.)
 2. **Allow new users to sign up**: turn it **on**. Do this last.
 
-With **Confirm email** and **Confirm phone** both on, signing up with an address that already has an account returns a decoy user and sends no email, so Supabase does not reveal which addresses exist. The app recognises the decoy and shows "An account with this email already exists, try signing in." If Confirm phone is off, Supabase returns `User already registered` instead and the app shows the same message, but the server has then revealed that the address is registered.
+With **Confirm email** and **Confirm phone** both on, signing up with an address that already has an account returns a decoy user and sends no email. The decoy still reveals that the address is registered: its `identities` list is empty, which is exactly how the app recognises it and shows "An account with this email already exists, try signing in." Anyone with the publishable key can make the same check, limited only by Supabase's per-IP rate limit on sign-up requests. If Confirm phone is off, Supabase returns `User already registered` instead and the app shows the same message. Signing in to an unconfirmed account also returns `email_not_confirmed`. The invite-only hook in step 7 narrows this: an address that is not on the list gets the hook's 403 instead, so only list membership can be probed.
 
 ### 6. Owner acceptance
 
@@ -114,17 +114,19 @@ Use an address you control that is **not** the existing account, for example a G
 - [ ] Sign back in to the real account and check the challenge, water and history are unchanged.
 - [ ] VoiceOver and keyboard: Tab moves through the fields, Return submits, the code field announces "6-digit code from the email", errors are read as "Error: …".
 
-### 7. Later hardening (optional): only invited addresses can sign up
+### 7. Optional hardening: only invited addresses can sign up
 
-Anyone with the app, which embeds the public project URL and publishable key, can create an account. Row-level security keeps their data separate, so this is acceptable for a family. To restrict sign-ups to invited addresses later, use the **Before User Created** hook (**Authentication → Auth Hooks**; available on the Free plan). It runs only when a new user is created, so existing accounts and sign-ins are unaffected.
+Sign-ups stay open to anyone by the owner's decision. Anyone with the app, which embeds the public project URL and publishable key, can create an account. Row-level security keeps their data separate, and the [abuse limits](abuse-limits.md) cap what any one account can store. Open sign-up still lets a stranger use up the project-wide email quota (30 per hour), so friends' codes stop arriving; see [If abuse appears](#if-abuse-appears). If invite-only sign-up is ever wanted, use the **Before User Created** hook (**Authentication → Auth Hooks**; available on the Free plan). It runs only when a new user is created, so existing accounts and sign-ins are unaffected.
 
-The sketch below has **not** been run by the implementation worker. Try it first in a disposable local Supabase stack, then in the SQL Editor, then select it as the Before User Created hook (Postgres function) in Auth Hooks. Do not copy the domain example from the Supabase docs as-is; it reads the wrong value.
+The sketch below has been checked only on a disposable local PostgreSQL with Supabase's default `public` privileges emulated (a listed address returns `{}`, a stranger gets the 403, and `anon` and `authenticated` can neither read the list nor call the function), not on a real Supabase stack. Try it first in a disposable local Supabase stack, then in the SQL Editor, then select it as the Before User Created hook (Postgres function) in Auth Hooks. Do not copy the domain example from the Supabase docs as-is; it reads the wrong value.
 
 ```sql
 create table public.allowed_signup_emails (
   email text primary key check (email = lower(email))
 );
 alter table public.allowed_signup_emails enable row level security;
+-- Supabase grants new public tables to the client roles by default; undo that.
+revoke all on public.allowed_signup_emails from anon, authenticated;
 -- No client policies: only the Auth server reads this table.
 create policy "auth admin reads allowlist" on public.allowed_signup_emails
   for select to supabase_auth_admin using (true);
@@ -133,6 +135,7 @@ grant select on public.allowed_signup_emails to supabase_auth_admin;
 create function public.hook_allow_listed_signups(event jsonb)
 returns jsonb
 language plpgsql
+set search_path = ''
 as $$
 begin
   if exists (
@@ -153,6 +156,22 @@ revoke execute on function public.hook_allow_listed_signups from authenticated, 
 ```
 
 Add a friend with `insert into public.allowed_signup_emails values ('friend@example.com');` in the SQL Editor. The app shows the hook's message as written.
+
+## If abuse appears
+
+Signs: friends' codes stop arriving, Resend shows unfamiliar recipients, or the database grows quickly. Owner-only steps, in this order:
+
+1. **Stop new accounts in one step.** **Authentication → Sign In / Providers → User Signups**, turn **Allow new users to sign up** off and save. Existing accounts keep signing in and syncing; Create account in the app then says "New accounts are switched off for this app right now…". Turn it back on when things are quiet.
+2. **Check database size and who is writing.** In the SQL Editor (read-only):
+
+   ```sql
+   select pg_size_pretty(pg_database_size(current_database()));
+   select owner_id, count(*), max(octet_length(activity::text)) from public.challenge_events group by 1 order by 2 desc;
+   select owner_id, count(*) from public.sync_probe_entries group by 1 order by 2 desc;
+   ```
+
+   The Free plan becomes read-only above 500 MB. No account can exceed 10,000 events or 200 probe rows ([abuse limits](abuse-limits.md)), so a fast-growing database means many accounts. Match an `owner_id` to an address under **Authentication → Users**. Do not delete rows or users without a plan: `challenges.owner_id` has no `on delete cascade` (see Known behaviour).
+3. **Email quota.** **Authentication → Rate Limits → Rate limit for sending emails** is the project-wide cap, 30 per hour since custom SMTP was set up in step 2 of the dashboard setup. Leave it there or lower it during an attack; never raise it above the Resend free plan. Supabase also limits sign-up, resend and recovery requests per IP address and sends each address at most one email per 60 seconds.
 
 ## Known behaviour
 
