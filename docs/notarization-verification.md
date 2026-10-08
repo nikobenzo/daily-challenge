@@ -63,4 +63,29 @@ Runtime behaviour of the signed app (Keychain prompt, login item, notifications)
 
 ## Notarization and stapling
 
-Pending: the `dc-notary` keychain profile did not exist yet (`xcrun notarytool history --keychain-profile dc-notary` exited 69, "No Keychain password item found for profile: dc-notary").
+Before the profile existed, the default build stopped after signing with `Notarization credential profile "dc-notary" is missing or invalid.` (`notarytool history` exit 69). Once the owner stored `dc-notary`, the full default build (`bash scripts/build-proof.sh`, no flags) exited 0. Apple took about 35 minutes for this first submission.
+
+```
+Submission ID received
+  id: 3b86bf78-5665-4a8e-8d6a-95b490240431
+Processing complete
+  id: 3b86bf78-5665-4a8e-8d6a-95b490240431
+  status: Accepted
+
+$ xcrun stapler staple "build/Daily Challenge.app"
+The staple and validate action worked!
+$ xcrun stapler validate "build/Daily Challenge.app"
+The validate action worked!
+
+$ spctl --assess --type execute -vv "build/Daily Challenge.app"
+build/Daily Challenge.app: accepted
+source=Notarized Developer ID
+origin=Developer ID Application: Mykola Yakovetskyi (L644Y3WX5T)
+
+Built (Developer ID signed, notarized, stapled): build/Daily Challenge.app
+Share: build/DailyChallenge.zip
+```
+
+`xcrun notarytool log 3b86bf78-… --keychain-profile dc-notary`: `Accepted`, "Ready for distribution", issues `None`. The temporary submit zip was removed.
+
+`build/DailyChallenge.zip` (3.1 MB) was extracted to a scratch folder and checked again: `stapler validate` worked and `spctl` reported `accepted`, `source=Notarized Developer ID`, so the shared zip carries the stapled app. Nothing was uploaded anywhere except the Apple notary service.
