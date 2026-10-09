@@ -8,6 +8,8 @@ Follow the [exact hosted migration/install steps and two-Mac checklist](../docs/
 
 `20261009000200_abuse_limits.sql` bounds event size, shape and dates and the challenge settings, and caps rows per account; apply it after the timezone migration, only through the [abuse limits checklist](../docs/abuse-limits.md#owner-only-hosted-steps), after calibrating against existing rows.
 
+`20261010000100_extras_action_kinds.sql` widens that action-kind check to the three daily checklist extras kinds; apply it after abuse limits and before releasing the build with extras, following the [extras update](../docs/production-sync.md#extras-update-owner-only-once).
+
 Production SELECT/INSERT policies require the authenticated owner on both tables. Composite foreign keys and RLS protect event children and undo references; client UPDATE/DELETE and receipt-time forgery are denied. The local harness tests both schemas. Existing local tracking remains usable with pending/error status if production tables are not deployed; empty-device setup waits for a successful server check.
 
 The remaining sections describe the retained **diagnostic proof**, not production activity.

@@ -62,6 +62,15 @@ Without the hosted migration, an existing local challenge keeps accepting local 
 
 If a build with timezone setup is installed first, an existing challenge keeps syncing (reads treat a missing zone as Jersey); only uploading a new challenge's settings waits, with the "server needs the timezone update" error, until step 1 is done.
 
+## Extras update (owner only, once)
+
+`20261010000100_extras_action_kinds.sql` lets the server accept the three [daily checklist extras](tracker-interface.md#daily-checklist-extras) event kinds (`defineExtra`, `archiveExtra`, `setExtra`). It only widens the abuse-limit action-kind check (`challenge_events_action_kind` becomes `challenge_events_action_kind_v2` with the same rule plus those three names); size, keys, dates, row caps, RLS and grants are unchanged. The implementation worker must **not** apply it.
+
+1. Apply it **once, after `20261009000200_abuse_limits.sql` and before releasing the build with extras** to any Mac. Open a new query at https://supabase.com/dashboard/project/ujyvvyrugenknhjodfhc/sql/new , copy the **complete** file and run it. Expect "Success. No rows returned". It is transactional: if abuse limits are not applied yet, or it already ran, it stops with `constraint "challenge_events_action_kind" of relation "challenge_events" does not exist` and changes nothing. Keep any error text; do not drop constraints or rerun blindly.
+2. Optionally confirm (read-only): `select conname, convalidated from pg_constraint where conname like 'challenge_events_action_kind%';` shows only `challenge_events_action_kind_v2`, validated.
+
+**Why first:** without it, the first extras event a Mac uploads is rejected (`23514`), and because uploads are batched, the other changes pending in that batch wait with it. Sync shows an error, nothing is lost, and everything uploads once the migration is applied. An app from before extras cannot decode extras rows at all: builds that skip unreadable rows show "could not be read and were skipped" and keep syncing everything else, while older builds stop syncing until updated. Update every Mac (automatic updates) before relying on extras.
+
 ## Abuse limits (owner only, once, before going public)
 
 After the timezone update, and before the app or repository is public, the owner applies `20261009000200_abuse_limits.sql`, which bounds event size and shape, the challenge settings, and rows per account. Follow the calibrate-first [abuse limits checklist](abuse-limits.md#owner-only-hosted-steps), which also covers the Realtime public-access setting and the Security Advisor check. The implementation worker must **not** apply it.
