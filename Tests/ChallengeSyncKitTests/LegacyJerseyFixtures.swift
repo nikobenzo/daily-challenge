@@ -1,7 +1,6 @@
 import ChallengeCore
 import Foundation
 @testable import ChallengeSyncKit
-@testable import DailyChallengeProof
 
 // Fixtures written before per-challenge timezones describe Jersey challenges.
 // Production code always passes a zone; these keep those fixtures explicit.

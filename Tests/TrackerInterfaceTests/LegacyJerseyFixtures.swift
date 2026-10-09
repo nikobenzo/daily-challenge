@@ -1,5 +1,6 @@
 import ChallengeCore
 import Foundation
+@testable import ChallengeSyncKit
 @testable import DailyChallengeProof
 
 // Fixtures written before per-challenge timezones describe Jersey challenges.

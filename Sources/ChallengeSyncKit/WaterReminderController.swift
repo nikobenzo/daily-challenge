@@ -1,15 +1,14 @@
-import AppKit
 import ChallengeCore
 import Foundation
 import Observation
 import UserNotifications
 
-enum WaterNotificationPermission: Equatable {
+public enum WaterNotificationPermission: Equatable, Sendable {
     case notDetermined, denied, allowed, unknown
 }
 
 @MainActor
-protocol WaterNotificationCenter: AnyObject {
+public protocol WaterNotificationCenter: AnyObject {
     func permission() async -> WaterNotificationPermission
     func requestPermission() async throws
     func cancel()
@@ -18,21 +17,21 @@ protocol WaterNotificationCenter: AnyObject {
 
 /// Owns just one identifier; never removes another feature's notifications.
 @MainActor
-final class NativeWaterNotificationCenter: NSObject, WaterNotificationCenter, UNUserNotificationCenterDelegate {
+public final class NativeWaterNotificationCenter: NSObject, WaterNotificationCenter, UNUserNotificationCenterDelegate {
     private let center = UNUserNotificationCenter.current()
     private let identifier = "daily-challenge.water.next"
 
-    override init() {
+    override public init() {
         super.init()
         center.delegate = self
     }
 
-    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,
+    public nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,
         willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
         [.banner, .sound]
     }
 
-    func permission() async -> WaterNotificationPermission {
+    public func permission() async -> WaterNotificationPermission {
         switch await center.notificationSettings().authorizationStatus {
         case .notDetermined: .notDetermined
         case .denied: .denied
@@ -41,15 +40,15 @@ final class NativeWaterNotificationCenter: NSObject, WaterNotificationCenter, UN
         }
     }
 
-    func requestPermission() async throws {
+    public func requestPermission() async throws {
         _ = try await center.requestAuthorization(options: [.alert, .sound])
     }
 
-    func cancel() {
+    public func cancel() {
         center.removePendingNotificationRequests(withIdentifiers: [identifier])
     }
 
-    func schedule(at date: Date, timeZone: TimeZone) async throws {
+    public func schedule(at date: Date, timeZone: TimeZone) async throws {
         let content = UNMutableNotificationContent()
         content.title = "Water check-in"
         content.body = "Check today's water log. If you're below 4,000 ml, drink only what you still need toward your goal."
@@ -62,18 +61,20 @@ final class NativeWaterNotificationCenter: NSObject, WaterNotificationCenter, UN
     }
 }
 
-/// Reconciles independently of the popup's lifetime. A short rolling horizon
+/// Reconciles independently of any window's lifetime. A short rolling horizon
 /// keeps at most one pending request. Sleep clears it; wake plans future slots
-/// only. macOS still owns actual delivery (including Focus and system delays).
+/// only. The system still owns actual delivery (including Focus and system delays).
+/// Each app drives `sleep()`, `wake()` and periodic refreshes from its own lifecycle.
 @MainActor @Observable
-final class WaterReminderController {
-    static let defaultsKey = "water-reminders.device.v1"
-    private(set) var settings: WaterReminderSettings
-    private(set) var permission: WaterNotificationPermission = .unknown
-    private(set) var errorMessage: String?
-    private(set) var scheduledDate: Date?
+public final class WaterReminderController {
+    public static let defaultsKey = "water-reminders.device.v1"
+    public private(set) var settings: WaterReminderSettings
+    public private(set) var permission: WaterNotificationPermission = .unknown
+    public private(set) var errorMessage: String?
+    public private(set) var scheduledDate: Date?
     /// The challenge's zone: the reminder window is wall-clock time there.
-    private(set) var timeZone: TimeZone = .current
+    public private(set) var timeZone: TimeZone = .current
+    public let wording: DeviceWording
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored private let center: any WaterNotificationCenter
     @ObservationIgnored private let clock: () -> Date
@@ -84,11 +85,10 @@ final class WaterReminderController {
     @ObservationIgnored private var revision = 0
     @ObservationIgnored private var requestAuthorization = false
     @ObservationIgnored private var worker: Task<Void, Never>?
-    @ObservationIgnored private var timer: Task<Void, Never>?
-    @ObservationIgnored private var observers: [NSObjectProtocol] = []
 
-    init(defaults: UserDefaults, center: any WaterNotificationCenter,
-         clock: @escaping () -> Date = Date.init) {
+    public init(defaults: UserDefaults, center: any WaterNotificationCenter, wording: DeviceWording,
+                clock: @escaping () -> Date = Date.init) {
+        self.wording = wording
         self.defaults = defaults
         self.center = center
         self.clock = clock
@@ -98,20 +98,20 @@ final class WaterReminderController {
         } else { settings = WaterReminderSettings() }
     }
 
-    var status: String {
+    public var status: String {
         switch permission {
         case .notDetermined: return "Permission not determined. Toggle reminders off/on to request notifications."
-        case .denied: return "Notifications denied. Open System Settings > Notifications > Daily Challenge."
+        case .denied: return "Notifications denied. Open \(wording.notificationSettings)."
         case .unknown: return "Checking notification permission."
         case .allowed:
-            if !settings.enabled { return "Permission allowed · Reminders off on this Mac." }
+            if !settings.enabled { return "Permission allowed · Reminders off on this \(wording.device)." }
             if water == nil { return "Permission allowed · Waiting for a local challenge." }
             if water! >= 4_000 { return "Permission allowed · Today's water goal met." }
-            return "Permission allowed · Reminders enabled on this Mac. Delivery depends on macOS and Focus."
+            return "Permission allowed · Reminders enabled on this \(wording.device). Delivery depends on \(wording.system) and Focus."
         }
     }
 
-    func update(_ settings: WaterReminderSettings) {
+    public func update(_ settings: WaterReminderSettings) {
         guard settings.isValid else { return }
         let enabling = settings.enabled && !self.settings.enabled
         self.settings = settings
@@ -120,7 +120,7 @@ final class WaterReminderController {
         changed()
     }
 
-    func refresh(waterMillilitres: Int?, nextDayWaterMillilitres: Int? = nil, timeZone: TimeZone) {
+    public func refresh(waterMillilitres: Int?, nextDayWaterMillilitres: Int? = nil, timeZone: TimeZone) {
         let zoneChanged = self.timeZone != timeZone
         self.timeZone = timeZone
         let day = calendar.startOfDay(for: clock())
@@ -133,12 +133,12 @@ final class WaterReminderController {
         changed(cancel: totalsChanged)
     }
 
-    func sleep() {
+    public func sleep() {
         asleep = true
         changed()
     }
 
-    func wake() {
+    public func wake() {
         asleep = false
         changed()
     }
@@ -155,7 +155,7 @@ final class WaterReminderController {
     }
 
     /// Exposed to fixture tests so they can wait for all serialized work.
-    func settle() async { await worker?.value }
+    public func settle() async { await worker?.value }
 
     private func reconcile() async {
         while true {
@@ -185,27 +185,6 @@ final class WaterReminderController {
             }
             if token == revision { worker = nil; return }
             center.cancel() // A stale async add must not survive a new total/account/settings.
-        }
-    }
-
-    func start(refresh: @escaping @MainActor () -> Void) {
-        guard timer == nil else { return }
-        let workspace = NSWorkspace.shared.notificationCenter
-        observers.append(workspace.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { self?.sleep() }
-        })
-        observers.append(workspace.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { self?.wake(); refresh() }
-        })
-        observers.append(NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification, object: nil, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { self?.sleep() }
-        })
-        timer = Task { [weak self] in
-            while !Task.isCancelled {
-                guard self != nil else { return }
-                refresh()
-                do { try await Task.sleep(for: .seconds(15)) } catch { return }
-            }
         }
     }
 }

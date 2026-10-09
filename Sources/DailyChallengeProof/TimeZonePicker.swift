@@ -1,4 +1,5 @@
 import ChallengeCore
+import ChallengeSyncKit
 import SwiftUI
 
 /// Setup-only choice of the zone whose midnights bound every challenge day. A
@@ -76,41 +77,5 @@ struct TimeZoneList: View {
         .buttonStyle(.plain)
         .accessibilityLabel("\(ChallengeDates.city(zone)), \(zone.identifier), \(ChallengeDates.offset(zone, at: now))")
         .accessibilityAddTraits(zone.identifier == selection.identifier ? .isSelected : [])
-    }
-}
-
-enum TimeZoneChoices {
-    struct Group { let region: String; let zones: [TimeZone] }
-
-    /// "New York · GMT−4"
-    static func title(_ zone: TimeZone, at date: Date) -> String {
-        "\(ChallengeDates.city(zone)) · \(ChallengeDates.offset(zone, at: date))"
-    }
-
-    static let all: [TimeZone] = TimeZone.knownTimeZoneIdentifiers
-        .compactMap(Challenge.canonicalTimeZone)
-        .sorted { ChallengeDates.city($0).localizedStandardCompare(ChallengeDates.city($1)) == .orderedAscending }
-
-    static func groups(matching query: String) -> [Group] {
-        let words = query.split(whereSeparator: \.isWhitespace).map(String.init)
-        let matches = searchable.filter { _, texts in
-            words.allSatisfy { word in texts.contains { $0.localizedStandardContains(word) } }
-        }.map(\.zone)
-        return Dictionary(grouping: matches, by: region).sorted { $0.key < $1.key }
-            .map { Group(region: $0.key, zones: $0.value) }
-    }
-
-    /// Localized zone names are looked up once, not on every keystroke.
-    private static let searchable: [(zone: TimeZone, texts: [String])] = all.map { ($0, searchText($0)) }
-
-    private static func region(_ zone: TimeZone) -> String {
-        let parts = zone.identifier.split(separator: "/")
-        return parts.count > 1 ? String(parts[0]) : "Other"
-    }
-
-    private static func searchText(_ zone: TimeZone) -> [String] {
-        [zone.identifier.replacingOccurrences(of: "_", with: " "),
-         zone.localizedName(for: .generic, locale: .current),
-         zone.localizedName(for: .standard, locale: .current)].compactMap { $0 }
     }
 }

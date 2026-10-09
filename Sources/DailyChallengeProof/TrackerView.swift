@@ -1,5 +1,6 @@
 import AppKit
 import ChallengeCore
+import ChallengeSyncKit
 import SwiftUI
 
 enum TrackerSection: String, CaseIterable { case today = "Today", history = "History", account = "Account" }

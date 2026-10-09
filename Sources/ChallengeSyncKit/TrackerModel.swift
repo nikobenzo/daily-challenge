@@ -3,7 +3,7 @@ import Foundation
 import Observation
 import Network
 
-enum SyncState: Equatable {
+public enum SyncState: Equatable, Sendable {
     case localOnly
     case unavailable(pending: Int, error: String)
     case checking(pending: Int)
@@ -11,7 +11,7 @@ enum SyncState: Equatable {
     case awaitingCheck
     case synced(at: Date, clockWarning: Bool)
 
-    var footerText: String {
+    public var footerText: String {
         switch self {
         case .localOnly: return "Local only · Not synced"
         case let .unavailable(pending, error): return "Sync unavailable · \(pending) pending · \(error)"
@@ -25,20 +25,21 @@ enum SyncState: Equatable {
     }
 
     /// Plain words for the Account tab; never adds information the footer lacks.
-    var plainText: String {
+    public func plainText(on wording: DeviceWording) -> String {
+        let device = wording.device
         switch self {
-        case .localOnly: return "Saved on this Mac only, not connected to the server"
+        case .localOnly: return "Saved on this \(device) only, not connected to the server"
         case .unavailable: return "Can't reach the server, your entries are safe"
         case let .checking(pending): return pending > 0 ? "Syncing, \(Self.changes(pending)) waiting" : "Syncing"
-        case let .savedLocally(pending): return "Saved on this Mac, \(Self.changes(pending)) waiting"
-        case .awaitingCheck: return "Saved on this Mac, checking the server shortly"
+        case let .savedLocally(pending): return "Saved on this \(device), \(Self.changes(pending)) waiting"
+        case .awaitingCheck: return "Saved on this \(device), checking the server shortly"
         case let .synced(date, _): return "Up to date, checked \(date.formatted(date: .omitted, time: .shortened))"
         }
     }
 
-    var clockWarningText: String? {
+    public func clockWarningText(on wording: DeviceWording) -> String? {
         guard case .synced(_, true) = self else { return nil }
-        return "This Mac's clock looks ahead of the server; check Date & Time if this keeps happening"
+        return "This \(wording.device)'s clock looks ahead of the server; check \(wording.dateTimeSettings) if this keeps happening"
     }
 
     private static func changes(_ count: Int) -> String { count == 1 ? "1 change" : "\(count) changes" }
@@ -46,10 +47,17 @@ enum SyncState: Equatable {
 
 /// One serialized writer for the active app account. Real challenge data never
 /// enters the probe queue. Clock injection lets the UI's date/edit paths be tested.
+/// Shared by the Mac and iPhone apps; each drives refreshes and sync requests from
+/// its own lifecycle (popup visibility and wake on the Mac, scene phase on iOS).
 @MainActor @Observable
-final class TrackerModel {
-    private(set) var ownerID: UUID?
-    private(set) var store: ChallengeStore? {
+public final class TrackerModel {
+    /// The legacy on-disk layout (HANDOFF.md): unchanged so existing Mac data keeps opening.
+    public static var defaultDirectory: URL {
+        URL.applicationSupportDirectory.appendingPathComponent("DailyChallenge/ujyvvyrugenknhjodfhc", isDirectory: true)
+    }
+
+    public private(set) var ownerID: UUID?
+    public private(set) var store: ChallengeStore? {
         didSet {
             // Starting or adopting a challenge can change the zone that bounds days.
             selectedDay = followsToday ? today : dates.calendar.startOfDay(for: selectedDay)
@@ -57,8 +65,8 @@ final class TrackerModel {
             observeCompletion()
         }
     }
-    var reminders: WaterReminderController?
-    private(set) var celebration: CelebrationEvent?
+    public var reminders: WaterReminderController?
+    public private(set) var celebration: CelebrationEvent?
     @ObservationIgnored private var localCompletionDay: Date?
     @ObservationIgnored private var localExtrasDay: Date?
 
@@ -71,7 +79,7 @@ final class TrackerModel {
         }
     }
 
-    func refreshReminders() {
+    public func refreshReminders() {
         let date = clock()
         let nextDay = dates.calendar.date(byAdding: .day, value: 1, to: date)!
         func water(on day: Date) -> Int? {
@@ -81,30 +89,30 @@ final class TrackerModel {
         reminders?.refresh(waterMillilitres: water(on: date), nextDayWaterMillilitres: water(on: nextDay),
                            timeZone: dates.timeZone)
     }
-    private(set) var now: Date
-    private(set) var selectedDay: Date
-    private(set) var isEditingHistory = false
-    private(set) var errorMessage: String?
+    public private(set) var now: Date
+    public private(set) var selectedDay: Date
+    public private(set) var isEditingHistory = false
+    public private(set) var errorMessage: String?
     @ObservationIgnored private let directory: URL
     @ObservationIgnored private let clock: () -> Date
     @ObservationIgnored private var followsToday = true
     @ObservationIgnored private var transport: (any ChallengeTransport)?
     @ObservationIgnored private var automaticRequests = false
     @ObservationIgnored private var monitor: NWPathMonitor?
-    private(set) var syncActive = false
-    private(set) var isSyncing = false
-    private(set) var setupChecked = false
-    private(set) var syncError: String?
-    private(set) var lastSync: Date?
+    public private(set) var syncActive = false
+    public private(set) var isSyncing = false
+    public private(set) var setupChecked = false
+    public private(set) var syncError: String?
+    public private(set) var lastSync: Date?
     /// Server rows the last successful sync could not read.
-    private(set) var skippedRows = 0
-    private(set) var retryAfter: Date?
+    public private(set) var skippedRows = 0
+    public private(set) var retryAfter: Date?
     @ObservationIgnored private var failures = 0
     @ObservationIgnored private var generation = UUID()
 
-    var canStartChallenge: Bool { !syncActive || (setupChecked && !isSyncing && syncError == nil) }
+    public var canStartChallenge: Bool { !syncActive || (setupChecked && !isSyncing && syncError == nil) }
     /// The one sync state. The footer and the Account tab are two wordings of it.
-    var syncState: SyncState {
+    public var syncState: SyncState {
         guard syncActive else { return .localOnly }
         let pending = store?.pendingCount ?? 0
         if let syncError { return .unavailable(pending: pending, error: syncError) }
@@ -114,11 +122,11 @@ final class TrackerModel {
         return .synced(at: lastSync, clockWarning: store?.hasClockWarning ?? false)
     }
     /// Unreadable server rows are a note beside whatever the state is, never a failure.
-    var skippedNotice: String? { syncError == nil ? skippedRowsNotice(skippedRows) : nil }
-    var syncStatus: String { [syncState.footerText, skippedNotice].compactMap { $0 }.joined(separator: " · ") }
+    public var skippedNotice: String? { syncError == nil ? skippedRowsNotice(skippedRows) : nil }
+    public var syncStatus: String { [syncState.footerText, skippedNotice].compactMap { $0 }.joined(separator: " · ") }
 
     /// Fixtures configure a transport without launching timers/network monitoring.
-    func configureSync(_ transport: any ChallengeTransport, automatic: Bool = false) {
+    public func configureSync(_ transport: any ChallengeTransport, automatic: Bool = false) {
         self.transport = transport
         automaticRequests = automatic
         syncActive = true
@@ -140,12 +148,12 @@ final class TrackerModel {
         }
     }
 
-    func requestSync() {
+    public func requestSync() {
         guard syncActive, automaticRequests else { return }
         Task { await sync() }
     }
 
-    func sync(force: Bool = false) async {
+    public func sync(force: Bool = false) async {
         guard !isSyncing, let transport, let ownerID, store != nil,
               force || retryAfter.map({ clock() >= $0 }) != false else { return }
         let token = generation
@@ -190,11 +198,7 @@ final class TrackerModel {
         }
     }
 
-    init(
-        directory: URL = URL.applicationSupportDirectory
-            .appendingPathComponent("DailyChallenge/ujyvvyrugenknhjodfhc", isDirectory: true),
-        clock: @escaping () -> Date = Date.init
-    ) {
+    public init(directory: URL = TrackerModel.defaultDirectory, clock: @escaping () -> Date = Date.init) {
         self.directory = directory
         self.clock = clock
         let now = clock()
@@ -202,25 +206,25 @@ final class TrackerModel {
         self.selectedDay = ChallengeDates(timeZone: .current).calendar.startOfDay(for: now)
     }
 
-    var challenge: Challenge? { store?.challenge }
+    public var challenge: Challenge? { store?.challenge }
     /// The challenge's own zone. Before setup there is no challenge day yet; the
-    /// Mac's zone only places the navigation date until one is chosen or adopted.
-    var dates: ChallengeDates { ChallengeDates(timeZone: challenge?.timeZone ?? .current) }
-    var summary: Challenge.DailySummary? { challenge?.summary(on: selectedDay, asOf: now) }
-    var streaks: Challenge.StreakSummary? { challenge?.streaks(asOf: now) }
-    var history: [Challenge.Activity] { challenge?.history(on: selectedDay).reversed() ?? [] }
-    var today: Date { dates.calendar.startOfDay(for: now) }
-    var dayNumber: Int {
+    /// device's zone only places the navigation date until one is chosen or adopted.
+    public var dates: ChallengeDates { ChallengeDates(timeZone: challenge?.timeZone ?? .current) }
+    public var summary: Challenge.DailySummary? { challenge?.summary(on: selectedDay, asOf: now) }
+    public var streaks: Challenge.StreakSummary? { challenge?.streaks(asOf: now) }
+    public var history: [Challenge.Activity] { challenge?.history(on: selectedDay).reversed() ?? [] }
+    public var today: Date { dates.calendar.startOfDay(for: now) }
+    public var dayNumber: Int {
         guard let challenge else { return 0 }
         return max(0, (dates.calendar.dateComponents([.day], from: challenge.startDate, to: today).day ?? 0) + 1)
     }
-    var canEdit: Bool {
+    public var canEdit: Bool {
         guard let summary, summary.status != .future, summary.status != .outsideChallenge else { return false }
         return followsToday || isEditingHistory
     }
-    var canUndo: Bool { canEdit && !(summary?.activePours.isEmpty ?? true) }
+    public var canUndo: Bool { canEdit && !(summary?.activePours.isEmpty ?? true) }
 
-    func activate(ownerID: UUID?) {
+    public func activate(ownerID: UUID?) {
         guard self.ownerID != ownerID else { refresh(); return }
         generation = UUID()
         isSyncing = false
@@ -238,7 +242,7 @@ final class TrackerModel {
         if ownerID != nil { reload(); requestSync() }
     }
 
-    func reload() {
+    public func reload() {
         guard let ownerID else { return }
         do {
             store = try ChallengeStore(ownerID: ownerID, directory: directory)
@@ -249,19 +253,19 @@ final class TrackerModel {
         }
     }
 
-    func refresh() {
+    public func refresh() {
         now = clock()
         if followsToday { selectedDay = today }
         refreshReminders()
     }
 
-    func showToday() {
+    public func showToday() {
         followsToday = true
         isEditingHistory = false
         refresh()
     }
 
-    func selectHistoryDay(_ date: Date) {
+    public func selectHistoryDay(_ date: Date) {
         refresh()
         let day = dates.calendar.startOfDay(for: date)
         guard let challenge, day >= challenge.startDate, day <= today else { return }
@@ -271,10 +275,10 @@ final class TrackerModel {
         errorMessage = nil
     }
 
-    func enableCorrections() { isEditingHistory = true }
-    func dismissError() { errorMessage = nil }
+    public func enableCorrections() { isEditingHistory = true }
+    public func dismissError() { errorMessage = nil }
 
-    func startChallenge(on date: Date, timeZone: TimeZone) {
+    public func startChallenge(on date: Date, timeZone: TimeZone) {
         refresh()
         guard canStartChallenge else {
             errorMessage = "Check the server before setup. Existing local history can still be used offline."
@@ -296,17 +300,17 @@ final class TrackerModel {
         } catch { errorMessage = error.localizedDescription }
     }
 
-    func exportData() throws -> Data {
+    public func exportData() throws -> Data {
         guard let store else { throw ChallengeStoreError.notStarted }
         return try store.exportData()
     }
 
-    func previewImport(_ data: Data) throws -> ChallengeBackup.Plan {
+    public func previewImport(_ data: Data) throws -> ChallengeBackup.Plan {
         guard let store else { throw ChallengeStoreError.notStarted }
         return try store.previewImport(data)
     }
 
-    func importData(_ data: Data) throws -> URL {
+    public func importData(_ data: Data) throws -> URL {
         guard var candidate = store else { throw ChallengeStoreError.notStarted }
         let backup = try candidate.importData(data)
         store = candidate
@@ -315,9 +319,9 @@ final class TrackerModel {
         return backup
     }
 
-    func addWater(_ amount: Int = 450) { record(.pour(amount)) }
+    public func addWater(_ amount: Int = 450) { record(.pour(amount)) }
 
-    func addCustomWater(_ text: String) {
+    public func addCustomWater(_ text: String) {
         guard let amount = Int(text.trimmingCharacters(in: .whitespacesAndNewlines)), amount > 0 else {
             errorMessage = "Enter a positive whole amount in ml, such as 250."
             return
@@ -325,14 +329,14 @@ final class TrackerModel {
         addWater(amount)
     }
 
-    func undoWater() { record(.undoLatestPour) }
+    public func undoWater() { record(.undoLatestPour) }
 
-    func toggle(_ habit: Challenge.Habit) {
+    public func toggle(_ habit: Challenge.Habit) {
         refresh()
         record(.setHabit(habit, completed: !(summary?.completedHabits.contains(habit) ?? false)))
     }
 
-    func setDiet(_ state: Challenge.DietState) { record(.setDiet(state)) }
+    public func setDiet(_ state: Challenge.DietState) { record(.setDiet(state)) }
 
     private func record(_ action: Challenge.Action) {
         refresh()
@@ -360,10 +364,10 @@ final class TrackerModel {
 /// the History correction lock.
 extension TrackerModel {
     /// Not archived, in creation order: what Manage extras lists and the cap counts.
-    var activeExtras: [Challenge.Extra] { challenge?.allExtras.filter { !$0.isArchived } ?? [] }
-    var canAddExtra: Bool { challenge != nil && activeExtras.count < Challenge.maximumActiveExtras }
+    public var activeExtras: [Challenge.Extra] { challenge?.allExtras.filter { !$0.isArchived } ?? [] }
+    public var canAddExtra: Bool { challenge != nil && activeExtras.count < Challenge.maximumActiveExtras }
 
-    func toggleExtra(_ id: UUID) {
+    public func toggleExtra(_ id: UUID) {
         refresh()
         let done = summary?.completedExtras.contains(id) ?? false
         // Only a tick made here, today, may celebrate; opening or syncing never does.
@@ -373,14 +377,14 @@ extension TrackerModel {
     }
 
     /// Each returns nil once saved, otherwise the reason nothing was saved.
-    func addExtra(_ title: String) -> String? { defineExtra(id: UUID(), title: title) }
+    public func addExtra(_ title: String) -> String? { defineExtra(id: UUID(), title: title) }
 
-    func renameExtra(_ id: UUID, to title: String) -> String? {
+    public func renameExtra(_ id: UUID, to title: String) -> String? {
         guard Challenge.extraTitle(title) != activeExtras.first(where: { $0.id == id })?.title else { return nil }
         return defineExtra(id: id, title: title)
     }
 
-    func archiveExtra(_ id: UUID) -> String? { recordExtraSetting(.archiveExtra(id: id)) }
+    public func archiveExtra(_ id: UUID) -> String? { recordExtraSetting(.archiveExtra(id: id)) }
 
     private func defineExtra(id: UUID, title: String) -> String? {
         guard let title = Challenge.extraTitle(title) else { return ChallengeError.invalidExtraTitle.localizedDescription }

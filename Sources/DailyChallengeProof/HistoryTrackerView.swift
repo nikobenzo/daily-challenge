@@ -1,4 +1,5 @@
 import ChallengeCore
+import ChallengeSyncKit
 import SwiftUI
 
 /// History: month calendar, the selected day's card, and its Activity. Fixed to the

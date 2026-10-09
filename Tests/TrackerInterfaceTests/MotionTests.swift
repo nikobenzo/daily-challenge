@@ -4,6 +4,7 @@ import Foundation
 import Observation
 import SwiftUI
 import Testing
+@testable import ChallengeSyncKit
 @testable import DailyChallengeProof
 
 private let motionDate = ISO8601DateFormatter().date(from: "2026-10-08T12:00:00Z")!

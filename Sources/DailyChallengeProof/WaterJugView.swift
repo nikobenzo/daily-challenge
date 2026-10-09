@@ -1,3 +1,4 @@
+import ChallengeSyncKit
 import SwiftUI
 
 /// Bounded procedural motion; its finite frame task ends after settling.

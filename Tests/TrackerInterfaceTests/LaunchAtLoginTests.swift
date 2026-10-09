@@ -1,6 +1,7 @@
 import Foundation
 import ServiceManagement
 import Testing
+@testable import ChallengeSyncKit
 @testable import DailyChallengeProof
 
 @MainActor private final class FakeLoginItem: LoginItemService {

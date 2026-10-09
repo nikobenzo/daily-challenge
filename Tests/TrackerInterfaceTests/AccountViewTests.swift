@@ -3,6 +3,7 @@ import ChallengeCore
 import Foundation
 import SwiftUI
 import Testing
+@testable import ChallengeSyncKit
 @testable import DailyChallengeProof
 
 @MainActor private final class AccountTransport: ChallengeTransport {
@@ -130,7 +131,7 @@ struct AccountViewTests {
         model.activate(ownerID: owner)
         model.startChallenge(on: ChallengeDates.jersey.calendar.date(from: DateComponents(year: 2026, month: 9, day: 27))!)
         model.addWater()
-        let reminders = WaterReminderController(defaults: defaults, center: SilentWaterCenter(), clock: { clock })
+        let reminders = WaterReminderController(defaults: defaults, center: SilentWaterCenter(), wording: .mac, clock: { clock })
         model.reminders = reminders
         model.refreshReminders()
         await reminders.settle()

@@ -2,7 +2,7 @@ import ChallengeCore
 import Foundation
 import Supabase
 import Testing
-@testable import DailyChallengeProof
+@testable import ChallengeSyncKit
 
 private final class MemoryOnlyAuth: AuthLocalStorage, @unchecked Sendable {
     private let lock = NSLock()

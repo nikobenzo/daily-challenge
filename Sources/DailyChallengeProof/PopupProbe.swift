@@ -1,5 +1,6 @@
 import AppKit
 import ChallengeCore
+import ChallengeSyncKit
 import SwiftUI
 
 /// Developer-only verification of the real menu-bar popup (docs/appearance-verification.md#real-popup-probe).

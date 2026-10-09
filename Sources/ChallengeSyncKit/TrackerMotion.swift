@@ -2,56 +2,58 @@ import ChallengeCore
 import Foundation
 
 /// A finite presentation clock. No timer is needed outside this interval.
-struct WaterMotion: Equatable {
-    static let duration: TimeInterval = 1.2
-    let from: Int
-    let to: Int
-    let started: Date
-    let initialLevel: Double
+public struct WaterMotion: Equatable, Sendable {
+    public static let duration: TimeInterval = 1.2
+    public let from: Int
+    public let to: Int
+    public let started: Date
+    public let initialLevel: Double
 
-    init(from: Int, to: Int, started: Date, presentationLevel: Double? = nil) {
+    public init(from: Int, to: Int, started: Date, presentationLevel: Double? = nil) {
         self.from = from
         self.to = to
         self.started = started
         initialLevel = presentationLevel ?? Double(min(4_000, from)) / 4_000
     }
 
-    func isActive(at date: Date, visible: Bool, reduceMotion: Bool) -> Bool {
+    public func isActive(at date: Date, visible: Bool, reduceMotion: Bool) -> Bool {
         visible && !reduceMotion && date >= started && date < started.addingTimeInterval(Self.duration)
     }
 
-    func progress(at date: Date) -> Double {
+    public func progress(at date: Date) -> Double {
         min(1, max(0, date.timeIntervalSince(started) / Self.duration))
     }
 
-    func level(at date: Date) -> Double {
+    public func level(at date: Date) -> Double {
         let p = min(1, progress(at: date) / 0.55)
         let eased = 1 - pow(1 - p, 3)
         let targetLevel = Double(min(4_000, to)) / 4_000
         return initialLevel + (targetLevel - initialLevel) * eased
     }
 
-    func slosh(at date: Date) -> Double {
+    public func slosh(at date: Date) -> Double {
         let p = progress(at: date)
         return sin(p * .pi * 6) * pow(1 - p, 2) * 9
     }
 
-    var frameDates: [Date] { finiteFrames(started: started, duration: Self.duration) }
-    var spills: Bool { to > 4_000 && to > from }
+    public var frameDates: [Date] { finiteFrames(started: started, duration: Self.duration) }
+    public var spills: Bool { to > 4_000 && to > from }
 }
 
-enum CompletionCelebration: String, Codable { case daily, milestone, extras }
+public enum CompletionCelebration: String, Codable, Sendable { case daily, milestone, extras }
 
 /// Separate from synced history and backups. Observed completions are consumed even
 /// on open/sync/import, so undo/recomplete cannot replay an existing achievement.
 /// A failed/corrupt ledger suppresses effects rather than risking replay.
-struct CelebrationLedger {
-    let file: URL
+public struct CelebrationLedger {
+    public let file: URL
+
+    public init(file: URL) { self.file = file }
 
     /// Extras have their own key: ticking the last extra today celebrates once, even
     /// on a day the five were already complete, and never after undo and re-tick.
-    func observe(_ challenge: Challenge, challengeID: UUID, now: Date,
-                 localCompletionDay: Date? = nil, localExtrasDay: Date? = nil) -> CompletionCelebration? {
+    public func observe(_ challenge: Challenge, challengeID: UUID, now: Date,
+                        localCompletionDay: Date? = nil, localExtrasDay: Date? = nil) -> CompletionCelebration? {
         do {
             var seen: Set<String> = FileManager.default.fileExists(atPath: file.path)
                 ? try JSONDecoder().decode(Set<String>.self, from: Data(contentsOf: file)) : []
@@ -83,16 +85,21 @@ struct CelebrationLedger {
     }
 }
 
-enum CompletionPresentation { case idle, highlight, animated }
+public enum CompletionPresentation { case idle, highlight, animated }
 
-struct CelebrationEvent: Equatable {
-    let id = UUID()
-    let kind: CompletionCelebration
-    let started: Date
-    var duration: TimeInterval { kind == .milestone ? 3 : 1.8 }
-    var frameDates: [Date] { finiteFrames(started: started, duration: duration) }
+public struct CelebrationEvent: Equatable, Sendable {
+    public let id = UUID()
+    public let kind: CompletionCelebration
+    public let started: Date
 
-    func presentation(at date: Date, visible: Bool, reduceMotion: Bool) -> CompletionPresentation {
+    public init(kind: CompletionCelebration, started: Date) {
+        self.kind = kind
+        self.started = started
+    }
+    public var duration: TimeInterval { kind == .milestone ? 3 : 1.8 }
+    public var frameDates: [Date] { finiteFrames(started: started, duration: duration) }
+
+    public func presentation(at date: Date, visible: Bool, reduceMotion: Bool) -> CompletionPresentation {
         guard visible, date >= started, date < started.addingTimeInterval(duration) else { return .idle }
         return reduceMotion ? .highlight : .animated
     }
@@ -104,7 +111,7 @@ private func finiteFrames(started: Date, duration: TimeInterval) -> [Date] {
 
 /// Only a finite task owns frame delivery. No SwiftUI display-link/timeline
 /// scheduler survives settling; cancellation also prevents later frame writes.
-@MainActor func renderFiniteFrames(_ dates: [Date], update: (Date) -> Void) async throws {
+@MainActor public func renderFiniteFrames(_ dates: [Date], update: (Date) -> Void) async throws {
     for date in dates {
         let delay = date.timeIntervalSinceNow
         guard delay > 0 else { continue } // skip missed frames, never catch up in a burst

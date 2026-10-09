@@ -2,6 +2,7 @@ import AppKit
 import ChallengeCore
 import SwiftUI
 import Testing
+@testable import ChallengeSyncKit
 @testable import DailyChallengeProof
 
 @Suite(.serialized) @MainActor

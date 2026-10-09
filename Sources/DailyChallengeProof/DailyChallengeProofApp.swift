@@ -1,4 +1,5 @@
 import AppKit
+import ChallengeSyncKit
 import SwiftUI
 
 @main
@@ -15,6 +16,7 @@ struct DailyChallengeProofApp: App {
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var popup: PopupController?
+    private var reminderLifecycle: MacReminderLifecycle?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // No Dock icon, also when run without the bundle's LSUIElement.
@@ -31,9 +33,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         let auth = ProofModel()
         let tracker = TrackerModel()
-        let reminders = WaterReminderController(defaults: .standard, center: NativeWaterNotificationCenter())
+        let reminders = WaterReminderController(defaults: .standard, center: NativeWaterNotificationCenter(), wording: .mac)
         tracker.reminders = reminders
-        reminders.start { [weak tracker] in tracker?.refreshReminders() }
+        let lifecycle = MacReminderLifecycle(reminders: reminders)
+        lifecycle.start { [weak tracker] in tracker?.refreshReminders() }
+        reminderLifecycle = lifecycle
         auth.attachTracker(tracker)
         auth.start()
         // The app's single Sparkle updater; it checks daily once started.

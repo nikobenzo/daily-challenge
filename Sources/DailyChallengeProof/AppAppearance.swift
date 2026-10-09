@@ -1,4 +1,5 @@
 import AppKit
+import ChallengeSyncKit
 import Combine
 import Observation
 import SwiftUI

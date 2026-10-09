@@ -1,4 +1,5 @@
 import AppKit
+import ChallengeSyncKit
 import SwiftUI
 import UniformTypeIdentifiers
 

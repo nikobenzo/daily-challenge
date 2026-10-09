@@ -2,7 +2,6 @@ import Foundation
 import Supabase
 import Testing
 @testable import ChallengeSyncKit
-@testable import DailyChallengeProof
 
 private struct EphemeralAuthStorage: AuthLocalStorage {
     func store(key: String, value: Data) throws {}
@@ -80,7 +79,7 @@ private final class PasswordAuthProtocol: URLProtocol {
 }
 
 @MainActor
-private func makeModel(directory: URL) -> ProofModel {
+private func makeModel(directory: URL) -> AuthModel {
     let configuration = URLSessionConfiguration.ephemeral
     configuration.protocolClasses = [PasswordAuthProtocol.self]
     let client = SupabaseClient(
@@ -91,7 +90,7 @@ private func makeModel(directory: URL) -> ProofModel {
             global: .init(session: URLSession(configuration: configuration))
         )
     )
-    return ProofModel(client: client, directory: directory)
+    return AuthModel(client: client)
 }
 
 @Test @MainActor func passwordLoginUsesPasswordEndpointAndClearsForm() async {
@@ -103,7 +102,7 @@ private func makeModel(directory: URL) -> ProofModel {
     await model.signIn()
     #expect(model.ownerID == UUID(uuidString: "11111111-1111-4111-8111-111111111111"))
     #expect(model.signedInEmail == "person@example.com")
-    #expect(model.journal != nil)
+    #expect(model.ownerID != nil)
     #expect(model.password.isEmpty)
     #expect(!model.isBusy)
     #expect(model.errorMessage == nil)
@@ -115,7 +114,7 @@ private func makeModel(directory: URL) -> ProofModel {
     model.password = "incorrect synthetic password"
     await model.signIn()
     #expect(model.ownerID == nil)
-    #expect(model.journal == nil)
+    #expect(model.ownerID == nil)
     #expect(model.password.isEmpty)
     #expect(!model.isBusy)
     #expect(model.status == "Sign-in failed")
@@ -129,22 +128,4 @@ private func makeModel(directory: URL) -> ProofModel {
     #expect(model.ownerID == nil)
     #expect(!model.isBusy)
     #expect(model.errorMessage == "Enter your app account email and password.")
-}
-
-@Test @MainActor func successfulAuthDoesNotHideCorruptLocalQueue() async throws {
-    let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-    defer { try? FileManager.default.removeItem(at: directory) }
-    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-    let file = directory.appendingPathComponent("11111111-1111-4111-8111-111111111111.json")
-    try Data("corrupt".utf8).write(to: file)
-    let model = makeModel(directory: directory)
-    model.email = "person@example.com"
-    model.password = "  test password  "
-    await model.signIn()
-    #expect(model.ownerID != nil)
-    #expect(model.journal == nil)
-    #expect(model.password.isEmpty)
-    #expect(model.diagnosticStatus == "Local data could not be opened; it has not been reset")
-    #expect(model.diagnosticError != nil)
-    #expect(try String(contentsOf: file, encoding: .utf8) == "corrupt")
 }

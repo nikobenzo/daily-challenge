@@ -56,8 +56,8 @@ struct AdvancedDiagnosticsView: View {
                     }.padding(.vertical, 4)
                 }.frame(height: 180)
             }
-            Text(model.status).font(.caption)
-            if let error = model.errorMessage {
+            Text(model.diagnosticStatus).font(.caption)
+            if let error = model.diagnosticError {
                 Text(error).font(.caption).foregroundStyle(.red)
                     .textSelection(.enabled)
             }

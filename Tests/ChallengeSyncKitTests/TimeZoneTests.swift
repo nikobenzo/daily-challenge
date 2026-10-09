@@ -1,7 +1,7 @@
 import ChallengeCore
 import Foundation
 import Testing
-@testable import DailyChallengeProof
+@testable import ChallengeSyncKit
 
 private func date(_ string: String) -> Date { ISO8601DateFormatter().date(from: string)! }
 private func zone(_ identifier: String) -> TimeZone { Challenge.canonicalTimeZone(identifier)! }
@@ -85,7 +85,7 @@ private func zone(_ identifier: String) -> TimeZone { Challenge.canonicalTimeZon
         defer { defaults.removePersistentDomain(forName: suite) }
         clock.now = date("2026-10-08T12:59:30Z") // 08:59:30 in New York
         let center = ZoneRecordingCenter()
-        let reminders = WaterReminderController(defaults: defaults, center: center, clock: { clock.now })
+        let reminders = WaterReminderController(defaults: defaults, center: center, wording: .iPhone, clock: { clock.now })
         model.reminders = reminders
         model.startChallenge(on: clock.now, timeZone: zone("America/New_York"))
         reminders.update(.init(enabled: true))
@@ -93,7 +93,6 @@ private func zone(_ identifier: String) -> TimeZone { Challenge.canonicalTimeZon
         #expect(reminders.timeZone.identifier == "America/New_York")
         #expect(reminders.scheduledDate == date("2026-10-08T13:00:00Z")) // 09:00 in New York
         #expect(center.scheduled.last?.1.identifier == "America/New_York")
-        #expect(WaterReminderSettingsView.details(timeZone: reminders.timeZone).hasPrefix("Times are New York time"))
     }
 }
 

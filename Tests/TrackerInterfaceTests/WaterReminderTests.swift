@@ -3,6 +3,7 @@ import ChallengeCore
 import Foundation
 import SwiftUI
 import Testing
+@testable import ChallengeSyncKit
 @testable import DailyChallengeProof
 
 @MainActor private final class ReminderClock {
@@ -42,7 +43,7 @@ import Testing
     init() {
         defaults = UserDefaults(suiteName: suite)!
         let clock = self.clock
-        model = WaterReminderController(defaults: defaults, center: center, clock: { clock.now })
+        model = WaterReminderController(defaults: defaults, center: center, wording: .mac, clock: { clock.now })
     }
     func enable(water: Int? = 0) async {
         model.refresh(waterMillilitres: water)
@@ -76,7 +77,7 @@ import Testing
     let f = ReminderFixture(), otherMac = ReminderFixture()
     defer { f.cleanup(); otherMac.cleanup() }
     await f.enable()
-    let relaunched = WaterReminderController(defaults: f.defaults, center: f.center, clock: { f.clock.now })
+    let relaunched = WaterReminderController(defaults: f.defaults, center: f.center, wording: .mac, clock: { f.clock.now })
     #expect(relaunched.settings.enabled)
     #expect(!otherMac.model.settings.enabled)
     f.model.update(.init(enabled: true, intervalMinutes: 30, startMinute: 600, endMinute: 660))
@@ -171,7 +172,7 @@ import Testing
     await f.enable()
     #expect(f.center.pending.count == 1)
     f.clock.set("2026-10-08T12:00:01Z")
-    let relaunched = WaterReminderController(defaults: f.defaults, center: f.center, clock: { f.clock.now })
+    let relaunched = WaterReminderController(defaults: f.defaults, center: f.center, wording: .mac, clock: { f.clock.now })
     relaunched.refresh(waterMillilitres: 0); await relaunched.settle()
     #expect(f.center.pending.isEmpty)
     #expect(f.center.additions.count == 1) // no missed-slot replay
@@ -306,4 +307,9 @@ import Testing
     #expect(f.center.pending.count == 1)
     tracker.activate(ownerID: nil); await f.model.settle()
     #expect(f.center.pending.isEmpty)
+}
+
+@Test @MainActor func reminderSettingsNameTheChallengeZone() {
+    #expect(WaterReminderSettingsView.details(timeZone: TimeZone(identifier: "America/New_York")!)
+        .hasPrefix("Times are New York time"))
 }

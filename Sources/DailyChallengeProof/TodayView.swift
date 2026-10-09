@@ -1,4 +1,5 @@
 import ChallengeCore
+import ChallengeSyncKit
 import SwiftUI
 
 /// Today: five ring gauges, the water hero and the streak row, separated by hairlines.

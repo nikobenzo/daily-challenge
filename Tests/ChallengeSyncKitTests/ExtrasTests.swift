@@ -1,7 +1,7 @@
 import ChallengeCore
 import Foundation
 import Testing
-@testable import DailyChallengeProof
+@testable import ChallengeSyncKit
 
 private func date(_ string: String) -> Date { ISO8601DateFormatter().date(from: string)! }
 

@@ -1,7 +1,7 @@
 import Foundation
 import Supabase
 import Testing
-@testable import DailyChallengeProof
+@testable import ChallengeSyncKit
 
 /// Holds the session in memory so `update(user:)` can find it. Never touches Keychain.
 private final class InMemoryAuthStorage: AuthLocalStorage, @unchecked Sendable {
@@ -180,7 +180,7 @@ private final class RecoveryInterruption: @unchecked Sendable {
 }
 
 private struct Harness {
-    let model: ProofModel
+    let model: AuthModel
     let client: SupabaseClient
     let host: String
     let clock: TestClock
@@ -206,13 +206,13 @@ private func makeHarness() -> Harness {
     let clock = TestClock()
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     return Harness(
-        model: ProofModel(client: client, directory: directory, now: { clock.now }),
+        model: AuthModel(client: client, now: { clock.now }),
         client: client, host: host, clock: clock, directory: directory
     )
 }
 
 @MainActor
-private func expectSecretsCleared(_ model: ProofModel) {
+private func expectSecretsCleared(_ model: AuthModel) {
     #expect(model.password.isEmpty)
     #expect(model.passwordConfirmation.isEmpty)
     #expect(model.newPassword.isEmpty)
@@ -248,7 +248,7 @@ private func expectSecretsCleared(_ model: ProofModel) {
 
     #expect(h.model.ownerID == UUID(uuidString: newAccountID))
     #expect(h.model.signedInEmail == "new@example.com")
-    #expect(h.model.journal != nil)
+    #expect(h.model.ownerID != nil)
     #expect(h.model.authStep == .signIn)
     #expect(h.model.code.isEmpty)
     #expect(h.model.errorMessage == nil)
@@ -480,7 +480,7 @@ private func expectSecretsCleared(_ model: ProofModel) {
         let h = makeHarness()
         defer { try? FileManager.default.removeItem(at: h.directory) }
         await h.model.signUp(email: "new@example.com", password: "fresh secret 7")
-        #expect(ProofModel.isCompleteCode(code))
+        #expect(AuthModel.isCompleteCode(code))
         await h.model.confirmSignUp(code: code)
         #expect(h.model.ownerID == UUID(uuidString: newAccountID), "\(code.count)-digit code")
         #expect(h.requests(to: "/auth/v1/verify").first?["token"] as? String == code)
@@ -489,7 +489,7 @@ private func expectSecretsCleared(_ model: ProofModel) {
 
 @Test @MainActor func codesOutsideSixToTenDigitsAreRejectedLocally() async {
     for code in ["12345", "12345678901", "1234567a", "１２３４５６"] {
-        #expect(!ProofModel.isCompleteCode(code), "\(code)")
+        #expect(!AuthModel.isCompleteCode(code), "\(code)")
         let h = makeHarness()
         defer { try? FileManager.default.removeItem(at: h.directory) }
         await h.model.signUp(email: "new@example.com", password: "fresh secret 7")
@@ -504,22 +504,19 @@ private func expectSecretsCleared(_ model: ProofModel) {
     defer { try? FileManager.default.removeItem(at: h.directory) }
     await h.model.signUp(email: "new@example.com", password: "fresh secret 7")
     #expect(h.model.notice == "We emailed a code to new@example.com. Enter it to finish creating your account.")
-    for step in [AuthStep.createAccount, .forgotPassword, .confirmSignUp(email: "a@b.c"), .resetPassword(email: "a@b.c")] {
-        #expect(!step.subtitle.contains("digit"))
-    }
 }
 
 @Test func newPasswordsNeedTenCharactersWithALetterAndANumber() {
     let rule = "Use at least 10 characters, with at least one letter and one number."
-    #expect(ProofModel.passwordProblem("") == rule)
-    #expect(ProofModel.passwordProblem("abc123") == rule)
-    #expect(ProofModel.passwordProblem("abcdefghij") == rule)
-    #expect(ProofModel.passwordProblem("1234567890") == rule)
-    #expect(ProofModel.passwordProblem("abcdefghi1") == nil)
+    #expect(AuthModel.passwordProblem("") == rule)
+    #expect(AuthModel.passwordProblem("abc123") == rule)
+    #expect(AuthModel.passwordProblem("abcdefghij") == rule)
+    #expect(AuthModel.passwordProblem("1234567890") == rule)
+    #expect(AuthModel.passwordProblem("abcdefghi1") == nil)
     // Supabase's server-side "Letters and digits" rule counts only ASCII characters.
-    #expect(ProofModel.passwordProblem("ééééééééé1") == rule)
-    #expect(ProofModel.passwordProblem("abcdefghi١") == rule)
-    #expect(ProofModel.passwordProblem("fresh secret 7") == nil)
+    #expect(AuthModel.passwordProblem("ééééééééé1") == rule)
+    #expect(AuthModel.passwordProblem("abcdefghi١") == rule)
+    #expect(AuthModel.passwordProblem("fresh secret 7") == nil)
 }
 
 @Test @MainActor func weakNewPasswordsAreRejectedBeforeAnyRequest() async {

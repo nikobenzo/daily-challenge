@@ -1,3 +1,4 @@
+import ChallengeSyncKit
 import SwiftUI
 
 extension AuthStep {

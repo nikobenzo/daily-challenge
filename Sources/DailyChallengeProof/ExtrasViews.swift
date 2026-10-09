@@ -1,4 +1,5 @@
 import ChallengeCore
+import ChallengeSyncKit
 import SwiftUI
 
 /// Today's collapsible Extras list under the rings. Hidden entirely when the selected

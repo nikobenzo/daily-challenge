@@ -1,4 +1,5 @@
 import ChallengeCore
+import ChallengeSyncKit
 import SwiftUI
 
 struct WaterReminderSettingsView: View {

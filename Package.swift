@@ -3,9 +3,12 @@ import PackageDescription
 
 let package = Package(
     name: "DailyChallenge",
-    platforms: [.macOS(.v14)],
+    // iOS is for the iPhone app's Xcode project (iOS/), which links only the two libraries.
+    platforms: [.macOS(.v14), .iOS("26.0")],
     products: [
-        .executable(name: "DailyChallengeProof", targets: ["DailyChallengeProof"])
+        .executable(name: "DailyChallengeProof", targets: ["DailyChallengeProof"]),
+        .library(name: "ChallengeCore", targets: ["ChallengeCore"]),
+        .library(name: "ChallengeSyncKit", targets: ["ChallengeSyncKit"])
     ],
     dependencies: [
         .package(url: "https://github.com/supabase/supabase-swift.git", exact: "2.55.3"),
@@ -14,10 +17,15 @@ let package = Package(
     targets: [
         .target(name: "ProbeCore"),
         .target(name: "ChallengeCore"),
+        // Platform-neutral auth, transport and sync coordinator shared by the Mac and iPhone apps.
+        .target(
+            name: "ChallengeSyncKit",
+            dependencies: ["ChallengeCore", .product(name: "Supabase", package: "supabase-swift")]
+        ),
         .executableTarget(
             name: "DailyChallengeProof",
             dependencies: [
-                "ProbeCore", "ChallengeCore",
+                "ProbeCore", "ChallengeCore", "ChallengeSyncKit",
                 .product(name: "Supabase", package: "supabase-swift"),
                 .product(name: "Sparkle", package: "Sparkle")
             ],
@@ -26,10 +34,15 @@ let package = Package(
         ),
         .testTarget(name: "ProbeCoreTests", dependencies: ["ProbeCore"]),
         .testTarget(name: "ChallengeCoreTests", dependencies: ["ChallengeCore"]),
-        .testTarget(name: "TrackerInterfaceTests", dependencies: ["DailyChallengeProof", "ChallengeCore"]),
+        .testTarget(
+            name: "ChallengeSyncKitTests",
+            dependencies: ["ChallengeSyncKit", "ChallengeCore", .product(name: "Supabase", package: "supabase-swift")]
+        ),
+        .testTarget(name: "TrackerInterfaceTests", dependencies: ["DailyChallengeProof", "ChallengeCore", "ChallengeSyncKit"]),
         .testTarget(
             name: "ProofAuthTests",
-            dependencies: ["DailyChallengeProof", "ChallengeCore", .product(name: "Supabase", package: "supabase-swift")]
+            dependencies: ["DailyChallengeProof", "ChallengeCore", "ChallengeSyncKit",
+                           .product(name: "Supabase", package: "supabase-swift")]
         )
     ]
 )

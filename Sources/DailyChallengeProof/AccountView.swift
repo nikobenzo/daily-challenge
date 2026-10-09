@@ -1,4 +1,5 @@
 import ChallengeCore
+import ChallengeSyncKit
 import SwiftUI
 
 /// The signed-in Account tab: profile and sync, device settings, your data and account,
