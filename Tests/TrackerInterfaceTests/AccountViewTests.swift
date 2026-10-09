@@ -175,7 +175,7 @@ struct AccountViewTests {
         auth.newPassword = ""
         auth.passwordConfirmation = ""
         try render(TrackerPopup(model: model, auth: auth, appearance: appearance, section: .account).environment(updates),
-                   name: "account-tab-popup", appearance: appearance)
+                   name: "account-tab-popup", appearance: appearance, glass: true)
     }
 
     private static func shippedVersion() throws -> String {
@@ -186,7 +186,9 @@ struct AccountViewTests {
         return String(try #require(line).split(separator: "=")[1])
     }
 
-    private func render<Content: View>(_ content: Content, name: String, appearance: AppAppearance) throws {
+    /// Standalone renders sit on the opaque themed surface; the popup root is glass, so it
+    /// is sampled on the sheet (under the header) rather than at the transparent corner.
+    private func render<Content: View>(_ content: Content, name: String, appearance: AppAppearance, glass: Bool = false) throws {
         let host = NSHostingView(rootView: content)
         host.sizingOptions = [.intrinsicContentSize]
         let window = NSWindow(contentRect: CGRect(x: 0, y: 0, width: 420, height: 640), styleMask: .borderless, backing: .buffered, defer: false)
@@ -202,8 +204,10 @@ struct AccountViewTests {
             window.displayIfNeeded()
             let bitmap = try #require(host.bitmapImageRepForCachingDisplay(in: host.bounds))
             host.cacheDisplay(in: host.bounds, to: bitmap)
-            let pixel = try #require(bitmap.colorAt(x: 2, y: 2)?.usingColorSpace(.deviceRGB))
-            #expect(pixel.alphaComponent > 0.99, "\(name): opaque backing")
+            let scale = CGFloat(bitmap.pixelsWide) / host.bounds.width
+            let sample = glass ? (x: Int(10 * scale), y: Int(66 * scale)) : (x: 2, y: 2)
+            let pixel = try #require(bitmap.colorAt(x: sample.x, y: sample.y)?.usingColorSpace(.deviceRGB))
+            #expect(pixel.alphaComponent > (glass ? 0.6 : 0.99), "\(name): backing")
             if preference == .light { #expect(pixel.redComponent > 0.75, "\(name): Light backing") }
             if preference == .dark { #expect(pixel.redComponent < 0.3, "\(name): Dark backing") }
             guard let output = ProcessInfo.processInfo.environment["DAILY_CHALLENGE_SNAPSHOT_DIR"] else { continue }

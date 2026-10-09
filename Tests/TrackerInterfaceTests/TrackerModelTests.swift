@@ -186,7 +186,8 @@ private func date(_ string: String) -> Date { ISO8601DateFormatter().date(from: 
                 host.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
                 let size = host.fittingSize
                 #expect(size.width == 420)
-                #expect(size.height <= 600)
+                // History is fixed to the shared History/Account height; Today is shorter.
+                #expect(size.height <= Theme.Size.wideSectionHeight + 32)
                 let window = NSWindow(contentRect: CGRect(origin: .zero, size: size), styleMask: .borderless, backing: .buffered, defer: false)
                 window.isReleasedWhenClosed = false
                 window.contentView = host

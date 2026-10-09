@@ -38,7 +38,10 @@ struct AppearanceTests {
 
     /// Uses the production root and native application appearance, NOT a test-added
     /// solid background or a forced SwiftUI colorScheme. No real auth/data access.
-    @Test func productionPopupSurfacesHaveOpaqueAdaptiveBacking() throws {
+    /// The popup is a glass sheet plus a detached footer in a transparent window: the
+    /// sheet must carry the adaptive glass tint (legible without any desktop blur) and
+    /// everything outside the glass must be fully transparent, never a half-filled band.
+    @Test func productionPopupSurfacesHaveAdaptiveGlass() throws {
         try withPreferences { appearance, _ in
             let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
             defer { try? FileManager.default.removeItem(at: directory) }
@@ -52,15 +55,14 @@ struct AppearanceTests {
             try renderLiveModes(
                 TrackerView(model: model, auth: auth, setupTimeZone: TimeZone(identifier: "America/New_York")!)
                     .environment(appearance)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                    .trackerSurface(),
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top),
                 name: "setup-new-york", appearance: appearance
             )
             let york = TimeZone(identifier: "America/New_York")!
             try renderLiveModes(TimeZoneList(selection: .constant(york), now: now, done: {}),
-                                name: "time-zone-list", appearance: appearance, oversizedHost: false)
+                                name: "time-zone-list", appearance: appearance, surface: .opaque)
             try renderLiveModes(TimeZoneList(selection: .constant(york), now: now, done: {}, query: "syd"),
-                                name: "time-zone-search", appearance: appearance, oversizedHost: false)
+                                name: "time-zone-search", appearance: appearance, surface: .opaque)
             for setup in [true, false] {
                 if !setup {
                     model.startChallenge(on: now)
@@ -79,6 +81,9 @@ struct AppearanceTests {
                     #expect(try encoder.encode(model.challenge) == before)
                 }
             }
+            // Enough activity that History's capped Activity list scrolls.
+            model.showToday()
+            for _ in 0..<4 { model.addWater() }
             try renderRetainedWindowTransitions(model: model, auth: auth, appearance: appearance)
             model.enableCorrections()
             try renderLiveModes(TrackerPopup(model: model, auth: auth, appearance: appearance, section: .history), name: "history-editing", appearance: appearance)
@@ -86,14 +91,14 @@ struct AppearanceTests {
             model.addCustomWater("3600")
             try renderLiveModes(TrackerPopup(model: model, auth: auth, appearance: appearance), name: "today-overflow", appearance: appearance)
             try renderLiveModes(TrackerPopup(model: model, auth: signedOut, appearance: appearance), name: "sign-in", appearance: appearance)
-            try renderLiveModes(CustomPourView(amount: .constant(""), cancel: {}, submit: {}), name: "custom-disabled", appearance: appearance, oversizedHost: false)
-            try renderLiveModes(CustomPourView(amount: .constant("250"), cancel: {}, submit: {}), name: "custom-enabled", appearance: appearance, oversizedHost: false)
+            try renderLiveModes(CustomPourView(amount: .constant(""), cancel: {}, submit: {}), name: "custom-disabled", appearance: appearance, surface: .opaque)
+            try renderLiveModes(CustomPourView(amount: .constant("250"), cancel: {}, submit: {}), name: "custom-enabled", appearance: appearance, surface: .opaque)
         }
     }
 
     /// Every signed-out auth screen on the production root, Light and Dark. Offline
     /// fixtures only: no SDK client, Keychain, network or real account.
-    @Test func signedOutAuthScreensHaveOpaqueAdaptiveBacking() throws {
+    @Test func signedOutAuthScreensHaveAdaptiveGlass() throws {
         try withPreferences { appearance, _ in
             let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
             defer { try? FileManager.default.removeItem(at: directory) }
@@ -142,21 +147,39 @@ struct AppearanceTests {
         }
     }
 
+    private enum Surface { case glass, opaque }
+
     private func assertFilledEdges(_ bitmap: NSBitmapImageRep, name: String) {
-        // Native rounded-corner compositing is a captain check. In-process,
-        // every backing pixel at the window boundary must be opaque.
+        // Standalone popovers keep an opaque themed surface to every edge.
         for y in [0, 1, bitmap.pixelsHigh - 2, bitmap.pixelsHigh - 1] {
             let filled = (0..<bitmap.pixelsWide).allSatisfy { x in
                 (bitmap.colorAt(x: x, y: y)?.alphaComponent ?? 0) > 0.99
             }
-            #expect(filled, "\(name): unfilled window edge at row \(y)")
+            #expect(filled, "\(name): unfilled edge at row \(y)")
         }
-        for x in [0, bitmap.pixelsWide - 1] {
-            let filled = (0..<bitmap.pixelsHigh).allSatisfy { y in
-                (bitmap.colorAt(x: x, y: y)?.alphaComponent ?? 0) > 0.99
-            }
-            #expect(filled, "\(name): unfilled window side at column \(x)")
-        }
+    }
+
+    /// A point on the glass inside the sheet: left padding, just under the header hairline.
+    private func glassPixel(_ bitmap: NSBitmapImageRep, host: NSView) throws -> NSColor {
+        let scale = CGFloat(bitmap.pixelsWide) / host.bounds.width
+        return try #require(bitmap.colorAt(x: Int(10 * scale), y: Int(66 * scale))?.usingColorSpace(.deviceRGB))
+    }
+
+    private func assertGlass(_ bitmap: NSBitmapImageRep, host: NSView, name: String, preference: AppearancePreference) throws {
+        let pixel = try glassPixel(bitmap, host: host)
+        // The tint alone (0.62 Dark, 0.66 Light) keeps text legible over any desktop.
+        #expect(pixel.alphaComponent > 0.6, "\(name): the sheet must carry the glass tint")
+        if preference == .light { #expect(pixel.redComponent > 0.75, "\(name): Light glass") }
+        if preference == .dark { #expect(pixel.redComponent < 0.3, "\(name): Dark glass") }
+        // The window's sheet corners are outside the glass and fully transparent.
+        #expect((bitmap.colorAt(x: 0, y: 0)?.alphaComponent ?? 1) < 0.01, "\(name): transparent outside the 28 pt corner")
+    }
+
+    /// Below the footer, a retained or oversized window is invisible, never a band.
+    private func assertTransparentBelowContent(_ bitmap: NSBitmapImageRep, name: String) {
+        let row = bitmap.pixelsHigh - 1
+        let clear = (0..<bitmap.pixelsWide).allSatisfy { x in (bitmap.colorAt(x: x, y: row)?.alphaComponent ?? 1) < 0.01 }
+        #expect(clear, "\(name): retained window space must be transparent")
     }
 
     private func renderRetainedWindowTransitions(model: TrackerModel, auth: ProofModel, appearance: AppAppearance) throws {
@@ -179,8 +202,8 @@ struct AppearanceTests {
                 host.layoutSubtreeIfNeeded()
                 #expect(host.bounds.height == 653, "Retain the measured native window, not a content-sized test render")
                 if section == .history {
-                    // Exercise the scrolled History viewport, not just its first
-                    // screen; no screen events or OS settings are changed.
+                    // Exercise History's scrolled Activity list, not just its first
+                    // rows; no screen events or OS settings are changed.
                     var didScroll = false
                     func scrollToEnd(_ view: NSView) {
                         if let scroll = view as? NSScrollView, let document = scroll.documentView {
@@ -196,12 +219,15 @@ struct AppearanceTests {
                 }
                 let bitmap = try #require(host.bitmapImageRepForCachingDisplay(in: host.bounds))
                 host.cacheDisplay(in: host.bounds, to: bitmap)
-                assertFilledEdges(bitmap, name: "retained-\(section.rawValue)-\(preference.rawValue)")
+                let name = "retained-\(section.rawValue)-\(preference.rawValue)"
+                if preference != .system { try assertGlass(bitmap, host: host, name: name, preference: preference) }
+                // Today is far shorter than the retained 653 pt: the rest stays invisible.
+                if section == .today { assertTransparentBelowContent(bitmap, name: name) }
             }
         }
     }
 
-    private func renderLiveModes<Content: View>(_ content: Content, name: String, appearance: AppAppearance, oversizedHost: Bool = true) throws {
+    private func renderLiveModes<Content: View>(_ content: Content, name: String, appearance: AppAppearance, surface: Surface = .glass) throws {
         // Changing preference on a retained window tests native live propagation.
         do {
             let host = NSHostingView(rootView: content)
@@ -217,12 +243,13 @@ struct AppearanceTests {
                 let size = host.fittingSize
                 // Reproduce a host taller than the content. Do NOT resize to
                 // fittingSize: that hid MenuBarExtra's retained-height bands.
-                let hostHeight = ceil(size.height) + (oversizedHost ? 64 : 0)
+                let oversized = surface == .glass
+                let hostHeight = ceil(size.height) + (oversized ? 64 : 0)
                 window.setContentSize(NSSize(width: size.width, height: hostHeight))
                 host.layoutSubtreeIfNeeded()
                 RunLoop.main.run(until: Date().addingTimeInterval(0.1))
                 host.layoutSubtreeIfNeeded()
-                if oversizedHost {
+                if oversized {
                     #expect(host.bounds.height == hostHeight, "Keep the oversized test window so gaps cannot be hidden by resizing")
                 }
                 window.displayIfNeeded()
@@ -230,11 +257,17 @@ struct AppearanceTests {
                 #expect(window.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == NSApplication.shared.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]))
                 let bitmap = try #require(host.bitmapImageRepForCachingDisplay(in: host.bounds))
                 host.cacheDisplay(in: host.bounds, to: bitmap)
-                assertFilledEdges(bitmap, name: name)
-                let pixel = try #require(bitmap.colorAt(x: 2, y: 2)?.usingColorSpace(.deviceRGB))
-                #expect(pixel.alphaComponent > 0.99, "\(name): root must obscure the desktop, not rely on the window material")
-                if preference == .light { #expect(pixel.redComponent > 0.75, "\(name): Light backing") }
-                if preference == .dark { #expect(pixel.redComponent < 0.3, "\(name): Dark backing") }
+                switch surface {
+                case .glass:
+                    if preference != .system { try assertGlass(bitmap, host: host, name: name, preference: preference) }
+                    assertTransparentBelowContent(bitmap, name: name)
+                case .opaque:
+                    assertFilledEdges(bitmap, name: name)
+                    let pixel = try #require(bitmap.colorAt(x: 2, y: 2)?.usingColorSpace(.deviceRGB))
+                    #expect(pixel.alphaComponent > 0.99, "\(name): popover surface must be opaque")
+                    if preference == .light { #expect(pixel.redComponent > 0.75, "\(name): Light surface") }
+                    if preference == .dark { #expect(pixel.redComponent < 0.3, "\(name): Dark surface") }
+                }
                 if preference != .system, let output = ProcessInfo.processInfo.environment["DAILY_CHALLENGE_SNAPSHOT_DIR"] {
                     let directory = URL(fileURLWithPath: output)
                     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
