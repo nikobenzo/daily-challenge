@@ -35,7 +35,7 @@ private struct LegacyFixture: Encodable { let version = 1; let challenge: Challe
     let header = try #require(store.record)
     let events = store.pending.map {
         ChallengeEvent(ownerID: owner, challengeID: header.id, activity: $0.activity,
-                       receivedAt: now.addingTimeInterval(301).ISO8601Format())
+                       receivedAt: now.addingTimeInterval(-301).ISO8601Format())
     }
     try FileManager.default.setAttributes([.posixPermissions: 0o500], ofItemAtPath: directory.path)
     #expect(throws: (any Error).self) { try store.merge(record: header, events: events) }

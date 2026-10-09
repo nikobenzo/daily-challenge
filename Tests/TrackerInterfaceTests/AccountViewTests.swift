@@ -50,7 +50,7 @@ struct AccountViewTests {
         #expect(SyncState.savedLocally(pending: 1).plainText == "Saved on this Mac, 1 change waiting")
         #expect(SyncState.unavailable(pending: 2, error: "Offline").plainText == "Can't reach the server, your entries are safe")
         #expect(SyncState.synced(at: checked, clockWarning: true).clockWarningText
-            == "Some entries arrived late; check your Mac's clock if this keeps happening")
+            == "This Mac's clock looks ahead of the server; check Date & Time if this keeps happening")
         #expect(SyncState.synced(at: checked, clockWarning: false).clockWarningText == nil)
         let all: [SyncState] = [.localOnly, .unavailable(pending: 1, error: "x"), .checking(pending: 0), .checking(pending: 2),
                                 .savedLocally(pending: 2), .awaitingCheck, .synced(at: checked, clockWarning: true)]

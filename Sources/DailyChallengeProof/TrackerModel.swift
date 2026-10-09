@@ -38,7 +38,7 @@ enum SyncState: Equatable {
 
     var clockWarningText: String? {
         guard case .synced(_, true) = self else { return nil }
-        return "Some entries arrived late; check your Mac's clock if this keeps happening"
+        return "This Mac's clock looks ahead of the server; check Date & Time if this keeps happening"
     }
 
     private static func changes(_ count: Int) -> String { count == 1 ? "1 change" : "\(count) changes" }

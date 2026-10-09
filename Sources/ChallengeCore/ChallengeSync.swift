@@ -67,9 +67,15 @@ public struct ChallengeEvent: Codable, Sendable {
         if receipt == nil { parser.formatOptions = [.withInternetDateTime]; receipt = parser.date(from: receivedAt) }
         return receipt
     }
+    /// True when the entry was recorded more than five minutes after the server
+    /// received it, so the recording clock must be ahead of the server's. Late
+    /// delivery (a sleeping or offline Mac, an unreachable server, a sync that runs
+    /// a while after the edit) puts recordedAt *behind* receipt and is expected, so
+    /// it is not flagged. A slow clock looks the same as late delivery from these
+    /// two timestamps and cannot be detected here.
     public var hasClockWarning: Bool {
         guard let receiptDate else { return false }
-        return abs(receiptDate.timeIntervalSince(activity.recordedAt)) > 300
+        return activity.recordedAt.timeIntervalSince(receiptDate) > 300
     }
 }
 

@@ -59,14 +59,57 @@ private func confirmed(_ events: [ChallengeEvent], at date: Date = syncDate) -> 
     #expect(a.summary(on: syncDate, asOf: syncDate).diet == .clean)
 }
 
-@Test func clockWarningBoundaryDoesNotChangeEventOrdering() {
+@Test func clockWarningOnlyFlagsAnEntryRecordedAheadOfItsReceipt() {
     let activity = Challenge.Activity(id: UUID(), day: syncDate, recordedAt: syncDate,
                                       action: .pour(450), undonePourID: nil, deviceID: "fixture")
-    for delta in [-301.0, -300, 0, 300, 301] {
+    // Positive deltas are late delivery (received after recording), however late.
+    for delta in [-301.0, -300, 0, 300, 301, 86_400] {
         let event = ChallengeEvent(ownerID: UUID(), challengeID: UUID(), activity: activity,
                                    receivedAt: syncDate.addingTimeInterval(delta).ISO8601Format())
-        #expect(event.hasClockWarning == (abs(delta) > 300))
+        #expect(event.hasClockWarning == (delta < -300), "receipt offset \(delta)")
     }
+}
+
+@Test func clockWarningClearsOnTheNextCleanMergeAndIgnoresRefetchedHistory() throws {
+    let directory = fixtureDirectory(), owner = UUID()
+    defer { try? FileManager.default.removeItem(at: directory) }
+    var store = try ChallengeStore(ownerID: owner, directory: directory)
+    try store.start(on: syncDate)
+    try store.record(.pour(450), on: syncDate, at: syncDate)
+    let header = try #require(store.record)
+    let ahead = confirmed(store.pending, at: syncDate.addingTimeInterval(-301))
+    try store.merge(record: header, events: ahead)
+    #expect(store.hasClockWarning)
+    #expect(try ChallengeStore(ownerID: owner, directory: directory).hasClockWarning)
+    // The next sync refetches the flagged entry with a late-delivered new one.
+    try store.record(.pour(450), on: syncDate, at: syncDate.addingTimeInterval(60))
+    let late = confirmed(store.pending, at: syncDate.addingTimeInterval(3600))
+    try store.merge(record: header, events: ahead + late)
+    #expect(!store.hasClockWarning)
+    try store.merge(record: header, events: ahead + late)
+    #expect(!store.hasClockWarning)
+    #expect(try !ChallengeStore(ownerID: owner, directory: directory).hasClockWarning)
+}
+
+@Test func aStickyWarningFromAnOlderFileClearsOnTheFirstCleanMerge() throws {
+    let directory = fixtureDirectory(), owner = UUID()
+    defer { try? FileManager.default.removeItem(at: directory) }
+    var store = try ChallengeStore(ownerID: owner, directory: directory)
+    try store.start(on: syncDate)
+    try store.record(.pour(900), on: syncDate, at: syncDate)
+    let header = try #require(store.record)
+    let late = confirmed(store.pending, at: syncDate.addingTimeInterval(3600))
+    try store.merge(record: header, events: late)
+    // Older builds OR'd every delayed entry into a flag that never cleared.
+    let file = directory.appendingPathComponent("challenge-\(owner.uuidString.lowercased()).json")
+    var json = try #require(JSONSerialization.jsonObject(with: Data(contentsOf: file)) as? [String: Any])
+    json["clockWarning"] = true
+    try JSONSerialization.data(withJSONObject: json).write(to: file)
+    var reopened = try ChallengeStore(ownerID: owner, directory: directory)
+    #expect(reopened.hasClockWarning)
+    try reopened.merge(record: header, events: late)
+    #expect(!reopened.hasClockWarning)
+    #expect(try !ChallengeStore(ownerID: owner, directory: directory).hasClockWarning)
 }
 
 @Test func migrationBacksUpExactLegacyBytesAndRetainsTheRealWorld900mlScenario() throws {

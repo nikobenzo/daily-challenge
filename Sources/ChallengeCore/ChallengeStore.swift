@@ -124,9 +124,13 @@ public struct ChallengeStore {
             }
         }
         try next.challenge.merge(events.map(\.activity))
+        // Every sync refetches the full history, so the warning reflects only this
+        // Mac's uploads that this merge acknowledges. It clears on the next merge
+        // whose acknowledged uploads are clean, including a flag from an older file.
+        let acknowledged = events.filter { next.pendingIDs!.contains($0.id) }
         for event in events { next.pendingIDs!.remove(event.id) }
         next.headerPending = false
-        next.clockWarning = next.clockWarning! || events.contains(where: \.hasClockWarning)
+        next.clockWarning = acknowledged.contains(where: \.hasClockWarning)
         try commit(next)
     }
 
