@@ -91,28 +91,36 @@ final class SoftwareUpdates: NSObject, SPUStandardUserDriverDelegate {
     }
 }
 
-/// The About group's update row in the Account tab.
+/// The About row's update state: an amber version chip and Install when an update is
+/// waiting, otherwise a check-for-updates icon. The wrench sits after it in AccountView.
 struct SoftwareUpdateSettings: View {
     let updates: SoftwareUpdates?
 
     var body: some View {
         if let updates, updates.isConfigured {
-            HStack {
-                if let version = updates.availableVersion {
-                    Label("Version \(version) is available", systemImage: "arrow.down.circle")
-                } else {
-                    Text("Updates install from inside the app.").foregroundStyle(.secondary)
-                }
-                Spacer()
-                Button(updates.availableVersion == nil ? "Check for updates" : "Install update") {
-                    updates.checkForUpdates()
-                }
-                .disabled(!updates.canCheck)
+            if let version = updates.availableVersion {
+                Badge(symbol: "arrow.down.circle", text: version, fill: Theme.amberTint, foreground: Theme.amberText, height: 30)
+                    .help("Version \(version) is available")
+                    .accessibilityLabel("Version \(version) is available")
+                Spacer(minLength: 4)
+                Button("Install") { updates.checkForUpdates() }
+                    .buttonStyle(PrimaryPillStyle(height: 36, expands: false))
+                    .disabled(!updates.canCheck)
+                    .help("Install update. Daily Challenge also checks once a day on its own.")
+                    .accessibilityLabel("Install update")
+            } else {
+                Spacer(minLength: 4)
+                Button { updates.checkForUpdates() } label: { Image(systemName: "arrow.triangle.2.circlepath") }
+                    .buttonStyle(RoundIconStyle(size: 36))
+                    .disabled(!updates.canCheck)
+                    .help("Check for updates. Updates install from inside the app; it also checks once a day on its own.")
+                    .accessibilityLabel("Check for updates")
             }
-            .help("Daily Challenge also checks once a day on its own.")
         } else {
-            Text("Updates are off in this development build.")
-                .font(.caption).foregroundStyle(.secondary)
+            Badge(symbol: "slash.circle", text: "Updates off", foreground: Theme.textTertiary, height: 30)
+                .help("Updates are off in this development build.")
+                .accessibilityLabel("Updates are off in this development build.")
+            Spacer(minLength: 4)
         }
     }
 }

@@ -15,6 +15,12 @@ extension EnvironmentValues {
     }
 }
 
+/// Whether the popup is on screen; the menu-bar glyph fills while it is open.
+@MainActor @Observable
+final class PopupPresence {
+    var isOpen = false
+}
+
 /// MenuBarExtra may retain its SwiftUI tree after dismissal. Native occlusion,
 /// not just onDisappear, gates all presentation clocks.
 struct PopupVisibilityReader: NSViewRepresentable {

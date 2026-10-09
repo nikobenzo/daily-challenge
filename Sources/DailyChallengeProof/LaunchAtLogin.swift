@@ -59,12 +59,28 @@ struct LaunchAtLoginSettings: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Toggle("Launch at login on this Mac", isOn: Binding(
-                get: { model.isRequested }, set: { model.setRequested($0) }
-            ))
-            Text(model.statusMessage).font(.caption).foregroundStyle(.secondary)
+            Toggle(isOn: Binding(get: { model.isRequested }, set: { model.setRequested($0) })) {
+                HStack(spacing: 12) {
+                    Image(systemName: "desktopcomputer").font(.system(size: 17, weight: .medium)).frame(width: 24)
+                        .accessibilityHidden(true)
+                    Text("Launch at login").font(Theme.Fonts.rowLabel)
+                }
+                .foregroundStyle(Theme.textPrimary)
+            }
+            .toggleStyle(GlassToggleStyle())
+            .frame(minHeight: 44)
+            .help(model.statusMessage)
+            .accessibilityLabel("Launch at login on this Mac")
+            .accessibilityHint(model.statusMessage)
+            // On and off are the switch itself; only states needing action are spelled out.
+            if model.status == .requiresApproval || model.status == .notFound {
+                Label(model.statusMessage, systemImage: "exclamationmark.circle")
+                    .font(Theme.Fonts.caption).foregroundStyle(Theme.amberText)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.leading, 36)
+            }
             if let error = model.errorMessage {
-                Text(error).font(.caption).foregroundStyle(.red).textSelection(.enabled)
+                FieldError(text: error).padding(.leading, 36)
             }
         }
         .onAppear { model.refresh() }

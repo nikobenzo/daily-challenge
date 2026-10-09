@@ -9,17 +9,29 @@ struct BackupSettingsView: View {
     @State private var message: String?
     @State private var confirming = false
 
+    static let privacyNote = "Exports contain personal data: your account ID, challenge settings and full activity/correction history. Store and share them carefully. No credentials or session tokens are included."
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Backups").font(.headline)
-            Text("Exports contain personal data: your account ID, challenge settings and full activity/correction history. Store and share them carefully. No credentials or session tokens are included.")
-                .font(.caption).foregroundStyle(.secondary)
-            HStack {
-                Button("Export JSON…", action: export)
-                Button("Import JSON…", action: selectImport)
+        VStack(alignment: .leading, spacing: 4) {
+            SettingRow(symbol: "cylinder.split.1x2", title: "Your data") {
+                Button(action: export) { Label("Export", systemImage: "square.and.arrow.up") }
+                    .buttonStyle(TintedPillStyle(height: 36))
+                    .help("Export JSON… " + Self.privacyNote)
+                    .accessibilityLabel("Export JSON")
+                    .accessibilityHint(Self.privacyNote)
+                Button(action: selectImport) { Label("Import", systemImage: "square.and.arrow.down") }
+                    .buttonStyle(TintedPillStyle(height: 36))
+                    .help("Import JSON… Merges an export from this account; existing history is kept.")
+                    .accessibilityLabel("Import JSON")
             }
             .disabled(model.challenge == nil)
-            if let message { Text(message).font(.caption).textSelection(.enabled) }
+            .help(Self.privacyNote)
+            if let message {
+                Text(message).font(Theme.Fonts.caption).foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .textSelection(.enabled)
+                    .padding(.leading, 36)
+            }
         }
         .confirmationDialog("Merge this export?", isPresented: $confirming, titleVisibility: .visible) {
             Button("Import and merge") {

@@ -9,21 +9,15 @@ struct TimeZonePicker: View {
     @State private var choosing = false
 
     var body: some View {
-        HStack {
-            Text("Time zone")
-            Spacer()
-            Button { choosing = true } label: {
-                HStack(spacing: 4) {
-                    Text(TimeZoneChoices.title(selection, at: now))
-                    Image(systemName: "chevron.up.chevron.down").font(.caption2)
+        SettingRow(symbol: "globe", title: "Timezone") {
+            Button { choosing = true } label: { chip(TimeZoneChoices.title(selection, at: now)) }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Time zone")
+                .accessibilityValue(TimeZoneChoices.title(selection, at: now))
+                .help("Choose the city whose midnight starts each challenge day")
+                .popover(isPresented: $choosing, arrowEdge: .bottom) {
+                    TimeZoneList(selection: $selection, now: now) { choosing = false }
                 }
-            }
-            .accessibilityLabel("Time zone")
-            .accessibilityValue(TimeZoneChoices.title(selection, at: now))
-            .help("Choose the city whose midnight starts each challenge day")
-            .popover(isPresented: $choosing, arrowEdge: .bottom) {
-                TimeZoneList(selection: $selection, now: now) { choosing = false }
-            }
         }
     }
 }

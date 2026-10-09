@@ -42,44 +42,47 @@ struct WaterJugView: View {
         }
     }
 
+    /// 88 × 112 jug (board viewBox 124 × 158): glass vessel, gradient water, handle and cap.
+    /// Over the goal the water stays at the rim and droplets sit under the jug.
     private func drawing(level: Double, slosh: Double, spill: Double) -> some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 18)
-                .strokeBorder(.primary.opacity(contrast == .increased ? 1 : 0.5), lineWidth: 5)
-                .frame(width: 47, height: 93).offset(x: 82, y: 9)
+        let outline = contrast == .increased ? Theme.textPrimary : Theme.jugOutline
+        return ZStack(alignment: .topLeading) {
+            RoundedRectangle(cornerRadius: 11)
+                .strokeBorder(outline.opacity(0.75), lineWidth: 5)
+                .frame(width: 30, height: 44)
+                .offset(x: 56, y: 42)
             ZStack {
-                JugVessel().fill(Color(nsColor: .controlBackgroundColor).opacity(reduceTransparency ? 1 : 0.5))
+                JugVessel().fill(reduceTransparency ? Theme.solidGlass : Theme.jugGlass)
                 JugWater(level: level, slosh: slosh)
-                    .fill(LinearGradient(colors: [.cyan.opacity(0.75), .blue.opacity(0.85)], startPoint: .top, endPoint: .bottom))
+                    .fill(Theme.jugGradient)
                     .clipShape(JugVessel())
-                JugVessel().stroke(.primary.opacity(contrast == .increased ? 1 : 0.5), lineWidth: 2)
-                Capsule().fill(.white.opacity(0.35)).frame(width: 6, height: 78).offset(x: -46, y: 28)
-                ForEach([3, 2, 1], id: \.self) { litre in
-                    HStack(spacing: 4) {
-                        Rectangle().fill(.primary).frame(width: 9, height: 1)
-                        Text("\(litre)").font(.system(size: 9, weight: .medium, design: .rounded))
-                    }.padding(2)
-                        .background(Color(nsColor: .windowBackgroundColor), in: RoundedRectangle(cornerRadius: 3))
-                        .offset(x: 43, y: (0.5 - Double(litre) / 4) * 174)
+                JugVessel().stroke(outline, lineWidth: 2.5)
+                Capsule(style: .circular).fill(.white.opacity(0.35)).frame(width: 4, height: 54).offset(x: -21, y: 14)
+            }
+            .frame(width: 66, height: 100)
+            .offset(y: 10)
+            RoundedRectangle(cornerRadius: 3)
+                .fill(Theme.jugGlass)
+                .overlay(RoundedRectangle(cornerRadius: 3).stroke(outline, lineWidth: 2))
+                .frame(width: 28, height: 8)
+                .offset(x: 19, y: 3)
+            if millilitres > 4_000 {
+                HStack(spacing: 34) {
+                    ForEach(0..<2) { _ in Image(systemName: "drop.fill").font(.system(size: 8)) }
                 }
-                Text("4 L").font(.caption2.weight(.bold)).padding(2)
-                    .background(Color(nsColor: .windowBackgroundColor), in: RoundedRectangle(cornerRadius: 3))
-                    .offset(y: -56)
-            }.frame(width: 150, height: 174)
-            RoundedRectangle(cornerRadius: 4).fill(.secondary.opacity(0.5))
-                .frame(width: 55, height: 10).offset(y: -84)
+                .foregroundStyle(Theme.water)
+                .offset(x: 13, y: 113)
+            }
             if spill > 0 {
                 HStack(spacing: 6) {
                     ForEach(0..<3) { index in
-                        Image(systemName: "drop.fill").font(.system(size: 9)).offset(y: CGFloat(index % 2) * 7)
+                        Image(systemName: "drop.fill").font(.system(size: 8)).offset(y: CGFloat(index % 2) * 6)
                     }
-                }.foregroundStyle(.primary).opacity(spill)
-                    .offset(x: -70 - (1 - spill) * 12, y: -35 + (1 - spill) * 115)
+                }.foregroundStyle(Theme.water).opacity(spill)
+                    .offset(x: 16, y: -2 - (1 - spill) * 12)
             }
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: 190)
-        .clipped()
+        .frame(width: Theme.Size.jug.width + 8, height: Theme.Size.jug.height + 14, alignment: .topLeading)
     }
 }
 

@@ -3,6 +3,7 @@ import SwiftUI
 
 struct WaterReminderSettingsView: View {
     @Bindable var model: WaterReminderController
+    @State private var choosingWindow = false
 
     static func details(timeZone: TimeZone) -> String {
         """
@@ -14,26 +15,64 @@ struct WaterReminderSettingsView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Toggle("Water reminders on this Mac", isOn: setting(\.enabled))
-            Stepper("Every \(model.settings.intervalMinutes) minutes", value: setting(\.intervalMinutes), in: 15...240, step: 15)
+        let interval = model.settings.intervalMinutes
+        VStack(alignment: .leading, spacing: 6) {
+            Toggle(isOn: setting(\.enabled)) {
+                HStack(spacing: 12) {
+                    Image(systemName: "bell").font(.system(size: 17, weight: .medium)).frame(width: 24)
+                        .accessibilityHidden(true)
+                    Text("Reminders").font(Theme.Fonts.rowLabel)
+                    Image(systemName: "questionmark.circle").font(.system(size: 13)).foregroundStyle(Theme.textTertiary)
+                        .help("Turn this on for just one Mac. " + Self.details(timeZone: model.timeZone))
+                        .accessibilityLabel("More about water reminders")
+                        .accessibilityHint(Self.details(timeZone: model.timeZone))
+                }
+                .foregroundStyle(Theme.textPrimary)
+            }
+            .toggleStyle(GlassToggleStyle())
+            .frame(minHeight: 44)
+            .accessibilityLabel("Water reminders on this Mac")
             HStack {
-                DatePicker("From", selection: time(\.startMinute), displayedComponents: .hourAndMinute)
-                DatePicker("Until", selection: time(\.endMinute), displayedComponents: .hourAndMinute)
+                PillStepper(text: "\(interval) min", accessibilityText: "Every \(interval) minutes",
+                            decrement: interval > 15 ? { step(-15) } : nil,
+                            increment: interval < 240 ? { step(15) } : nil)
+                    .help("How often to remind you")
+                Spacer()
+                Button { choosingWindow = true } label: {
+                    Label("\(Self.clock(model.settings.startMinute)) – \(Self.clock(model.settings.endMinute))", systemImage: "clock")
+                        .monospacedDigit()
+                }
+                .buttonStyle(TintedPillStyle(height: Theme.Size.segmentTrack))
+                .help("Reminder hours, \(ChallengeDates.city(model.timeZone)) time")
+                .accessibilityLabel("Reminder hours")
+                .accessibilityValue("From \(Self.clock(model.settings.startMinute)) until \(Self.clock(model.settings.endMinute))")
+                .popover(isPresented: $choosingWindow, arrowEdge: .bottom) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        DatePicker("From", selection: time(\.startMinute), displayedComponents: .hourAndMinute)
+                        DatePicker("Until", selection: time(\.endMinute), displayedComponents: .hourAndMinute)
+                    }
+                    .padding(16)
+                    .environment(\.timeZone, model.timeZone)
+                    .environment(\.calendar, Challenge.calendar(for: model.timeZone))
+                    .trackerSurface()
+                }
             }
-            .environment(\.timeZone, model.timeZone)
-            .environment(\.calendar, Challenge.calendar(for: model.timeZone))
-            Text(model.status)
-            if let error = model.errorMessage { Text(error).foregroundStyle(.red) }
-            HStack(spacing: 4) {
-                Text("Turn this on for just one Mac.").foregroundStyle(.secondary)
-                Image(systemName: "questionmark.circle").foregroundStyle(.secondary)
-                    .accessibilityLabel("More about water reminders")
-                    .accessibilityHint(Self.details(timeZone: model.timeZone))
+            .padding(.leading, 36)
+            Text(model.status).font(Theme.Fonts.caption).foregroundStyle(Theme.textTertiary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.leading, 36)
+            if let error = model.errorMessage {
+                FieldError(text: error).padding(.leading, 36)
             }
-            .help(Self.details(timeZone: model.timeZone))
         }
-        .font(.caption)
+    }
+
+    static func clock(_ minute: Int) -> String { String(format: "%02d:%02d", minute / 60, minute % 60) }
+
+    private func step(_ delta: Int) {
+        var settings = model.settings
+        settings.intervalMinutes = min(240, max(15, settings.intervalMinutes + delta))
+        model.update(settings)
     }
 
     private func setting<Value>(_ keyPath: WritableKeyPath<WaterReminderSettings, Value>) -> Binding<Value> {

@@ -54,8 +54,9 @@ final class AppAppearance {
     }
 }
 
-/// The production popup root. Keep the backing surface here, not in previews:
-/// MenuBarExtra's window material otherwise blends the desktop behind the UI.
+/// The production popup root. The glass sheet and the detached footer are drawn by
+/// TrackerView; the window around them stays transparent (PopupWindowAdapter), so a
+/// retained or still-resizing MenuBarExtra window never shows an unfilled band.
 struct TrackerPopup: View {
     let model: TrackerModel
     let auth: ProofModel
@@ -65,50 +66,31 @@ struct TrackerPopup: View {
     var body: some View {
         TrackerView(model: model, auth: auth, section: section)
             .environment(appearance)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .trackerSurface()
+            // minHeight 0: a window shorter than the content still shows it from the top.
+            .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .top)
     }
 }
 
 extension View {
+    /// An opaque themed surface for popovers and standalone renders, where no glass sheet exists.
     func trackerSurface() -> some View {
-        background(Color(nsColor: .windowBackgroundColor).ignoresSafeArea())
-    }
-
-    func trackerCard(cornerRadius: CGFloat = 12) -> some View {
-        modifier(TrackerCard(cornerRadius: cornerRadius))
+        background(Theme.solidGlass.ignoresSafeArea())
     }
 }
 
-private struct TrackerCard: ViewModifier {
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
-    @Environment(\.colorSchemeContrast) private var contrast
-    let cornerRadius: CGFloat
-
-    func body(content: Content) -> some View {
-        let shape = RoundedRectangle(cornerRadius: cornerRadius)
-        content.background {
-            if reduceTransparency || contrast == .increased {
-                shape.fill(Color(nsColor: .controlBackgroundColor))
-            } else {
-                shape.fill(.regularMaterial)
-            }
-        }
-        .overlay(shape.strokeBorder(Color.primary.opacity(contrast == .increased ? 1 : 0), lineWidth: 1))
-    }
-}
-
+/// Appearance row: A (System) / sun (Light) / moon (Dark), icon-only with tooltips.
 struct AppearanceSettings: View {
     @Environment(AppAppearance.self) private var appearance
 
     var body: some View {
         @Bindable var appearance = appearance
-        Picker("Appearance", selection: $appearance.preference) {
-            ForEach(AppearancePreference.allCases) { option in
-                Text(option.title).tag(option)
-            }
+        SettingRow(symbol: "circle.lefthalf.filled", title: "Appearance") {
+            IconSegmented(selection: $appearance.preference, options: [
+                .init(value: .system, text: "A", label: "System: follows macOS"),
+                .init(value: .light, symbol: "sun.max", label: "Light"),
+                .init(value: .dark, symbol: "moon", label: "Dark")
+            ], cell: Theme.Size.appearanceCell, track: Theme.Size.appearanceTrack)
         }
-        .pickerStyle(.segmented)
         .help("System follows macOS. This choice is saved only on this Mac.")
     }
 }

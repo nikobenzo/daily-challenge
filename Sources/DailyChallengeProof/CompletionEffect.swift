@@ -25,7 +25,7 @@ struct CompletionEffect: View {
                         ForEach(0..<(active.kind == .milestone ? 16 : 8), id: \.self) { index in
                             let angle = Double(index) * .pi / (active.kind == .milestone ? 8 : 4)
                             Image(systemName: "sparkle")
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(Theme.done)
                                 .offset(x: cos(angle) * (30 + progress * 110), y: sin(angle) * (20 + progress * 55))
                                 .opacity(1 - progress)
                         }
@@ -61,9 +61,10 @@ struct CompletionEffect: View {
     private func badge(_ kind: CompletionCelebration) -> some View {
         Label(kind == .milestone ? "75 consecutive days!" : "All five complete!",
               systemImage: kind == .milestone ? "trophy.fill" : "checkmark.seal.fill")
-            .font(kind == .milestone ? .headline : .callout)
-            .padding(10)
-            .background(Color(nsColor: .windowBackgroundColor), in: RoundedRectangle(cornerRadius: 10))
-            .overlay { RoundedRectangle(cornerRadius: 10).stroke(.primary.opacity(0.5)) }
+            .font(kind == .milestone ? Theme.Fonts.appName : Theme.Fonts.pill)
+            .foregroundStyle(Theme.doneText)
+            .padding(.horizontal, 14).padding(.vertical, 9)
+            .background(Theme.solidGlass, in: Capsule(style: .circular))
+            .overlay { Capsule(style: .circular).strokeBorder(Theme.done, lineWidth: 1.5) }
     }
 }

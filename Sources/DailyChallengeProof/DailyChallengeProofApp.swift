@@ -7,6 +7,7 @@ struct DailyChallengeProofApp: App {
     @State private var tracker: TrackerModel
     @State private var appearance = AppAppearance()
     @State private var updates: SoftwareUpdates
+    @State private var presence = PopupPresence()
 
     init() {
         let auth = ProofModel()
@@ -23,44 +24,15 @@ struct DailyChallengeProofApp: App {
     }
 
     var body: some Scene {
-        MenuBarExtra("Daily Challenge", systemImage: "drop.circle") {
+        MenuBarExtra {
             TrackerPopup(model: tracker, auth: model, appearance: appearance)
                 .environment(updates)
+                .environment(presence)
+        } label: {
+            // drop.circle at rest, drop.circle.fill while the popup is open.
+            Image(systemName: presence.isOpen ? "drop.circle.fill" : "drop.circle")
+                .accessibilityLabel("Daily Challenge")
         }
         .menuBarExtraStyle(.window)
-    }
-}
-
-struct ProofView: View {
-    @Bindable var model: ProofModel
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Image(systemName: "arrow.triangle.2.circlepath.icloud")
-                Text(model.authStep.title).font(.headline)
-                Spacer()
-                if model.isBusy { ProgressView().controlSize(.small) }
-            }
-            Text(model.authStep.subtitle)
-                .font(.caption).foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-
-            if model.configurationReady {
-                AuthView(model: model)
-            }
-
-            Divider()
-            AppearanceSettings()
-            LaunchAtLoginSettings()
-            // AuthView shows its own guidance and errors beside the form.
-            if !model.configurationReady {
-                Text(model.status).font(.caption)
-                if let error = model.errorMessage {
-                    Text(error).font(.caption).foregroundStyle(.red)
-                        .textSelection(.enabled)
-                }
-            }
-        }
     }
 }

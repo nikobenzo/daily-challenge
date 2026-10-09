@@ -1,8 +1,8 @@
 import ChallengeCore
 import SwiftUI
 
-/// The signed-in Account tab: one grouped list a non-technical person can read.
-/// Sign-in itself stays in `ProofView`.
+/// The signed-in Account tab: profile and sync, device settings, your data and account,
+/// then About, separated by hairlines. Sign-in itself stays in `ProofView`.
 struct AccountView: View {
     @Bindable var auth: ProofModel
     let tracker: TrackerModel
@@ -19,37 +19,35 @@ struct AccountView: View {
     private var reduceMotion: Bool { reduceMotionOverride ?? systemReduceMotion }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            group("You", divider: false) { you }
-            group("Sync") { sync }
-            if let reminders = tracker.reminders {
-                group("Reminders") { WaterReminderSettingsView(model: reminders) }
-            }
-            group("Appearance & startup") {
-                AppearanceSettings()
+        VStack(spacing: 0) {
+            you
+                .padding(.horizontal, Theme.Size.sectionHorizontal)
+                .padding(.vertical, Theme.Size.sectionVertical)
+            HairlineDivider()
+            VStack(spacing: 4) {
+                if let reminders = tracker.reminders { WaterReminderSettingsView(model: reminders) }
                 LaunchAtLoginSettings()
+                AppearanceSettings()
             }
-            group("Your data") { BackupSettingsView(model: tracker) }
-            group("Account") { account }
-            group("About") {
-                HStack {
-                    Text("Daily Challenge")
-                    Spacer()
-                    Text(version.map { "Version \($0)" } ?? "Development build").foregroundStyle(.secondary)
-                }
-                .accessibilityElement(children: .combine)
-                SoftwareUpdateSettings(updates: updates)
+            .padding(.horizontal, Theme.Size.sectionHorizontal)
+            .padding(.vertical, 10)
+            HairlineDivider()
+            VStack(spacing: 4) {
+                BackupSettingsView(model: tracker)
+                account
             }
-            Divider()
-            DisclosureGroup(isExpanded: Binding(
-                get: { showsAdvanced },
-                set: { expanded in withAnimation(reduceMotion ? nil : .default) { showsAdvanced = expanded } }
-            )) {
-                AdvancedDiagnosticsView(model: auth).padding(.top, 8)
-            } label: {
-                Text("Advanced").font(.subheadline.weight(.semibold))
+            .padding(.horizontal, Theme.Size.sectionHorizontal)
+            .padding(.vertical, 10)
+            HairlineDivider()
+            about
+                .padding(.horizontal, Theme.Size.sectionHorizontal)
+                .padding(.vertical, Theme.Space.s)
+            if showsAdvanced {
+                HairlineDivider()
+                AdvancedDiagnosticsView(model: auth)
+                    .padding(.horizontal, Theme.Size.sectionHorizontal)
+                    .padding(.vertical, Theme.Space.s)
             }
-            .accessibilityHint("Sync diagnostics for troubleshooting")
         }
         .onChange(of: auth.ownerID) { _, _ in
             showsAdvanced = false
@@ -59,29 +57,38 @@ struct AccountView: View {
         }
     }
 
-    private func group<Content: View>(_ title: String, divider: Bool = true, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if divider { Divider() }
-            Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
-                .accessibilityAddTraits(.isHeader)
-            content()
-        }
-    }
-
     private var you: some View {
-        HStack(spacing: 10) {
-            Text(initial)
-                .font(.headline).foregroundStyle(.white)
-                .frame(width: 36, height: 36)
-                .background(Circle().fill(Color.accentColor))
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(auth.signedInEmail ?? "Signed in").textSelection(.enabled)
-                Text(progress).font(.caption).foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 12) {
+                Text(initial)
+                    .font(.system(size: 18, weight: .heavy)).foregroundStyle(.white)
+                    .frame(width: 44, height: 44)
+                    .background(Circle().fill(Theme.appMarkGradient))
+                    .shadow(color: Theme.primaryShadow, radius: 6, y: 3)
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(auth.signedInEmail ?? "Signed in").font(Theme.Fonts.pill).foregroundStyle(Theme.textPrimary)
+                        .lineLimit(1).truncationMode(.middle)
+                        .textSelection(.enabled)
+                    Label(progress, systemImage: "calendar")
+                        .font(Theme.Fonts.caption).foregroundStyle(Theme.textSecondary)
+                        .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                }
+                .accessibilityElement(children: .combine)
+                Spacer(minLength: 4)
+                sync
             }
-            Spacer(minLength: 0)
+            if let warning = tracker.syncState.clockWarningText {
+                Label(warning, systemImage: "clock.badge.exclamationmark")
+                    .font(Theme.Fonts.caption).foregroundStyle(Theme.amberText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if let skipped = tracker.skippedNotice {
+                Label(skipped, systemImage: "exclamationmark.icloud")
+                    .font(Theme.Fonts.caption).foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
-        .accessibilityElement(children: .combine)
     }
 
     private var initial: String {
@@ -102,55 +109,44 @@ struct AccountView: View {
         return "Day \(day)\(bestStreak >= 75 ? " · 75 reached" : "") · \(started)"
     }
 
+    /// Sync pill (state glyph + time or short word) and the Sync now icon button.
     private var sync: some View {
         let state = tracker.syncState
-        return VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .firstTextBaseline) {
-                Label(state.plainText, systemImage: symbol(for: state))
-                    .help(errorDetail(state) ?? "Your entries are saved on this Mac first, then copied to the server.")
-                Spacer()
-                if tracker.syncActive {
-                    Button("Sync now") { Task { await tracker.sync(force: true) } }
-                        .disabled(tracker.isSyncing)
-                }
+        let synced = if case .synced(_, false) = state { true } else { false }
+        let failing = if case .unavailable = state { true } else { false }
+        return HStack(spacing: 8) {
+            Badge(symbol: SyncFooterItem.symbol(state), text: SyncFooterItem.shortText(state),
+                  fill: synced ? Theme.doneTint : failing ? Theme.amberTint : Theme.controlFill,
+                  foreground: synced ? Theme.doneText : failing ? Theme.amberText : Theme.textSecondary, height: 32)
+                .help(errorDetail(state) ?? "\(state.plainText). Your entries are saved on this Mac first, then copied to the server.")
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(state.plainText)
+            if tracker.syncActive {
+                Button { Task { await tracker.sync(force: true) } } label: { Image(systemName: "arrow.triangle.2.circlepath") }
+                    .buttonStyle(RoundIconStyle(size: 36))
+                    .disabled(tracker.isSyncing)
+                    .help("Sync now").accessibilityLabel("Sync now")
             }
-            if let warning = state.clockWarningText {
-                Label(warning, systemImage: "clock.badge.exclamationmark")
-                    .font(.caption).foregroundStyle(.secondary)
-            }
-            if let skipped = tracker.skippedNotice {
-                Label(skipped, systemImage: "exclamationmark.icloud")
-                    .font(.caption).foregroundStyle(.secondary)
-            }
-        }
-    }
-
-    private func symbol(for state: SyncState) -> String {
-        switch state {
-        case .synced: "checkmark.icloud"
-        case .unavailable: "icloud.slash"
-        case .checking: "arrow.triangle.2.circlepath.icloud"
-        case .localOnly, .savedLocally, .awaitingCheck: "internaldrive"
         }
     }
 
     private func errorDetail(_ state: SyncState) -> String? {
         guard case let .unavailable(pending, error) = state else { return nil }
-        return "\(pending) change\(pending == 1 ? "" : "s") waiting on this Mac. Details: \(error)"
+        return "\(state.plainText). \(pending) change\(pending == 1 ? "" : "s") waiting on this Mac. Details: \(error)"
     }
 
     private var account: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 4) {
             Button {
                 if changingPassword { closePasswordForm() } else { openPasswordForm() }
             } label: {
-                HStack {
-                    Text("Change password")
-                    Spacer()
+                SettingRow(symbol: "key", title: "Change password") {
                     if passwordSaved && !changingPassword {
-                        Text("Changed").font(.caption).foregroundStyle(.secondary)
+                        Badge(symbol: "checkmark", text: "Changed", fill: Theme.doneTint, foreground: Theme.doneText)
                     }
-                    Image(systemName: changingPassword ? "chevron.down" : "chevron.right").accessibilityHidden(true)
+                    Image(systemName: changingPassword ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 13, weight: .bold)).foregroundStyle(Theme.textSecondary)
+                        .accessibilityHidden(true)
                 }
                 .contentShape(Rectangle())
             }
@@ -159,58 +155,77 @@ struct AccountView: View {
             .accessibilityHint(changingPassword ? "Hides the new password form" : "Shows a form to choose a new password")
             .help("Choose a new password for this account. Your other Macs stay signed in.")
             if changingPassword { passwordForm }
-            HStack {
-                Text("Sign out on this Mac")
-                Spacer()
-                Button("Sign out") {
-                    Task {
-                        await auth.signOut()
-                        if auth.ownerID != nil { signOutError = auth.errorMessage }
-                    }
+            Button {
+                Task {
+                    await auth.signOut()
+                    if auth.ownerID != nil { signOutError = auth.errorMessage }
                 }
-                .disabled(auth.isBusy)
+            } label: {
+                SettingRow(symbol: "rectangle.portrait.and.arrow.right", title: "Sign out on this Mac", tint: Theme.danger) {
+                    EmptyView()
+                }
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            .disabled(auth.isBusy)
             .help("Your other Macs stay signed in. Nothing is deleted.")
             if let signOutError {
-                Text("Couldn't sign out. \(signOutError)").font(.caption).foregroundStyle(.red)
-                    .textSelection(.enabled)
+                FieldError(text: "Couldn't sign out. \(signOutError)")
             }
         }
     }
 
+    private enum PasswordField: Hashable { case new, repeated }
+    @FocusState private var passwordFocus: PasswordField?
+
     private var passwordForm: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            SecureField("New password", text: $auth.newPassword)
-                .textFieldStyle(.roundedBorder)
-                .textContentType(.newPassword)
-            SecureField("Type the new password again", text: $auth.passwordConfirmation)
-                .textFieldStyle(.roundedBorder)
-                .textContentType(.newPassword)
-                .onSubmit(savePassword)
+        VStack(alignment: .leading, spacing: 10) {
+            GlassField(symbol: "lock", placeholder: "New password", text: $auth.newPassword, secure: true,
+                       contentType: .newPassword, focus: $passwordFocus, equals: .new) { passwordFocus = .repeated }
+            GlassField(symbol: "lock.shield", placeholder: "Repeat password", text: $auth.passwordConfirmation, secure: true,
+                       invalid: !auth.passwordConfirmation.isEmpty && auth.newPassword != auth.passwordConfirmation,
+                       contentType: .newPassword, focus: $passwordFocus, equals: .repeated, onSubmit: savePassword)
             if !auth.passwordConfirmation.isEmpty, auth.newPassword != auth.passwordConfirmation {
-                Text("The passwords don't match yet.").font(.caption).foregroundStyle(.orange)
-            } else if let problem = ProofModel.passwordProblem(auth.newPassword) {
-                Text(problem).font(.caption).foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                FieldError(text: "The passwords don't match yet.")
             }
+            RuleChips(password: auth.newPassword, confirmation: auth.passwordConfirmation)
             if let passwordError {
-                Label(passwordError, systemImage: "exclamationmark.triangle.fill")
-                    .font(.caption).foregroundStyle(.red)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .textSelection(.enabled)
-                    .accessibilityLabel("Error: \(passwordError)")
+                FieldError(text: passwordError)
             }
             HStack {
-                Button("Save password", action: savePassword)
-                    .keyboardShortcut(.defaultAction)
-                    .disabled(!canSavePassword)
-                Button("Cancel", action: closePasswordForm)
+                Button("Cancel", action: closePasswordForm).buttonStyle(TintedPillStyle(height: 36))
                 Spacer()
                 if auth.isBusy { ProgressView().controlSize(.small) }
+                Button("Save password", action: savePassword)
+                    .buttonStyle(PrimaryPillStyle(height: 36, expands: false))
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(!canSavePassword)
             }
         }
         .disabled(auth.isBusy)
-        .padding(.leading, 12)
+        .padding(.vertical, 6)
+        .onAppear { passwordFocus = .new }
+    }
+
+    /// Version, update state and the Advanced (wrench) diagnostics toggle.
+    private var about: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "info.circle").font(.system(size: 17, weight: .medium)).foregroundStyle(Theme.textSecondary)
+                .frame(width: 24).accessibilityHidden(true)
+            Text(version ?? "Development build").font(Theme.Fonts.pill).foregroundStyle(Theme.textSecondary)
+                .help("Daily Challenge \(version.map { "version \($0)" } ?? "development build")")
+                .accessibilityLabel("Daily Challenge \(version.map { "Version \($0)" } ?? "Development build")")
+            SoftwareUpdateSettings(updates: updates)
+            Button {
+                withAnimation(reduceMotion ? nil : .default) { showsAdvanced.toggle() }
+            } label: { Image(systemName: "wrench.and.screwdriver") }
+                .buttonStyle(RoundIconStyle(size: 36, fill: showsAdvanced ? Theme.amberTint : Theme.controlFill,
+                                            foreground: showsAdvanced ? Theme.amberText : Theme.textPrimary))
+                .help("Advanced: sync diagnostics for troubleshooting")
+                .accessibilityLabel("Advanced")
+                .accessibilityValue(showsAdvanced ? "Expanded" : "Collapsed")
+                .accessibilityHint("Sync diagnostics for troubleshooting")
+        }
     }
 
     private var canSavePassword: Bool {
