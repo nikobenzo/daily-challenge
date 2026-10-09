@@ -55,8 +55,8 @@ final class AppAppearance {
 }
 
 /// The production popup root. The glass sheet and the detached footer are drawn by
-/// TrackerView; the window around them stays transparent (PopupWindowAdapter), so a
-/// retained or still-resizing MenuBarExtra window never shows an unfilled band.
+/// TrackerView; the popup panel around them stays transparent (PopupPanel), so a window
+/// still resizing around the animated glass never shows an unfilled band.
 struct TrackerPopup: View {
     let model: TrackerModel
     let auth: ProofModel
@@ -66,8 +66,9 @@ struct TrackerPopup: View {
     var body: some View {
         TrackerView(model: model, auth: auth, section: section)
             .environment(appearance)
-            // minHeight 0: a window shorter than the content still shows it from the top.
-            .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .top)
+            // minHeight 0: a window not yet grown to the content still shows it from the top.
+            // The width keeps the sheet's 420 pt minimum, so no host can squeeze or clip it.
+            .frame(maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .top)
     }
 }
 

@@ -14,7 +14,6 @@ struct TrackerView: View {
     @State private var isVisible = false
     @State private var choosingStart = false
     @State private var showingRules = false
-    @Environment(PopupPresence.self) private var presence: PopupPresence?
     @Environment(\.trackerReduceMotionOverride) private var reduceMotionOverride
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
 
@@ -50,12 +49,7 @@ struct TrackerView: View {
             footer
         }
         .environment(\.trackerPopupVisible, isVisible)
-        .background {
-            PopupVisibilityReader {
-                isVisible = $0
-                presence?.isOpen = $0
-            }
-        }
+        .background { PopupVisibilityReader { isVisible = $0 } }
         .environment(\.calendar, model.dates.calendar)
         .environment(\.timeZone, model.dates.timeZone)
         .onAppear {
@@ -64,9 +58,12 @@ struct TrackerView: View {
             model.refresh()
             model.requestSync()
         }
-        .onDisappear {
-            isVisible = false
-            presence?.isOpen = false
+        .onDisappear { isVisible = false }
+        // The popup panel is kept between openings: catch up whenever it is shown again.
+        .onChange(of: isVisible) { _, visible in
+            guard visible else { return }
+            model.refresh()
+            model.requestSync()
         }
         .onChange(of: auth.ownerID) { _, owner in
             model.activate(ownerID: owner)

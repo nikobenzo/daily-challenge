@@ -14,6 +14,7 @@ enum Theme {
     static let glassBorder = color(dark: rgba(255, 255, 255, 0.16), light: rgba(255, 255, 255, 0.9))
     static let glassHighlight = color(dark: rgba(255, 255, 255, 0.18), light: rgba(255, 255, 255, 0.9))
     static let sheetShadow = color(dark: rgba(8, 10, 40, 0.45), light: rgba(30, 40, 90, 0.22))
+    static let footerShadow = color(dark: rgba(8, 10, 40, 0.40), light: rgba(30, 40, 90, 0.18))
     static let hairline = color(dark: rgba(255, 255, 255, 0.10), light: rgba(15, 23, 42, 0.08))
 
     // MARK: Controls
@@ -119,6 +120,15 @@ enum Theme {
         static let sheetRadius: CGFloat = 28
         static let footerHeight: CGFloat = 56
         static let footerGap: CGFloat = 12
+        /// Board shadows (CSS 0 24 60 and 0 18 40): blur and downward offset.
+        static let sheetShadowBlur: CGFloat = 60
+        static let sheetShadowY: CGFloat = 24
+        static let footerShadowBlur: CGFloat = 40
+        static let footerShadowY: CGFloat = 18
+        /// Transparent room around the sheet in the popup window for its shadow.
+        static let shadowMargin: CGFloat = 60
+        /// The sheet's top edge under the menu bar (Menu bar presence board).
+        static let menuBarGap: CGFloat = 8
         static let headerHeight: CGFloat = 60
         static let sectionHorizontal: CGFloat = 20
         static let sectionVertical: CGFloat = 16

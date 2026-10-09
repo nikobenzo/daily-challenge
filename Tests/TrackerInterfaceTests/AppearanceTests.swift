@@ -171,8 +171,11 @@ struct AppearanceTests {
         #expect(pixel.alphaComponent > 0.6, "\(name): the sheet must carry the glass tint")
         if preference == .light { #expect(pixel.redComponent > 0.75, "\(name): Light glass") }
         if preference == .dark { #expect(pixel.redComponent < 0.3, "\(name): Dark glass") }
-        // The window's sheet corners are outside the glass and fully transparent.
-        #expect((bitmap.colorAt(x: 0, y: 0)?.alphaComponent ?? 1) < 0.01, "\(name): transparent outside the 28 pt corner")
+        // Outside the 28 pt corner only the board's soft sheet shadow shows (dark, faint),
+        // never the glass tint or a system material.
+        let corner = try #require(bitmap.colorAt(x: 0, y: 0)?.usingColorSpace(.deviceRGB))
+        #expect(corner.alphaComponent < 0.25, "\(name): outside the 28 pt corner is no more than shadow")
+        #expect(corner.alphaComponent < 0.01 || corner.redComponent < 0.4, "\(name): outside the 28 pt corner is no glass")
     }
 
     /// Below the footer, a retained or oversized window is invisible, never a band.

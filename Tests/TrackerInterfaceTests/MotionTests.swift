@@ -208,7 +208,7 @@ private struct MotionTestSurface: View {
     }
 }
 
-/// In-process renders of production Today controls and effects, not MenuBarExtra
+/// In-process renders of production Today controls and effects, not real-popup
 /// compositor acceptance. All commands persist only to an isolated fixture account.
 @Test @MainActor func todayMotionRendersLocalCommandsAndSettles() async throws {
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)

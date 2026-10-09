@@ -9,7 +9,7 @@ in that file too). The code is the source of truth for values:
 | --- | --- |
 | Tokens: dark/light palette, type scale, spacing, radii, sizes, motion | `Sources/DailyChallengeProof/Theme.swift` |
 | Shared components | `Sources/DailyChallengeProof/Components.swift` |
-| Window transparency and the animated height | `Sources/DailyChallengeProof/PopupWindow.swift` |
+| The status item, the popup panel and the animated height | `Sources/DailyChallengeProof/PopupWindow.swift` |
 | Screens | `TrackerView.swift` (root, header, footer, setup), `TodayView.swift`, `HistoryTrackerView.swift`, `AccountView.swift`, `AuthView.swift` |
 
 ## Principles
@@ -17,7 +17,8 @@ in that file too). The code is the source of truth for values:
 - **One glass sheet.** A 420 pt sheet with 28 pt corners: an `NSVisualEffectView` (`.hudWindow` in
   Dark, `.popover` in Light) under a tint (`Theme.glass`), 1 pt border and inner top highlight.
   Sections are separated by hairlines, never boxed cards. A detached 420 × 56 footer capsule sits
-  12 pt below it: sync state on the left, power + Quit on the right.
+  12 pt below it: sync state on the left, power + Quit on the right. Both cast the boards' soft
+  shadows (`0 24 60` `sheetShadow`, `0 18 40` `footerShadow`) through `OuterShadow`.
 - **Icons first.** When a glyph is unambiguous it stands alone with a tooltip (`.help`) and an
   accessibility label. Words remain only where an action is destructive or irreversible
   ("Sign out on this Mac", "Start challenge") or where a value is shown. Long helper sentences
@@ -51,9 +52,39 @@ macOS 27, continuous corners at that radius draw flattened ends and stray stroke
 History and Account share one content height (`Theme.Size.wideSectionHeight`, 600 pt): History's
 Activity list fills the remainder and scrolls inside, and Account scrolls if a form or the
 Advanced diagnostics make it longer. Today is shorter; setup and the auth steps size to their
-content. `AnimatedPopupStack` animates the visible glass to each new height; the window grows
-before an animation and shrinks only after it, and `PopupWindowAdapter` keeps the MenuBarExtra
-panel transparent outside the glass, top-anchored under the menu bar.
+content. `AnimatedPopupStack` animates the visible glass to each new height; the transparent
+window grows before an animation and shrinks only after it, its top edge fixed under the menu bar.
+
+## Popup window
+
+The popup is the app's own status item (`drop.circle`, filled and highlighted while open)
+toggling `PopupPanel`, a borderless, non-activating, transparent `NSPanel` hosting `TrackerPopup`
+(`PopupController` in `PopupWindow.swift`). The window starts at the menu bar; the sheet sits
+8 pt below it (Menu bar presence board) with its left edge under the item, kept 8 pt inside the
+screen, and with a menu bar on several displays it opens under the copy that was clicked. It
+closes on Escape, the status item, a click outside the glass or in another app, another app
+activating, or a Space change; clicks in its own popovers keep it open. The window has no shadow
+of its own: 60 pt of transparent margin at the sides and bottom hold the sheet's and footer's
+shadows, which are pre-rendered images (`OuterShadow`) so they move with the animating glass and
+look the same on screen, in renders and in popup captures (cacheDisplay draws Core Animation
+shadow offsets upside down).
+
+**Decision (9 October 2026), not SwiftUI's `MenuBarExtra(.window)`.** Measured on the real popup
+on macOS 27.0.1 with the developer probe ([evidence](appearance-verification.md#real-popup-probe)),
+macOS 27 presents `MenuBarExtra(.window)` through a system scene session (`NSSceneStatusItem`
+with an expanded-interface delegate), which:
+
+1. sizes the window from the root's *minimum* size, clamped to 298 × 10 pt, so a root without a
+   minimum width (`.frame(minWidth: 0, …)`) got a 298 pt window that cut the 420 pt sheet on both
+   sides; with the minimum restored it still jumps to each new height in one frame and never
+   shrinks, centring shorter content in the retained height (the band above the sheet);
+2. fills the window with its own Liquid Glass backdrop (`CABackdropLayer` and `CAChameleonLayer`
+   inside the hosting view, not an `NSVisualEffectView`), which `.containerBackground(.clear,
+   for: .window)` does not remove and which shows in the 12 pt gap and outside the 28 pt corners;
+3. opens only on a click relayed by the system, so nothing in-process could open it to verify it.
+
+Owning the window removes all three. `TrackerPopup` still reports the sheet's 420 pt minimum
+width (`popupRootReportsTheSheetWidth`), so no host can squeeze it again.
 
 ## Decisions where the boards were ambiguous
 

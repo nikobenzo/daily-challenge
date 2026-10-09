@@ -64,6 +64,76 @@ extension View {
     }
 }
 
+/// The boards' soft outer shadow (CSS `0 y blur`), drawn only outside the shape so it
+/// never darkens the translucent glass. It is a pre-rendered image stretched along the
+/// shape's straight sides rather than a Core Animation shadow: cacheDisplay (renders and
+/// popup captures) draws CA shadow offsets upside down, an image looks the same everywhere,
+/// and an animating height costs no blur per frame. Tinted with a dynamic colour token.
+struct OuterShadow: View {
+    let cornerRadius: CGFloat
+    var style: RoundedCornerStyle = .continuous
+    let color: Color
+    let blur: CGFloat
+    let y: CGFloat
+
+    var body: some View {
+        GeometryReader { proxy in
+            // Enough straight side above and below the stretched row that the blur of the
+            // corners never reaches it; a shorter shape (the footer) is drawn exactly.
+            let core = min(proxy.size.height, 2 * (cornerRadius + blur + y))
+            let image = Self.image(width: proxy.size.width, height: core, cornerRadius: cornerRadius,
+                                   style: style, blur: blur, y: y)
+            let top = (blur + core / 2).rounded(.down)
+            let leading = ((image.size.width - 1) / 2).rounded(.down)
+            Image(nsImage: image)
+                .renderingMode(.template)
+                .resizable(capInsets: EdgeInsets(top: top, leading: leading, bottom: image.size.height - top - 1,
+                                                 trailing: image.size.width - leading - 1), resizingMode: .stretch)
+                .foregroundStyle(color)
+                .frame(width: proxy.size.width + 2 * blur, height: proxy.size.height + 2 * blur + y)
+                .offset(x: -blur, y: -blur)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    private struct Key: Hashable {
+        let width: CGFloat, height: CGFloat, cornerRadius: CGFloat, continuous: Bool, blur: CGFloat, y: CGFloat
+    }
+    @MainActor private static var cache: [Key: NSImage] = [:]
+
+    /// The shadow of a black shape, with the shape itself cut out, at 2x.
+    @MainActor static func image(width: CGFloat, height: CGFloat, cornerRadius: CGFloat, style: RoundedCornerStyle,
+                                 blur: CGFloat, y: CGFloat) -> NSImage {
+        let key = Key(width: width, height: height, cornerRadius: cornerRadius, continuous: style == .continuous, blur: blur, y: y)
+        if let image = cache[key] { return image }
+        let scale: CGFloat = 2
+        let size = CGSize(width: width + 2 * blur, height: height + 2 * blur + y)
+        guard size.width > 0, size.height > 0, let context = CGContext(
+            data: nil, width: Int((size.width * scale).rounded(.up)), height: Int((size.height * scale).rounded(.up)),
+            bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return NSImage(size: .zero) }
+        // Top-left origin in points; CG shadow geometry stays in pixels with y up.
+        context.translateBy(x: 0, y: CGFloat(context.height))
+        context.scaleBy(x: scale, y: -scale)
+        let path = RoundedRectangle(cornerRadius: min(cornerRadius, height / 2), style: style)
+            .path(in: CGRect(x: blur, y: blur, width: width, height: height)).cgPath
+        let black = CGColor(gray: 0, alpha: 1)
+        context.setShadow(offset: CGSize(width: 0, height: -y * scale), blur: blur * scale, color: black)
+        context.setFillColor(black)
+        context.addPath(path)
+        context.fillPath()
+        context.setShadow(offset: .zero, blur: 0, color: nil)
+        context.setBlendMode(.clear)
+        context.addPath(path)
+        context.fillPath()
+        let image = context.makeImage().map { NSImage(cgImage: $0, size: size) } ?? NSImage(size: .zero)
+        cache[key] = image
+        return image
+    }
+}
+
 struct HairlineDivider: View {
     var body: some View {
         Theme.hairline.frame(height: 1).accessibilityHidden(true)

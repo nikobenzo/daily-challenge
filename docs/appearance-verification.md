@@ -7,7 +7,8 @@
 > the glass is fully transparent. The regressions are now `productionPopupSurfacesHaveAdaptiveGlass`,
 > `signedOutAuthScreensHaveAdaptiveGlass` and `PopupResizeTests`. Committed fixture renders show the
 > new look; they are never-shown windows, so the material renders as its flat fallback rather than a
-> blur. The history below records the earlier defect and fix.
+> blur. Since the popup fix the window is the app's own panel, not `MenuBarExtra`
+> ([design system](design-system.md#popup-window)). The history below records the earlier defect and fix.
 
 **Edge-fill follow-up:** [confirmed retained-window-height diagnosis, full-host backing, regression and captain checks](popup-edges.md). The original evidence below predates that follow-up.
 
