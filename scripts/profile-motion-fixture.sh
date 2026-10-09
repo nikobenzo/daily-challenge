@@ -10,10 +10,17 @@ xcrun swiftc -swift-version 6 -O -parse-as-library -emit-library -emit-module \
   -emit-module-path "$fixture/ChallengeCore.swiftmodule" \
   -Xlinker -install_name -Xlinker @rpath/libChallengeCore.dylib \
   -o "$app/Contents/Frameworks/libChallengeCore.dylib"
-xcrun swiftc -swift-version 6 -O -parse-as-library -I "$fixture" \
+# Only the kit's date and motion files: the rest of ChallengeSyncKit needs the Supabase SDK.
+xcrun swiftc -swift-version 6 -O -parse-as-library -emit-library -emit-module -I "$fixture" \
+  -module-name ChallengeSyncKit Sources/ChallengeSyncKit/{ChallengeDates,TrackerMotion}.swift \
   -L "$app/Contents/Frameworks" -lChallengeCore \
+  -emit-module-path "$fixture/ChallengeSyncKit.swiftmodule" \
+  -Xlinker -install_name -Xlinker @rpath/libChallengeSyncKit.dylib \
+  -o "$app/Contents/Frameworks/libChallengeSyncKit.dylib"
+xcrun swiftc -swift-version 6 -O -parse-as-library -I "$fixture" \
+  -L "$app/Contents/Frameworks" -lChallengeCore -lChallengeSyncKit \
   -Xlinker -rpath -Xlinker @executable_path/../Frameworks \
-  Sources/DailyChallengeProof/{ChallengeDates,TrackerMotion,PopupVisibility,WaterJugView,CompletionEffect}.swift \
+  Sources/DailyChallengeProof/{Theme,PopupVisibility,WaterJugView,CompletionEffect}.swift \
   scripts/motion-fixture-visibility.swift scripts/motion-fixture.swift -o "$app/Contents/MacOS/MotionFixture"
 /usr/bin/plutil -create xml1 "$app/Contents/Info.plist"
 /usr/bin/plutil -replace CFBundleIdentifier -string app.daily-challenge.motion-fixture "$app/Contents/Info.plist"

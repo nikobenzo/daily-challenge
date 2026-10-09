@@ -76,17 +76,20 @@ Fixture tests cover validation, round trips, undo, derived recalculation, backup
 | `Sources/ChallengeCore/Challenge.swift` | UI/network-independent rules, deterministic event union/undo reconciliation, day summaries, derived streaks/milestones and the extras list |
 | `Sources/ChallengeCore/ChallengeStore.swift` | Account-scoped atomic history + pending queue, v1 backup/migration, exact acknowledgment; corrupt files throw rather than reset |
 | `Sources/ChallengeCore/ChallengeSync.swift` | Immutable challenge settings/event wire records and injected transport seam |
-| `Sources/DailyChallengeProof/SupabaseChallengeTransport.swift` | Authenticated insert-ignore batches, owner-scoped paginated reads; proof-style transport |
-| `Sources/DailyChallengeProof/TrackerModel.swift` | Main-actor UI/sync coordinator, account generations, backoff, setup preflight and truthful status; one active writer |
+| `Sources/ChallengeSyncKit/` | Platform-neutral library shared by the Mac and iPhone apps (depends on `ChallengeCore` and `supabase-swift` only); tests in `Tests/ChallengeSyncKitTests/` |
+| `Sources/ChallengeSyncKit/SupabaseChallengeTransport.swift` | Authenticated insert-ignore batches, owner-scoped paginated reads; proof-style transport |
+| `Sources/ChallengeSyncKit/TrackerModel.swift` | Main-actor UI/sync coordinator and `SyncState`, account generations, backoff, setup preflight and truthful status; one active writer |
+| `Sources/ChallengeSyncKit/AuthModel.swift` | Supabase email/password auth with emailed codes, Keychain sessions under per-app names (`SessionStorage`), bundled public configuration |
+| `Sources/ChallengeSyncKit/WaterReminderController.swift`, `ChallengeDates.swift`, `TrackerMotion.swift`, `DeviceWording.swift` | Reminder reconciliation (each app drives sleep/wake), dates and zone choices in the challenge's zone, finite motion clocks and celebration ledger, per-device wording ("this Mac") |
 | `Sources/DailyChallengeProof/Theme.swift`, `Components.swift`, `PopupWindow.swift` | Design-system tokens, shared glass components, the status item and transparent popup panel with its animated height ([design system](docs/design-system.md)); `PopupProbe.swift` is the developer-only real-popup probe |
-| `Sources/DailyChallengeProof/TrackerView.swift`, `TodayView.swift`, `TimeZonePicker.swift`, `ChallengeDates.swift` | Root sheet, header, footer and setup with its timezone picker; Today rings, water and streak; visible-window/midnight/wake refresh; dates in the challenge's zone |
-| `Sources/DailyChallengeProof/WaterJugView.swift`, `TrackerMotion.swift`, `CompletionEffect.swift`, `PopupVisibility.swift` | Finite motion schedules, local celebration ledger, noninteractive effects and native visibility gating |
+| `Sources/DailyChallengeProof/TrackerView.swift`, `TodayView.swift`, `TimeZonePicker.swift` | Root sheet, header, footer and setup with its timezone picker; Today rings, water and streak; visible-window/midnight/wake refresh; dates in the challenge's zone |
+| `Sources/DailyChallengeProof/WaterJugView.swift`, `CompletionEffect.swift`, `PopupVisibility.swift`, `MacPlatform.swift` | Finite motion schedules, local celebration ledger, noninteractive effects and native visibility gating |
 | `Sources/DailyChallengeProof/HistoryTrackerView.swift` | Calendar, correction unlock, audit |
 | `Sources/DailyChallengeProof/ExtrasViews.swift` | Today's Extras section, History's extras pill, Manage extras popover and Account row |
 | `Sources/DailyChallengeProof/DailyChallengeProofApp.swift`, `AuthView.swift` | App entry (models, `PopupController`; drop.circle, filled while open); signed-out sheet (`ProofView`) and auth steps |
 | `Sources/DailyChallengeProof/AccountView.swift`, `AdvancedDiagnosticsView.swift` | Signed-in Account tab as hairline-separated settings rows; sync line rephrases `TrackerModel.syncState` (same source as the footer); test-message diagnostics moved unchanged behind a collapsed Advanced disclosure |
 | `Sources/DailyChallengeProof/SoftwareUpdates.swift` | Sparkle updater, Dock-less window activation, About-group update row |
-| `Sources/DailyChallengeProof/ProofModel.swift` | Supabase password auth, Keychain sessions, proof queue/polling; not production challenge sync |
+| `Sources/DailyChallengeProof/ProofModel.swift` | The Mac's account object: `AuthModel` under the legacy Keychain names, plus the proof queue/polling diagnostics; not production challenge sync |
 | `Sources/ProbeCore/ProbeJournal.swift` | Durable independent test-message queue, retry IDs, validated remote acknowledgments |
 | `supabase/migrations/`, `supabase/tests/` | Proof + production append-only schema and local role/RLS/child-ownership tests |
 

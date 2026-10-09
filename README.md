@@ -110,8 +110,9 @@ Local proof data lives under `~/Library/Application Support/DailyChallengeProof/
 
 - `Sources/ChallengeCore/`: challenge rules, convergent event merge, versioned durable queue/storage, and transport seam; no SDK or UI dependency.
 - `Sources/ProbeCore/`: durable account-scoped test journal; no SDK or UI dependency.
-- `Sources/DailyChallengeProof/`: tracker UI, production sync coordinator/SDK adapter, authentication, and separate proof-sync diagnostics.
+- `Sources/ChallengeSyncKit/`: platform-neutral library shared by the Mac and iPhone apps: Supabase transport, the sync coordinator and its status (`TrackerModel`), email/password/code authentication (`AuthModel`), water-reminder scheduling, challenge-zone dates and the finite motion clocks. Depends only on `ChallengeCore` and `supabase-swift`; no AppKit, UIKit, Sparkle or popup code.
+- `Sources/DailyChallengeProof/`: the Mac menu-bar app: popup, views, Sparkle updates, login item, the Mac's reminder lifecycle and the separate proof-sync diagnostics, consuming the kit.
 - `supabase/migrations/`: versioned database changes.
-- `Tests/ChallengeCoreTests/`, `Tests/TrackerInterfaceTests/`, `Tests/ProbeCoreTests/`, `Tests/ProofAuthTests/`, and `supabase/tests/`: automated local checks.
+- `Tests/ChallengeCoreTests/`, `Tests/ChallengeSyncKitTests/`, `Tests/TrackerInterfaceTests/`, `Tests/ProbeCoreTests/`, `Tests/ProofAuthTests/`, and `supabase/tests/`: automated local checks.
 
 The diagnostics remain independent of production activity. See [production sync architecture and deployment](docs/production-sync.md). Remaining work includes owner-hosted deployment/two-Mac acceptance, native reminder delivery and backup-panel acceptance, [motion energy/owner acceptance](docs/motion-verification.md), and validated distribution. No cloud CI is configured.

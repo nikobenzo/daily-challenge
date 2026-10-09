@@ -1,6 +1,7 @@
 // Standalone offline fixture: only production motion views and pure challenge rules.
 // No auth, Keychain, user defaults, network, or production data paths are linked.
 import AppKit
+import ChallengeSyncKit
 import Observation
 import SwiftUI
 
