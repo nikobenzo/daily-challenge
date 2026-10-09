@@ -31,6 +31,7 @@ final class PopupController: NSObject {
 
     /// Open from the click until close() starts the fade-out.
     private(set) var isOpen = false
+    var statusButton: NSStatusBarButton? { statusItem.button }
 
     @objc func toggle() {
         if isOpen { close() } else { open() }

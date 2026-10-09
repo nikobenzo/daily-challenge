@@ -73,6 +73,10 @@ struct TrackerView: View {
             if selection == .today { model.showToday() }
             if selection == .history { model.selectHistoryDay(model.today) }
         }
+        // Only the developer popup probe posts this; it switches exactly as the header control does.
+        .onReceive(NotificationCenter.default.publisher(for: PopupProbe.selectSection)) { note in
+            if auth.ownerID != nil, let value = note.object as? TrackerSection { select(value) }
+        }
         .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didWakeNotification)) { _ in
             model.refresh()
             model.requestSync()

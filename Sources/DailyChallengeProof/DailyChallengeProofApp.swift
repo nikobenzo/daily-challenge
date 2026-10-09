@@ -19,6 +19,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         // No Dock icon, also when run without the bundle's LSUIElement.
         NSApp.setActivationPolicy(.accessory)
+        // Developer-only popup verification on offline fixtures; nil in normal use.
+        if let probe = PopupProbe.current {
+            let models = probe.models()
+            let popup = PopupController(content: TrackerPopup(model: models.tracker, auth: models.auth,
+                                                              appearance: models.appearance, section: probe.section)
+                .environment(SoftwareUpdates(fixtureAvailableVersion: nil)))
+            self.popup = popup
+            Task { await probe.run(popup) }
+            return
+        }
         let auth = ProofModel()
         let tracker = TrackerModel()
         let reminders = WaterReminderController(defaults: .standard, center: NativeWaterNotificationCenter())

@@ -8,7 +8,46 @@
 > `signedOutAuthScreensHaveAdaptiveGlass` and `PopupResizeTests`. Committed fixture renders show the
 > new look; they are never-shown windows, so the material renders as its flat fallback rather than a
 > blur. Since the popup fix the window is the app's own panel, not `MenuBarExtra`
-> ([design system](design-system.md#popup-window)). The history below records the earlier defect and fix.
+> ([design system](design-system.md#popup-window)), and the [real-popup probe](#real-popup-probe)
+> captures the real popup. The history below records the earlier defect and fix.
+
+## Real-popup probe
+
+`scripts/capture-real-popup.sh` opens the **real** popup of an isolated copy of the built app and
+writes the popup window's own rendering and geometry, with no human click and no screen-recording
+or accessibility permission:
+
+```bash
+scripts/build-proof.sh --adhoc --skip-notarize   # a placeholder .env.local is enough
+scripts/capture-real-popup.sh                    # --docs also refreshes docs/screenshots/real-popup
+```
+
+The script copies `build/Daily Challenge.app` to `.build/real-popup-probe/` with its own bundle ID
+(`app.daily-challenge.popup-probe`), without `Configuration.json` or an update feed, and launches
+the copy once per screen and appearance through a developer-only launch path (`PopupProbe.swift`):
+
+| Environment variable | Meaning |
+| --- | --- |
+| `DAILY_CHALLENGE_POPUP_PROBE` | Directory for fixture data and output. Required: unset, the app behaves normally; the production bundle (`app.daily-challenge.proof`) ignores it. |
+| `DAILY_CHALLENGE_POPUP_PROBE_SCREEN` | `sign-in`, `setup`, `today` (default), `history` or `account` |
+| `DAILY_CHALLENGE_POPUP_PROBE_APPEARANCE` | `light` (default) or `dark` |
+| `DAILY_CHALLENGE_POPUP_PROBE_STEPS` | Sections to switch to after the first capture, such as `history,account,today` |
+
+In probe mode the app runs on the committed renders' offline fixtures (8 October 2026 at noon, Day 1,
+900 ml) inside that directory: no Supabase client, Keychain, Sparkle, reminders or production data
+paths. It clicks its own status item (the item's own action), then writes `<screen>-<appearance>.png`
+from the popup window's `contentView` (`bitmapImageRepForCachingDisplay` and `cacheDisplay`) and a
+`.json` report: window and status-item frames, sheet and footer frames, opacity, window shadow, key
+state, any system material behind the glass, and pixel coverage. Each step switches section the way
+the header control does and records the window height and top edge and the sheet height about
+every 8 ms while the height animates. Escape then closes the popup and the copy quits. It never
+touches the installed app, a real account or the Keychain.
+
+A capture is the popup window's own drawing, not the WindowServer composite: the behind-window blur
+renders as its flat fallback, and cacheDisplay draws Core Animation shadows upside down, which
+affects only small control glows (the sheet and footer shadows are images). Window position, size,
+transparency, clipping, corners, shadows and the resize are the real ones. The isolated copy is an
+unregistered bundle, so its Launch at login row reports "Login item not found".
 
 **Edge-fill follow-up:** [confirmed retained-window-height diagnosis, full-host backing, regression and captain checks](popup-edges.md). The original evidence below predates that follow-up.
 

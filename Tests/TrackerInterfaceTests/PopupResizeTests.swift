@@ -4,7 +4,8 @@ import Testing
 @testable import DailyChallengeProof
 
 /// The production root in the production popup panel (PopupPanel). Never ordered on
-/// screen; offline fixture auth only. This keeps the popup's geometry from
+/// screen; offline fixture auth only. The real popup is checked with the probe
+/// (docs/appearance-verification.md#real-popup-probe); this keeps its geometry from
 /// regressing: macOS 27's MenuBarExtra sized its window from the root's minimum size
 /// (298 x 10 pt) and filled it with a system backdrop, cutting the sheet on both sides.
 @Suite(.serialized) @MainActor
@@ -135,6 +136,16 @@ struct PopupResizeTests {
         #expect(right.minX + margin + width == visible.maxX - 8, "Near the right edge the sheet stays on screen")
         let left = PopupPanel.frame(contentHeight: 500, anchor: CGRect(x: -4, y: 875, width: 32, height: 25), visibleFrame: visible)
         #expect(left.minX + margin == 8)
+    }
+
+    /// The developer probe never runs without its variable, nor in the production bundle.
+    @Test func popupProbeIsInertInNormalUse() {
+        let probe = ["DAILY_CHALLENGE_POPUP_PROBE": "/tmp/probe", "DAILY_CHALLENGE_POPUP_PROBE_SCREEN": "history",
+                     "DAILY_CHALLENGE_POPUP_PROBE_APPEARANCE": "dark", "DAILY_CHALLENGE_POPUP_PROBE_STEPS": "account,Today"]
+        #expect(PopupProbe(environment: [:], bundleID: "app.daily-challenge.popup-probe") == nil)
+        #expect(PopupProbe(environment: probe, bundleID: PopupProbe.productionBundleID) == nil)
+        let isolated = PopupProbe(environment: probe, bundleID: "app.daily-challenge.popup-probe")
+        #expect(isolated?.screen == .history && isolated?.appearance == .dark && isolated?.steps == [.account, .today])
     }
 
     /// The sheet is 420 pt wide at the panel's top edge, the footer 12 pt under it, and
