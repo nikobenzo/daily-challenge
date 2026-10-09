@@ -1,0 +1,931 @@
+{
+  "clearBackground" : true,
+  "footer" : [
+    60,
+    60,
+    420,
+    56
+  ],
+  "foreignMaterials" : [
+
+  ],
+  "frame" : [
+    1899,
+    1594,
+    540,
+    797
+  ],
+  "isKey" : true,
+  "isOpaque" : false,
+  "macOS" : "Version 27.0.1 (Build 26A434)",
+  "pixels" : {
+    "cornerAlpha" : [
+      0,
+      0,
+      0,
+      0
+    ],
+    "coveredBox" : [
+      16,
+      0,
+      523,
+      783
+    ],
+    "sizePoints" : [
+      540,
+      797
+    ]
+  },
+  "screen" : [
+    -934,
+    982,
+    3440,
+    1440
+  ],
+  "sheet" : [
+    60,
+    128,
+    420,
+    661
+  ],
+  "statusItem" : [
+    1959,
+    2391,
+    32,
+    33
+  ],
+  "trace" : [
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 406,
+      "sheetTop" : 534,
+      "t" : 1.6927719116210938e-05,
+      "windowHeight" : 542,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 406,
+      "sheetTop" : 534,
+      "t" : 0.096060991287231445,
+      "windowHeight" : 542,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 371,
+      "sheetHeight" : 406,
+      "sheetTop" : 789,
+      "t" : 0.10991489887237549,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 370.85506057739258,
+      "sheetHeight" : 406.14493942260742,
+      "sheetTop" : 789,
+      "t" : 0.12425196170806885,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 368.08905220031738,
+      "sheetHeight" : 408.91094779968262,
+      "sheetTop" : 789,
+      "t" : 0.13269996643066406,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 361.8928918838501,
+      "sheetHeight" : 415.1071081161499,
+      "sheetTop" : 789,
+      "t" : 0.14896392822265625,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 354.85530471801758,
+      "sheetHeight" : 422.14469528198242,
+      "sheetTop" : 789,
+      "t" : 0.16102290153503418,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 351.08687973022461,
+      "sheetHeight" : 425.91312026977539,
+      "sheetTop" : 789,
+      "t" : 0.17119097709655762,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 335.8283576965332,
+      "sheetHeight" : 441.1716423034668,
+      "sheetTop" : 789,
+      "t" : 0.18364298343658447,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 327.07070922851562,
+      "sheetHeight" : 449.92929077148438,
+      "sheetTop" : 789,
+      "t" : 0.19377601146697998,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 317.62994861602783,
+      "sheetHeight" : 459.37005138397217,
+      "sheetTop" : 789,
+      "t" : 0.2039029598236084,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 292.85868263244629,
+      "sheetHeight" : 484.14131736755371,
+      "sheetTop" : 789,
+      "t" : 0.2187429666519165,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 283.89456844329834,
+      "sheetHeight" : 493.10543155670166,
+      "sheetTop" : 789,
+      "t" : 0.22766792774200439,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 271.0051736831665,
+      "sheetHeight" : 505.9948263168335,
+      "sheetTop" : 789,
+      "t" : 0.23777890205383301,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 245.03183460235596,
+      "sheetHeight" : 531.96816539764404,
+      "sheetTop" : 789,
+      "t" : 0.25060594081878662,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 218.07626342773438,
+      "sheetHeight" : 558.92373657226562,
+      "sheetTop" : 789,
+      "t" : 0.26904892921447754,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 207.75613880157471,
+      "sheetHeight" : 569.24386119842529,
+      "sheetTop" : 789,
+      "t" : 0.27925300598144531,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 183.35038280487061,
+      "sheetHeight" : 593.64961719512939,
+      "sheetTop" : 789,
+      "t" : 0.29147791862487793,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 170.76667404174805,
+      "sheetHeight" : 606.23332595825195,
+      "sheetTop" : 789,
+      "t" : 0.30159294605255127,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 162.08538627624512,
+      "sheetHeight" : 614.91461372375488,
+      "sheetTop" : 789,
+      "t" : 0.31174993515014648,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 145.57980155944824,
+      "sheetHeight" : 631.42019844055176,
+      "sheetTop" : 789,
+      "t" : 0.32474696636199951,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 138.5232458114624,
+      "sheetHeight" : 638.4767541885376,
+      "sheetTop" : 789,
+      "t" : 0.33490490913391113,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 132.30179405212402,
+      "sheetHeight" : 644.69820594787598,
+      "sheetTop" : 789,
+      "t" : 0.34501993656158447,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 122.20151042938232,
+      "sheetHeight" : 654.79848957061768,
+      "sheetTop" : 789,
+      "t" : 0.3606029748916626,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 118.04568862915039,
+      "sheetHeight" : 658.95431137084961,
+      "sheetTop" : 789,
+      "t" : 0.37353992462158203,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116.34337997436523,
+      "sheetHeight" : 660.65662002563477,
+      "sheetTop" : 789,
+      "t" : 0.38385391235351562,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.39600598812103271,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.4061729907989502,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.41635799407958984,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.4265139102935791,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.43660998344421387,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.44671189785003662,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.45682299137115479,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.46696293354034424,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.47553491592407227,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.48576092720031738,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.49593400955200195,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.50612592697143555,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.51633095741271973,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.52647900581359863,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.53664398193359375,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.54680395126342773,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.55695295333862305,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.56705296039581299,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.57723093032836914,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.58739590644836426,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.596809983253479,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.6052929162979126,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.61546599864959717,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.62559390068054199,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.6353079080581665,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.64555001258850098,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.65589189529418945,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.66618990898132324,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.67445194721221924,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.68472099304199219,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.69504690170288086,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.70533192157745361,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.71564793586730957,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.72502601146697998,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.73479390144348145,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.74494993686676025,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.75518500804901123,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.7655189037322998,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.77573192119598389,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.78469300270080566,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.79509997367858887,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.8050379753112793,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.815329909324646,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.82564997673034668,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.8341209888458252,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.84265995025634766,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.85289597511291504,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.8632429838180542,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.8735499382019043,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.88376998901367188,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.89259397983551025,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.90296900272369385,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.9116508960723877,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.92183995246887207,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.93203890323638916,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.9422459602355957,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.95167696475982666,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.96035099029541016,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.97056496143341064,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.9808429479598999,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 0.99110698699951172,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 1.000607967376709,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 1.0103919506072998,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 1.0195639133453369,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 1.0297878980636597,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 1.0400549173355103,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 1.0487169027328491,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 1.0589720010757446,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 1.06836998462677,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 1.0771369934082031,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 1.0874769687652588,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 1.0976619720458984,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 1.1078999042510986,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 1.1175199747085571,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 1.1274219751358032,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 1.1377439498901367,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 1.147939920425415,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 1.1582199335098267,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 1.1669780015945435,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 1.175475001335144,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 1.185276985168457,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 661,
+      "sheetTop" : 789,
+      "t" : 1.1955599784851074,
+      "windowHeight" : 797,
+      "windowTop" : 2391
+    }
+  ],
+  "visibleFrame" : [
+    -934,
+    982,
+    3440,
+    1410
+  ],
+  "windowClass" : "DailyChallengeProof.PopupPanel",
+  "windowShadow" : false
+}

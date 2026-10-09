@@ -14,7 +14,7 @@ Appearance backing and the device-local setting remain implemented; [appearance 
 
 ## Visual redesign (9 October)
 
-Every screen now follows the captain-approved Paper design system: a 420 pt glass sheet with hairline sections, a detached footer capsule, five ring gauges on Today, an icon-only section switcher, icon-first controls with tooltips, and animated (never cut) height changes; History and Account share one height. [Design system](docs/design-system.md) lists the tokens (`Theme.swift`), components, window-height policy and the board ambiguities decided in code. Presentation only: behaviour, sync, auth, reminders, backups, updates and timezone logic are unchanged. Regressions: `productionPopupSurfacesHaveAdaptiveGlass`, `signedOutAuthScreensHaveAdaptiveGlass`, `PopupResizeTests`. **Real-popup acceptance is pending:** an isolated copy of the ad-hoc build (separate bundle ID, no configuration, so no Keychain or data) launched and quit cleanly, but no agent could open the real MenuBarExtra popup (no assistive access), so glass compositing over the desktop and the animated resize in the real popup are captain checks.
+Every screen now follows the captain-approved Paper design system: a 420 pt glass sheet with hairline sections, a detached footer capsule, five ring gauges on Today, an icon-only section switcher, icon-first controls with tooltips, and animated (never cut) height changes; History and Account share one height. [Design system](docs/design-system.md) lists the tokens (`Theme.swift`), components, window-height policy and the board ambiguities decided in code. Presentation only: behaviour, sync, auth, reminders, backups, updates and timezone logic are unchanged. Regressions: `productionPopupSurfacesHaveAdaptiveGlass`, `signedOutAuthScreensHaveAdaptiveGlass`, `PopupResizeTests`. **Popup fix (9 October):** on macOS 27 the `MenuBarExtra` window was 298 pt wide, kept stale heights and drew a system backdrop, so the captain saw a cut, banded popup. The popup is now the app's own status item and transparent panel (`PopupWindow.swift`; [decision](docs/design-system.md#popup-window)), with the boards' sheet and footer shadows. `scripts/capture-real-popup.sh` opens and captures the real popup of an isolated copy without a click ([probe](docs/appearance-verification.md#real-popup-probe)); captures of every screen in both appearances and the animated resize traces are in `docs/screenshots/real-popup/`. Remaining captain checks: blur over the real desktop, outside-click/Escape closing, typing, popovers, a second display.
 
 ## Per-challenge timezone (9 October)
 
@@ -56,7 +56,7 @@ Fixture tests cover validation, round trips, undo, derived recalculation, backup
 - **Streaks:** current / 75, best, and valid milestone count. Tracking continues beyond 75.
 - **History:** monthly Monday-first calendar, day-state symbols, explicit **Edit this day** (pencil) unlock, immediate selected-day corrections, and newest-first activity audit, which scrolls inside the fixed History height. Selection is not an edit; selecting another date exits correction mode.
 - **Account:** retained email/password authentication and separate test-message sync diagnostics.
-- **Bounded motion:** procedural rise/fall, settling slosh and clipped overflow; daily/75-day celebrations consumed in a separate device-local ledger, never replayed from open/sync/import. Reduce Motion uses static levels and a brief completion badge. [Fixture CPU evidence and owner checks](docs/motion-verification.md); the final 60-second settled fixture run became occluded, so final energy and real MenuBarExtra acceptance remain pending.
+- **Bounded motion:** procedural rise/fall, settling slosh and clipped overflow; daily/75-day celebrations consumed in a separate device-local ledger, never replayed from open/sync/import. Reduce Motion uses static levels and a brief completion badge. [Fixture CPU evidence and owner checks](docs/motion-verification.md); the final 60-second settled fixture run became occluded, so final energy and real-popup motion acceptance remain pending.
 
 **Real challenge activity now has its own production queue and sync coordinator.** The footer shows pending/synced/error state and clock/delivery warnings. Until the owner deploys the schema, existing history remains locally usable with sync errors; an empty device waits for a successful server check before setup. Diagnostic test-message sync remains independent.
 
@@ -69,11 +69,11 @@ Fixture tests cover validation, round trips, undo, derived recalculation, backup
 | `Sources/ChallengeCore/ChallengeSync.swift` | Immutable challenge settings/event wire records and injected transport seam |
 | `Sources/DailyChallengeProof/SupabaseChallengeTransport.swift` | Authenticated insert-ignore batches, owner-scoped paginated reads; proof-style transport |
 | `Sources/DailyChallengeProof/TrackerModel.swift` | Main-actor UI/sync coordinator, account generations, backoff, setup preflight and truthful status; one active writer |
-| `Sources/DailyChallengeProof/Theme.swift`, `Components.swift`, `PopupWindow.swift` | Design-system tokens, shared glass components, transparent MenuBarExtra panel and animated height ([design system](docs/design-system.md)) |
+| `Sources/DailyChallengeProof/Theme.swift`, `Components.swift`, `PopupWindow.swift` | Design-system tokens, shared glass components, the status item and transparent popup panel with its animated height ([design system](docs/design-system.md)); `PopupProbe.swift` is the developer-only real-popup probe |
 | `Sources/DailyChallengeProof/TrackerView.swift`, `TodayView.swift`, `TimeZonePicker.swift`, `ChallengeDates.swift` | Root sheet, header, footer and setup with its timezone picker; Today rings, water and streak; visible-window/midnight/wake refresh; dates in the challenge's zone |
 | `Sources/DailyChallengeProof/WaterJugView.swift`, `TrackerMotion.swift`, `CompletionEffect.swift`, `PopupVisibility.swift` | Finite motion schedules, local celebration ledger, noninteractive effects and native visibility gating |
 | `Sources/DailyChallengeProof/HistoryTrackerView.swift` | Calendar, correction unlock, audit |
-| `Sources/DailyChallengeProof/DailyChallengeProofApp.swift`, `AuthView.swift` | App entry and MenuBarExtra (drop.circle, filled while open); signed-out sheet (`ProofView`) and auth steps |
+| `Sources/DailyChallengeProof/DailyChallengeProofApp.swift`, `AuthView.swift` | App entry (models, `PopupController`; drop.circle, filled while open); signed-out sheet (`ProofView`) and auth steps |
 | `Sources/DailyChallengeProof/AccountView.swift`, `AdvancedDiagnosticsView.swift` | Signed-in Account tab as hairline-separated settings rows; sync line rephrases `TrackerModel.syncState` (same source as the footer); test-message diagnostics moved unchanged behind a collapsed Advanced disclosure |
 | `Sources/DailyChallengeProof/SoftwareUpdates.swift` | Sparkle updater, Dock-less window activation, About-group update row |
 | `Sources/DailyChallengeProof/ProofModel.swift` | Supabase password auth, Keychain sessions, proof queue/polling; not production challenge sync |
@@ -98,6 +98,7 @@ See [appearance verification](docs/appearance-verification.md#automated-verifica
 swift test
 bash scripts/test-sync-security.sh
 bash scripts/build-proof.sh
+bash scripts/capture-real-popup.sh   # after an --adhoc build; isolated copy, see docs/appearance-verification.md
 bash scripts/test-update-fixture.sh --ed-key-file <throwaway key>  # isolated Sparkle probe, see docs/update-verification.md
 # Quit the running older app first, then:
 open "build/Daily Challenge.app"

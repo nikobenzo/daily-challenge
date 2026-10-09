@@ -49,6 +49,27 @@ affects only small control glows (the sheet and footer shadows are images). Wind
 transparency, clipping, corners, shadows and the resize are the real ones. The isolated copy is an
 unregistered bundle, so its Launch at login row reports "Login item not found".
 
+### Evidence (macOS 27.0.1, 26A434)
+
+[`screenshots/real-popup/`](screenshots/real-popup/) holds Setup, Today, History, Account and Sign in
+in Light and Dark with their reports, and Today → History → Account → Today traces in both
+appearances, all from the real popup window on this Mac. In every capture the window is 540 pt wide
+(the 420 pt sheet plus 60 pt of shadow margin each side), starts at the menu bar with the sheet
+8 pt below it and its left edge at the status item, the footer floats 12 pt below the sheet, the
+window is non-opaque and clear with no window shadow and no foreign material, and the popup is key
+(Sign in shows the focused email field). In the traces the top edge never moves: Today → History
+grows the transparent window first, then the glass eases 406 → 661 pt over about 0.28 s; History →
+Account changes nothing; Account → Today eases the glass down and shrinks the window afterwards.
+
+[`screenshots/real-popup/before/`](screenshots/real-popup/before/) is the same popup in the
+`MenuBarExtra` build the captain reported (main at dadb0f6), captured by a temporary probe build
+that requested the system's popup session directly (that private call was never committed), with
+the measured geometry and every counterfactual tested on it (`menubarextra-geometry.json`).
+
+Captain checks a capture cannot make: the glass blur over the real desktop; clicking outside, the
+status item and Escape closing it; typing in the sign-in fields; the start-date and rules popovers;
+placement with a menu bar on a second display; Reduce Transparency and Increase Contrast.
+
 **Edge-fill follow-up:** [confirmed retained-window-height diagnosis, full-host backing, regression and captain checks](popup-edges.md). The original evidence below predates that follow-up.
 
 ## Evidence and diagnosis

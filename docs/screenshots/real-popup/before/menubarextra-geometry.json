@@ -1,0 +1,449 @@
+{
+ "counterfactuals": {
+  "original root, no PopupWindowAdapter (setup)": {
+   "result": "popup window stays 298 x 10 pt; nothing captured",
+   "window": "_TtGC7SwiftUI18MenuBarExtraWindowVS_7AnyView_ visible=true frame=(1959.0, 2379.0, 298.0, 10.0)"
+  },
+  "root without minWidth/minHeight 0 (setup)": {
+   "contentMinSize": [
+    420,
+    531
+   ],
+   "coveredTop": 0,
+   "footer": [
+    0,
+    0,
+    420,
+    56
+   ],
+   "frame": [
+    1959,
+    1858,
+    420,
+    531
+   ],
+   "sheet": [
+    0,
+    68,
+    420,
+    463
+   ],
+   "systemBackdrop": [
+    "CABackdropLayer (0.0, 0.0, 420.0, 531.0) radius=0.0 mask=false filters=2 bg=true",
+    "CAChameleonLayer (0.0, 0.0, 420.0, 531.0) radius=0.0 mask=false filters=0 bg=false"
+   ]
+  },
+  "root without minimums + containerBackground(.clear, for: .window) (setup)": {
+   "contentMinSize": [
+    420,
+    531
+   ],
+   "coveredTop": 0,
+   "footer": [
+    0,
+    0,
+    420,
+    56
+   ],
+   "frame": [
+    1959,
+    1858,
+    420,
+    531
+   ],
+   "sheet": [
+    0,
+    68,
+    420,
+    463
+   ],
+   "systemBackdrop": [
+    "CABackdropLayer (0.0, 0.0, 420.0, 531.0) radius=0.0 mask=false filters=2 bg=true",
+    "CAChameleonLayer (0.0, 0.0, 420.0, 531.0) radius=0.0 mask=false filters=0 bg=false"
+   ]
+  },
+  "root without minimums, no PopupWindowAdapter, account->today": {
+   "contentMinSize": [
+    420,
+    474
+   ],
+   "coveredTop": 128,
+   "footer": [
+    0,
+    127,
+    420,
+    56
+   ],
+   "frame": [
+    1959,
+    1660,
+    420,
+    729
+   ],
+   "sheet": [
+    -2,
+    195,
+    425,
+    406
+   ],
+   "systemBackdrop": [
+    "CABackdropLayer (0.0, 128.0, 420.0, 474.0) radius=0.0 mask=false filters=2 bg=true",
+    "CAChameleonLayer (0.0, 128.0, 420.0, 474.0) radius=0.0 mask=false filters=0 bg=false"
+   ],
+   "windowHeightChanges(t,height,top)": [
+    [
+     0,
+     729,
+     2389
+    ]
+   ]
+  },
+  "root without minimums, no PopupWindowAdapter, today->history": {
+   "contentMinSize": [
+    420,
+    729
+   ],
+   "coveredTop": 0,
+   "footer": [
+    0,
+    0,
+    420,
+    56
+   ],
+   "frame": [
+    1959,
+    1660,
+    420,
+    729
+   ],
+   "sheet": [
+    -2,
+    68,
+    425,
+    661
+   ],
+   "systemBackdrop": [
+    "CABackdropLayer (0.0, 0.0, 420.0, 729.0) radius=0.0 mask=false filters=2 bg=true",
+    "CAChameleonLayer (0.0, 0.0, 420.0, 729.0) radius=0.0 mask=false filters=0 bg=false"
+   ],
+   "windowHeightChanges(t,height,top)": [
+    [
+     0.0,
+     474,
+     2389
+    ],
+    [
+     0.098,
+     729,
+     2389
+    ]
+   ]
+  },
+  "root without minimums, with PopupWindowAdapter, today->history": {
+   "contentMinSize": [
+    420,
+    729
+   ],
+   "coveredTop": 0,
+   "footer": [
+    0,
+    0,
+    420,
+    56
+   ],
+   "frame": [
+    1959,
+    1660,
+    420,
+    729
+   ],
+   "sheet": [
+    -2,
+    68,
+    425,
+    661
+   ],
+   "systemBackdrop": [
+    "CABackdropLayer (0.0, 0.0, 420.0, 729.0) radius=0.0 mask=false filters=2 bg=true",
+    "CAChameleonLayer (0.0, 0.0, 420.0, 729.0) radius=0.0 mask=false filters=0 bg=false"
+   ],
+   "windowHeightChanges(t,height,top)": [
+    [
+     0.0,
+     474,
+     2389
+    ],
+    [
+     0.123,
+     729,
+     2389
+    ]
+   ]
+  }
+ },
+ "setup-dark": {
+  "contentMinSize": [
+   298,
+   10
+  ],
+  "coveredTop": 31,
+  "footer": [
+   -61,
+   -31,
+   420,
+   56
+  ],
+  "frame": [
+   1959,
+   1858,
+   298,
+   531
+  ],
+  "hostingFitting": [
+   0,
+   0
+  ],
+  "isOpaque": false,
+  "macOS": "Version 27.0.1 (Build 26A434)",
+  "sheet": [
+   -61,
+   37,
+   420,
+   463
+  ],
+  "systemBackdrop": [
+   "CABackdropLayer (0.0, 31.0, 298.0, 470.0) radius=0.0 mask=false filters=2 bg=true",
+   "CAChameleonLayer (0.0, 31.0, 298.0, 470.0) radius=0.0 mask=false filters=0 bg=false"
+  ],
+  "windowClasses": [
+   "_TtGC7SwiftUI18MenuBarExtraWindowVS_7AnyView_",
+   "NSPanel"
+  ]
+ },
+ "setup-light": {
+  "contentMinSize": [
+   298,
+   10
+  ],
+  "coveredTop": 31,
+  "footer": [
+   -61,
+   -31,
+   420,
+   56
+  ],
+  "frame": [
+   1959,
+   1858,
+   298,
+   531
+  ],
+  "hostingFitting": [
+   0,
+   0
+  ],
+  "isOpaque": false,
+  "macOS": "Version 27.0.1 (Build 26A434)",
+  "sheet": [
+   -61,
+   37,
+   420,
+   463
+  ],
+  "systemBackdrop": [
+   "CABackdropLayer (0.0, 31.0, 298.0, 470.0) radius=0.0 mask=false filters=2 bg=true",
+   "CAChameleonLayer (0.0, 31.0, 298.0, 470.0) radius=0.0 mask=false filters=0 bg=false"
+  ],
+  "windowClasses": [
+   "_TtGC7SwiftUI18MenuBarExtraWindowVS_7AnyView_",
+   "NSPanel"
+  ]
+ },
+ "today-light": {
+  "contentMinSize": [
+   298,
+   10
+  ],
+  "coveredTop": 2,
+  "footer": [
+   -61,
+   -2,
+   420,
+   56
+  ],
+  "frame": [
+   1959,
+   1915,
+   298,
+   474
+  ],
+  "hostingFitting": [
+   0,
+   0
+  ],
+  "isOpaque": false,
+  "macOS": "Version 27.0.1 (Build 26A434)",
+  "sheet": [
+   -63,
+   66,
+   425,
+   406
+  ],
+  "systemBackdrop": [
+   "CABackdropLayer (0.0, 2.0, 298.0, 470.0) radius=0.0 mask=false filters=2 bg=true",
+   "CAChameleonLayer (0.0, 2.0, 298.0, 470.0) radius=0.0 mask=false filters=0 bg=false"
+  ],
+  "windowClasses": [
+   "_TtGC7SwiftUI18MenuBarExtraWindowVS_7AnyView_",
+   "NSPanel"
+  ]
+ },
+ "today-light-account-to-today": {
+  "contentMinSize": [
+   298,
+   10
+  ],
+  "coveredTop": 2,
+  "footer": [
+   -61,
+   -2,
+   420,
+   56
+  ],
+  "frame": [
+   1959,
+   1915,
+   298,
+   474
+  ],
+  "hostingFitting": [
+   0,
+   0
+  ],
+  "isOpaque": false,
+  "macOS": "Version 27.0.1 (Build 26A434)",
+  "sheet": [
+   -63,
+   66,
+   425,
+   406
+  ],
+  "systemBackdrop": [
+   "CABackdropLayer (0.0, 2.0, 298.0, 470.0) radius=0.0 mask=false filters=2 bg=true",
+   "CAChameleonLayer (0.0, 2.0, 298.0, 470.0) radius=0.0 mask=false filters=0 bg=false"
+  ],
+  "windowClasses": [
+   "_TtGC7SwiftUI18MenuBarExtraWindowVS_7AnyView_",
+   "NSPanel"
+  ],
+  "windowHeightChanges(t,height,top)": [
+   [
+    0.0,
+    729,
+    2389
+   ],
+   [
+    0.35,
+    474,
+    2389
+   ]
+  ]
+ },
+ "today-light-history-to-account": {
+  "contentMinSize": [
+   298,
+   10
+  ],
+  "coveredTop": 130,
+  "footer": [
+   -61,
+   -130,
+   420,
+   56
+  ],
+  "frame": [
+   1959,
+   1660,
+   298,
+   729
+  ],
+  "hostingFitting": [
+   0,
+   0
+  ],
+  "isOpaque": false,
+  "macOS": "Version 27.0.1 (Build 26A434)",
+  "sheet": [
+   -63,
+   -62,
+   425,
+   661
+  ],
+  "systemBackdrop": [
+   "CABackdropLayer (0.0, 130.0, 298.0, 470.0) radius=0.0 mask=false filters=2 bg=true",
+   "CAChameleonLayer (0.0, 130.0, 298.0, 470.0) radius=0.0 mask=false filters=0 bg=false"
+  ],
+  "windowClasses": [
+   "_TtGC7SwiftUI18MenuBarExtraWindowVS_7AnyView_",
+   "NSPanel"
+  ],
+  "windowHeightChanges(t,height,top)": [
+   [
+    0.0,
+    729,
+    2389
+   ]
+  ]
+ },
+ "today-light-today-to-history": {
+  "contentMinSize": [
+   298,
+   10
+  ],
+  "coveredTop": 130,
+  "footer": [
+   -61,
+   -130,
+   420,
+   56
+  ],
+  "frame": [
+   1959,
+   1660,
+   298,
+   729
+  ],
+  "hostingFitting": [
+   0,
+   0
+  ],
+  "isOpaque": false,
+  "macOS": "Version 27.0.1 (Build 26A434)",
+  "sheet": [
+   -63,
+   -62,
+   425,
+   661
+  ],
+  "systemBackdrop": [
+   "CABackdropLayer (0.0, 130.0, 298.0, 470.0) radius=0.0 mask=false filters=2 bg=true",
+   "CAChameleonLayer (0.0, 130.0, 298.0, 470.0) radius=0.0 mask=false filters=0 bg=false"
+  ],
+  "windowClasses": [
+   "_TtGC7SwiftUI18MenuBarExtraWindowVS_7AnyView_",
+   "NSPanel"
+  ],
+  "windowHeightChanges(t,height,top)": [
+   [
+    0.0,
+    474,
+    2389
+   ],
+   [
+    0.119,
+    729,
+    2389
+   ]
+  ]
+ }
+}
