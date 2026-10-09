@@ -38,6 +38,8 @@ struct AppearanceTests {
 
     /// Uses the production root and native application appearance, NOT a test-added
     /// solid background or a forced SwiftUI colorScheme. No real auth/data access.
+    /// These never-shown windows draw Liquid Glass controls flat (`trackerLiquidGlassOverride`):
+    /// cacheDisplay cannot draw the glass and drops everything it samples.
     /// The popup is a glass sheet plus a detached footer in a transparent window: the
     /// sheet must carry the adaptive glass tint (legible without any desktop blur) and
     /// everything outside the glass must be fully transparent, never a half-filled band.
@@ -147,6 +149,71 @@ struct AppearanceTests {
         }
     }
 
+    /// The header switcher marks the selected section, and only it, in Light and Dark: its
+    /// cell is lighter than the translucent track under the other cells. Production root,
+    /// drawn with the flat fallback, since cacheDisplay cannot draw Liquid Glass.
+    @Test func sectionSwitcherMarksTheSelectedSection() throws {
+        try withPreferences { appearance, _ in
+            let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+            defer { try? FileManager.default.removeItem(at: directory) }
+            let owner = UUID()
+            let now = ISO8601DateFormatter().date(from: "2026-10-08T12:00:00Z")!
+            let model = TrackerModel(directory: directory, clock: { now })
+            model.activate(ownerID: owner)
+            model.startChallenge(on: now)
+            let auth = ProofModel(fixtureOwnerID: owner, directory: directory)
+            // The track's right edge sits at the header's right padding; cells are 44 pt
+            // with 2 pt gaps inside 3 pt of track padding. Sample beside each glyph.
+            let cell = Theme.Size.segmentCell
+            let inset = (Theme.Size.segmentTrack - cell.height) / 2
+            let sections = TrackerSection.allCases
+            let trackWidth = CGFloat(sections.count) * cell.width + CGFloat(sections.count - 1) * 2 + 2 * inset
+            let trackMinX = Theme.Size.panelWidth - Theme.Size.sectionHorizontal - trackWidth
+            func samplePoint(_ index: Int) -> CGPoint {
+                CGPoint(x: trackMinX + inset + CGFloat(index) * (cell.width + 2) + 9, y: Theme.Size.headerHeight / 2 + 8)
+            }
+            for preference in [AppearancePreference.light, .dark] {
+                appearance.preference = preference
+                for (selectedIndex, section) in sections.enumerated() {
+                    let host = NSHostingView(rootView: TrackerPopup(model: model, auth: auth, appearance: appearance, section: section)
+                        .environment(\.trackerLiquidGlassOverride, false))
+                    host.sizingOptions = [.intrinsicContentSize]
+                    let window = NSWindow(contentRect: CGRect(x: 0, y: 0, width: 420, height: 640), styleMask: .borderless, backing: .buffered, defer: false)
+                    window.isReleasedWhenClosed = false
+                    window.contentView = host
+                    defer { window.close() }
+                    window.setContentSize(host.fittingSize)
+                    host.layoutSubtreeIfNeeded()
+                    RunLoop.main.run(until: Date().addingTimeInterval(0.1))
+                    let bitmap = try #require(host.bitmapImageRepForCachingDisplay(in: host.bounds))
+                    host.cacheDisplay(in: host.bounds, to: bitmap)
+                    let scale = CGFloat(bitmap.pixelsWide) / host.bounds.width
+                    let brightness = try sections.indices.map { index in
+                        let point = samplePoint(index)
+                        let pixel = try #require(bitmap.colorAt(x: Int(point.x * scale), y: Int(point.y * scale))?.usingColorSpace(.deviceRGB))
+                        return (pixel.redComponent + pixel.greenComponent + pixel.blueComponent) / 3
+                    }
+                    let name = "\(section.rawValue)-\(preference.rawValue)"
+                    for index in sections.indices where index != selectedIndex {
+                        #expect(brightness[selectedIndex] > brightness[index] + 0.03,
+                                "\(name): the selected cell must carry the indicator, not cell \(index) (\(brightness))")
+                    }
+                    let others = sections.indices.filter { $0 != selectedIndex }.map { brightness[$0] }
+                    #expect(abs(others[0] - others[1]) < 0.02, "\(name): unselected cells show only the track (\(brightness))")
+                }
+            }
+        }
+    }
+
+    @Test func switcherIndicatorUsesLiquidGlassUnlessTransparencyIsReduced() {
+        typealias Indicator = IconSegmented<TrackerSection>.Indicator
+        #expect(Indicator.resolve(liquidGlassAvailable: true, reduceTransparency: false, liquidGlassOverride: nil) == .glass)
+        #expect(Indicator.resolve(liquidGlassAvailable: true, reduceTransparency: true, liquidGlassOverride: nil) == .opaque)
+        #expect(Indicator.resolve(liquidGlassAvailable: false, reduceTransparency: false, liquidGlassOverride: nil) == .opaque)
+        #expect(Indicator.resolve(liquidGlassAvailable: true, reduceTransparency: false, liquidGlassOverride: false) == .flat)
+        #expect(Indicator.resolve(liquidGlassAvailable: true, reduceTransparency: true, liquidGlassOverride: false) == .opaque)
+    }
+
     private enum Surface { case glass, opaque }
 
     private func assertFilledEdges(_ bitmap: NSBitmapImageRep, name: String) {
@@ -200,6 +267,7 @@ struct AppearanceTests {
                 host.rootView = AnyView(
                     TrackerPopup(model: model, auth: auth, appearance: appearance, section: section)
                         .id(section)
+                        .environment(\.trackerLiquidGlassOverride, false)
                 )
                 RunLoop.main.run(until: Date().addingTimeInterval(0.05))
                 host.layoutSubtreeIfNeeded()
@@ -233,7 +301,7 @@ struct AppearanceTests {
     private func renderLiveModes<Content: View>(_ content: Content, name: String, appearance: AppAppearance, surface: Surface = .glass) throws {
         // Changing preference on a retained window tests native live propagation.
         do {
-            let host = NSHostingView(rootView: content)
+            let host = NSHostingView(rootView: content.environment(\.trackerLiquidGlassOverride, false))
             // MenuBarExtra's retained native size must not be silently clamped
             // to this test host's inferred maximum content size.
             host.sizingOptions = [.intrinsicContentSize]

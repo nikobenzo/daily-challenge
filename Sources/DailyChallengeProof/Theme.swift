@@ -30,6 +30,8 @@ enum Theme {
     static let toggleOffKnob = color(dark: hex(0xE6E8F2), light: hex(0xFFFFFF))
     /// The selected cell of a segmented track (boards: lifted white cell in Light).
     static let segmentSelected = color(dark: rgba(255, 255, 255, 0.18), light: hex(0xFFFFFF))
+    /// The same cell as a light tint on the Liquid Glass indicator, so the sheet shows through.
+    static let segmentGlassTint = color(dark: rgba(255, 255, 255, 0.18), light: rgba(255, 255, 255, 0.4))
     static let focus = color(dark: hex(0x6FA0FF), light: hex(0x1F56E0))
     static let focusHalo = color(dark: rgba(111, 160, 255, 0.25), light: rgba(31, 86, 224, 0.18))
 
@@ -156,6 +158,8 @@ enum Theme {
         static let sectionResize = Animation.easeInOut(duration: 0.28)
         static let reducedResize = Animation.linear(duration: 0.12)
         static let crossFade = Animation.easeInOut(duration: 0.2)
+        /// The segmented indicator sliding to a new cell, in step with the section resize.
+        static let selection = Animation.easeInOut(duration: 0.28)
         static let ring = Animation.easeInOut(duration: 0.35)
         static let band = Animation.easeOut(duration: 0.4)
         /// How long a shrinking window keeps its old height so the glass can animate.

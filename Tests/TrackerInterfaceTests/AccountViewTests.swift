@@ -188,8 +188,9 @@ struct AccountViewTests {
 
     /// Standalone renders sit on the opaque themed surface; the popup root is glass, so it
     /// is sampled on the sheet (under the header) rather than at the transparent corner.
+    /// Liquid Glass controls draw flat: cacheDisplay cannot draw the glass and drops what it samples.
     private func render<Content: View>(_ content: Content, name: String, appearance: AppAppearance, glass: Bool = false) throws {
-        let host = NSHostingView(rootView: content)
+        let host = NSHostingView(rootView: content.environment(\.trackerLiquidGlassOverride, false))
         host.sizingOptions = [.intrinsicContentSize]
         let window = NSWindow(contentRect: CGRect(x: 0, y: 0, width: 420, height: 640), styleMask: .borderless, backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false

@@ -280,6 +280,13 @@ struct GlassToggleStyle: ToggleStyle {
 
 /// An icon-only segmented track: each cell is an SF Symbol (or short text) with a
 /// tooltip and an accessibility label.
+///
+/// On macOS 26 and later the selected cell is Liquid Glass: one glass capsule in a
+/// `GlassEffectContainer`, lightly tinted with `segmentGlassTint` over the translucent
+/// track, that slides to the new cell. (Handing a `glassEffectID` from one cell to the next
+/// jumps on macOS 27 instead of moving, measured on screen.) Reduce Transparency draws the
+/// opaque `segmentSelected` pill, Reduce Motion cross-fades instead of sliding, and earlier
+/// systems slide the opaque pill.
 struct IconSegmented<Value: Hashable>: View {
     struct Option {
         let value: Value
@@ -288,32 +295,55 @@ struct IconSegmented<Value: Hashable>: View {
         let label: String
     }
 
+    /// How the selected cell is drawn.
+    enum Indicator: Equatable {
+        /// A Liquid Glass capsule (macOS 26 and later).
+        case glass
+        /// The same tint as a flat translucent capsule: in-process renders, which cannot draw glass.
+        case flat
+        /// The opaque `segmentSelected` pill: Reduce Transparency, and systems before macOS 26.
+        case opaque
+
+        static func resolve(liquidGlassAvailable: Bool, reduceTransparency: Bool, liquidGlassOverride: Bool?) -> Indicator {
+            if reduceTransparency || !liquidGlassAvailable { return .opaque }
+            return liquidGlassOverride == false ? .flat : .glass
+        }
+    }
+
     @Binding var selection: Value
     let options: [Option]
     var cell: CGSize = Theme.Size.segmentCell
     var track: CGFloat = Theme.Size.segmentTrack
+    @Environment(\.trackerReduceMotionOverride) private var reduceMotionOverride
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.trackerLiquidGlassOverride) private var liquidGlassOverride
+
+    private var reduceMotion: Bool { reduceMotionOverride ?? systemReduceMotion }
+    private var indicator: Indicator {
+        var available = false
+        if #available(macOS 26, *) { available = true }
+        return .resolve(liquidGlassAvailable: available, reduceTransparency: reduceTransparency, liquidGlassOverride: liquidGlassOverride)
+    }
 
     var body: some View {
+        cells
+            .background { indicatorRow }
+            .padding((track - cell.height) / 2)
+            .background(Capsule(style: .circular).fill(Theme.controlFill))
+            // The indicator and the icon colours move together, whoever changes the selection.
+            .animation(reduceMotion ? Theme.Motion.crossFade : Theme.Motion.selection, value: selection)
+    }
+
+    private var cells: some View {
         HStack(spacing: 2) {
             ForEach(options, id: \.value) { option in
                 let selected = option.value == selection
                 Button { selection = option.value } label: {
-                    Group {
-                        if let symbol = option.symbol {
-                            Image(systemName: symbol).font(.system(size: 15, weight: .semibold))
-                        } else {
-                            Text(option.text ?? "").font(.system(size: 14, weight: .heavy))
-                        }
-                    }
-                    .foregroundStyle(selected ? Theme.accentText : Theme.textSecondary)
-                    .frame(width: cell.width, height: cell.height)
-                    .background {
-                        if selected {
-                            Capsule(style: .circular).fill(Theme.segmentSelected)
-                                .shadow(color: Theme.sheetShadow.opacity(0.5), radius: 2, y: 1)
-                        }
-                    }
-                    .contentShape(Capsule(style: .circular))
+                    glyph(option)
+                        .foregroundStyle(selected ? Theme.accentText : Theme.textSecondary)
+                        .frame(width: cell.width, height: cell.height)
+                        .contentShape(Capsule(style: .circular))
                 }
                 .buttonStyle(.plain)
                 .help(option.label)
@@ -321,8 +351,53 @@ struct IconSegmented<Value: Hashable>: View {
                 .accessibilityAddTraits(selected ? [.isSelected, .isButton] : .isButton)
             }
         }
-        .padding((track - cell.height) / 2)
-        .background(Capsule(style: .circular).fill(Theme.controlFill))
+    }
+
+    @ViewBuilder private func glyph(_ option: Option) -> some View {
+        if let symbol = option.symbol {
+            Image(systemName: symbol).font(.system(size: 15, weight: .semibold))
+        } else {
+            Text(option.text ?? "").font(.system(size: 14, weight: .heavy))
+        }
+    }
+
+    /// The one indicator, under the icons, offset to the selected cell. A glass container
+    /// draws its glass above its own content, so the icons stay outside it. While the glass
+    /// moves, macOS 27 still composites it over the glyph it passes for a few frames.
+    @ViewBuilder private var indicatorRow: some View {
+        let row = ZStack(alignment: .leading) {
+            if let index = options.firstIndex(where: { $0.value == selection }) {
+                selectedCell
+                    .frame(width: cell.width, height: cell.height)
+                    .offset(x: CGFloat(index) * (cell.width + 2))
+                    // Reduce Motion: a new indicator fades in at the new cell instead of sliding.
+                    .id(reduceMotion ? index : -1)
+                    .transition(.opacity)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .accessibilityHidden(true)
+        if #available(macOS 26, *), indicator == .glass {
+            GlassEffectContainer(spacing: 2) { row }
+        } else {
+            row
+        }
+    }
+
+    @ViewBuilder private var selectedCell: some View {
+        let shape = Capsule(style: .circular)
+        switch indicator {
+        case .glass:
+            if #available(macOS 26, *) {
+                // Not .interactive(): the buttons above take the clicks, and interactive glass
+                // lifts over the icons while it moves (measured on screen, macOS 27).
+                Color.clear.glassEffect(.regular.tint(Theme.segmentGlassTint), in: shape)
+            }
+        case .flat:
+            shape.fill(Theme.segmentGlassTint).overlay(shape.strokeBorder(Theme.glassBorder, lineWidth: 0.5))
+        case .opaque:
+            shape.fill(Theme.segmentSelected).shadow(color: Theme.sheetShadow.opacity(0.5), radius: 2, y: 1)
+        }
     }
 }
 

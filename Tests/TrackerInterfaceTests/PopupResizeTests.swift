@@ -52,7 +52,10 @@ struct PopupResizeTests {
 
     @Test func panelIsTransparentAndFitsTheGlassWithoutClipping() async throws {
         try await fixture { model, auth, appearance, directory in
-            let panel = PopupPanel(content: TrackerPopup(model: model, auth: auth, appearance: appearance))
+            // The pixels below come from cacheDisplay, which cannot draw Liquid Glass and drops
+            // what it samples, so the Appearance control's indicator draws flat here.
+            let panel = PopupPanel(content: TrackerPopup(model: model, auth: auth, appearance: appearance)
+                .environment(\.trackerLiquidGlassOverride, false))
             defer { panel.close() }
             panel.setFrameTopLeftPoint(CGPoint(x: 200, y: 1000))
             let top = panel.frame.maxY

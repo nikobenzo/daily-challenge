@@ -225,7 +225,9 @@ import Testing
         // No preference writes, production Keychain, or displayed app windows.
         let appearance = AppAppearance(defaults: UserDefaults(suiteName: "sync-render-\(UUID())")!)
         let auth = ProofModel(fixtureOwnerID: fixture.owner, directory: fixture.directory)
-        let host = NSHostingView(rootView: TrackerPopup(model: model, auth: auth, appearance: appearance))
+        // cacheDisplay cannot draw Liquid Glass and drops what it samples; draw it flat.
+        let host = NSHostingView(rootView: TrackerPopup(model: model, auth: auth, appearance: appearance)
+            .environment(\.trackerLiquidGlassOverride, false))
         let window = NSWindow(contentRect: CGRect(x: 0, y: 0, width: 420, height: 640),
                               styleMask: .borderless, backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
