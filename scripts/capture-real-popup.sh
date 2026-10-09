@@ -6,8 +6,11 @@
 # The copy gets its own bundle ID, no Configuration.json and no update feed, and runs on
 # offline fixtures inside .build/real-popup-probe: never the installed app, a real
 # account, the Keychain or ~/Library/Application Support/DailyChallenge*.
-#   --docs   also copy the PNGs, their geometry reports and the resize traces into
-#            docs/screenshots/real-popup/
+# When this terminal may record the screen, each PNG is the WindowServer's image of the
+# popup window alone (it draws Liquid Glass), and each section switch is also recorded as
+# a video of the header switcher; with ffmpeg, its changing frames become a frame sheet.
+#   --docs   also copy the PNGs, their geometry reports, the resize traces, the switch
+#            videos and frame sheets into docs/screenshots/real-popup/
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -64,6 +67,14 @@ for appearance in light dark; do
   run today "$appearance" history,account,today
 done
 sw_vers > "$OUT/macos.txt"
+if command -v ffmpeg >/dev/null; then
+  for video in "$OUT"/*.mov; do
+    [[ -e "$video" ]] || continue
+    # Every frame that differs from the one before, top to bottom: before, the move, after.
+    ffmpeg -loglevel error -y -i "$video" -vf 'mpdecimate,tile=1x24:padding=2:color=0xFF00FF' \
+      -frames:v 1 "${video%.mov}-frames.png"
+  done
+fi
 if (( DOCS )); then
   DEST=docs/screenshots/real-popup
   mkdir -p "$DEST"
@@ -71,7 +82,10 @@ if (( DOCS )); then
     for screen in setup today history account sign-in; do
       cp "$OUT/$screen-$appearance.png" "$OUT/$screen-$appearance.json" "$DEST/"
     done
-    cp "$OUT"/today-"$appearance"-*-to-*.json "$DEST/"
+    for step in "$OUT"/today-"$appearance"-*-to-*.json; do
+      cp "${step%.json}".* "$DEST/" 2>/dev/null || true
+      cp "${step%.json}"-frames.png "$DEST/" 2>/dev/null || true
+    done
   done
   cp "$OUT/macos.txt" "$DEST/"
 fi

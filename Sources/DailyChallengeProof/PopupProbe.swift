@@ -8,10 +8,13 @@ import SwiftUI
 /// production bundle (`app.daily-challenge.proof`), so an installed app never changes
 /// behaviour. In probe mode the app runs on offline fixture models kept in that directory
 /// (no Supabase client, Keychain, Sparkle, reminders or production data paths), clicks its
-/// own status item at launch, writes the popup window's own rendering (cacheDisplay: no
-/// screen-recording or accessibility permission) and geometry to the directory, then quits.
+/// own status item at launch, writes the popup window's image and geometry to the
+/// directory, then quits. The image is the WindowServer's composite of the popup window
+/// alone (`screencapture -l`, which draws Liquid Glass) when the launching terminal may
+/// record the screen, else the window's own rendering (cacheDisplay, no permission).
 /// Optional section steps switch sections like the header control and record the window
-/// and glass frames on every display frame while the height animates.
+/// and glass frames on every display frame while the height animates, and, with screen
+/// recording, a video of the header switcher while its selection moves.
 ///
 ///     DAILY_CHALLENGE_POPUP_PROBE=<directory>                                  required
 ///     DAILY_CHALLENGE_POPUP_PROBE_SCREEN=sign-in|setup|today|history|account   (today)
@@ -83,12 +86,17 @@ struct PopupProbe {
         try? await Task.sleep(for: .milliseconds(300))
         guard popup.isOpen else { return finish(failure: "Clicking the status item did not open the popup.") }
         try? await Task.sleep(for: .seconds(1.2))
-        record(popup, as: name)
+        await record(popup, as: name)
         var previous = section
         for step in steps where step != previous {
+            let label = "\(name)-\(previous.rawValue.lowercased())-to-\(step.rawValue.lowercased())"
+            let video = recordHeader(popup.panel, to: label)
+            // Screen recording takes a moment to start; the switch happens inside the video.
+            if video != nil { try? await Task.sleep(for: .milliseconds(700)) }
             NotificationCenter.default.post(name: Self.selectSection, object: step)
             let trace = await Self.trace(popup.panel, seconds: 1.2)
-            record(popup, as: "\(name)-\(previous.rawValue.lowercased())-to-\(step.rawValue.lowercased())", trace: trace)
+            if let video { await Self.wait(for: video) }
+            await record(popup, as: label, trace: trace)
             previous = step
         }
         // Escape closes the popup, as a person would.
@@ -120,15 +128,71 @@ struct PopupProbe {
         return samples
     }
 
+    // MARK: Screen capture
+
+    /// Runs /usr/sbin/screencapture; it may record the screen only when the terminal that
+    /// launched the probe may (Privacy & Security > Screen Recording).
+    private static func screencapture(_ arguments: [String]) -> Process? {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
+        process.arguments = ["-x"] + arguments
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+        do { try process.run() } catch { return nil }
+        return process
+    }
+
+    private static func wait(for process: Process) async {
+        while process.isRunning { try? await Task.sleep(for: .milliseconds(20)) }
+    }
+
+    /// The WindowServer's composite of the popup window alone, without its desktop.
+    private func captureWindow(_ panel: PopupPanel, to url: URL) async -> NSBitmapImageRep? {
+        try? FileManager.default.removeItem(at: url)
+        guard let process = Self.screencapture(["-o", "-l\(panel.windowNumber)", url.path]) else { return nil }
+        await Self.wait(for: process)
+        guard process.terminationStatus == 0, let data = try? Data(contentsOf: url),
+              let bitmap = NSBitmapImageRep(data: data), bitmap.pixelsWide > 0 else { return nil }
+        return bitmap
+    }
+
+    /// A two-second video of the header's section switcher (on the glass, 4 pt around its
+    /// track) while a section changes. Only that part of the screen is recorded.
+    private func recordHeader(_ panel: PopupPanel, to label: String) -> Process? {
+        guard let sheet = panel.glassFrames.first, let primary = NSScreen.screens.first else { return nil }
+        let cells = CGFloat(TrackerSection.allCases.count), cell = Theme.Size.segmentCell
+        let track = CGSize(width: cells * cell.width + (cells - 1) * 2 + Theme.Size.segmentTrack - cell.height,
+                           height: Theme.Size.segmentTrack)
+        let switcher = CGRect(x: panel.frame.minX + sheet.maxX - Theme.Size.sectionHorizontal - track.width,
+                              y: panel.frame.minY + sheet.maxY - (Theme.Size.headerHeight + track.height) / 2,
+                              width: track.width, height: track.height).insetBy(dx: -4, dy: -4)
+        // screencapture -R takes top-left global coordinates.
+        let top = primary.frame.maxY - switcher.maxY
+        let url = directory.appendingPathComponent("\(label).mov")
+        try? FileManager.default.removeItem(at: url)
+        return Self.screencapture(["-v", "-V2", "-R\(Int(switcher.minX)),\(Int(top)),\(Int(switcher.width)),\(Int(switcher.height))", url.path])
+    }
+
     // MARK: Report
 
-    private func record(_ popup: PopupController, as label: String, trace: [[String: Double]]? = nil) {
+    private func record(_ popup: PopupController, as label: String, trace: [[String: Double]]? = nil) async {
         let panel = popup.panel
         guard let root = panel.contentView else { return }
         root.layoutSubtreeIfNeeded()
-        guard let bitmap = root.bitmapImageRepForCachingDisplay(in: root.bounds) else { return }
-        root.cacheDisplay(in: root.bounds, to: bitmap)
-        try? bitmap.representation(using: .png, properties: [:])?.write(to: directory.appendingPathComponent("\(label).png"))
+        let png = directory.appendingPathComponent("\(label).png")
+        let capture: String
+        let bitmap: NSBitmapImageRep
+        if let window = await captureWindow(panel, to: png) {
+            capture = "window-server"
+            bitmap = window
+        } else {
+            // cacheDisplay draws neither Liquid Glass nor what the glass samples behind it.
+            guard let cached = root.bitmapImageRepForCachingDisplay(in: root.bounds) else { return }
+            root.cacheDisplay(in: root.bounds, to: cached)
+            try? cached.representation(using: .png, properties: [:])?.write(to: png)
+            capture = "cacheDisplay"
+            bitmap = cached
+        }
         let glass = panel.glassFrames
         let screen = panel.screen ?? NSScreen.main
         var report: [String: Any] = [
@@ -137,6 +201,7 @@ struct PopupProbe {
             "visibleFrame": screen.map { Self.rect($0.visibleFrame) } ?? [],
             "statusItem": popup.statusButton?.window.map { Self.rect($0.frame) } ?? [],
             "windowClass": NSStringFromClass(type(of: panel)),
+            "capture": capture,
             "frame": Self.rect(panel.frame),
             "isOpaque": panel.isOpaque,
             "clearBackground": panel.backgroundColor == .clear,
