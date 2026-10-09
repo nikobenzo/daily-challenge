@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Regenerates the app icon master and the committed iconset from source.
+# Regenerates the app icon master, the committed iconset and the iPhone icon from source.
 # build-proof.sh only packs the committed iconset; run this after editing render-app-icon.swift.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -22,4 +22,7 @@ done
 check="$(mktemp -d)"
 trap 'rm -rf "$check"' EXIT
 iconutil -c icns "$iconset" -o "$check/AppIcon.icns"
-echo "wrote $master and $iconset"
+# The iPhone icon: the same tile full-bleed and opaque, in the iOS app's asset catalog.
+ios_icon=iOS/DailyChallenge/Assets.xcassets/AppIcon.appiconset/icon_1024.png
+swift scripts/render-app-icon.swift --ios "$ios_icon"
+echo "wrote $master, $iconset and $ios_icon"

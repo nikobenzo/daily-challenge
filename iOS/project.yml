@@ -1,0 +1,103 @@
+# The iPhone app. Generate DailyChallenge.xcodeproj with `xcodegen generate` (run in iOS/);
+# the generated project is committed, so building never requires XcodeGen.
+name: DailyChallenge
+options:
+  bundleIdPrefix: app.daily-challenge
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+  developmentLanguage: en
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    DEVELOPMENT_TEAM: L644Y3WX5T
+    CODE_SIGN_STYLE: Automatic
+    TARGETED_DEVICE_FAMILY: "1"
+    SWIFT_STRICT_CONCURRENCY: complete
+packages:
+  # The repository root package: only its ChallengeCore and ChallengeSyncKit libraries are
+  # linked. Sparkle is a dependency of the Mac target alone and is never linked here.
+  DailyChallenge:
+    path: ..
+targets:
+  DailyChallenge:
+    type: application
+    platform: iOS
+    sources:
+      - path: DailyChallenge
+      # Design-system tokens and components shared with the Mac app (no AppKit or UIKit there,
+      # apart from Theme's colour and font helpers).
+      - path: ../Sources/DailyChallengeProof/Shared
+    dependencies:
+      - package: DailyChallenge
+        product: ChallengeCore
+      - package: DailyChallenge
+        product: ChallengeSyncKit
+    info:
+      path: DailyChallenge/Info.plist
+      properties:
+        CFBundleDisplayName: Daily Challenge
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        LSRequiresIPhoneOS: true
+        ITSAppUsesNonExemptEncryption: false
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UIBackgroundModes: [fetch]
+        BGTaskSchedulerPermittedIdentifiers: [app.daily-challenge.ios.refresh]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.daily-challenge.ios
+        PRODUCT_NAME: Daily Challenge
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        # Placeholders: the Bundle phase below writes the real values from ../VERSION.
+        MARKETING_VERSION: "0.0.0"
+        CURRENT_PROJECT_VERSION: "0"
+        # The Bundle phase reads ../.env.local and ../VERSION, outside the sandboxed inputs.
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+    postBuildScripts:
+      - name: Bundle configuration and version
+        script: bash "$SRCROOT/scripts/bundle-configuration.sh"
+        # The processed Info.plist as an input orders this phase after Xcode writes it.
+        inputFiles: ["$(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)"]
+        basedOnDependencyAnalysis: false
+  DailyChallengeTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [DailyChallengeTests]
+    dependencies:
+      - target: DailyChallenge
+      - package: DailyChallenge
+        product: ChallengeCore
+      - package: DailyChallenge
+        product: ChallengeSyncKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.daily-challenge.ios.tests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Daily Challenge.app/Daily Challenge"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+  DailyChallengeUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [DailyChallengeUITests]
+    dependencies:
+      - target: DailyChallenge
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.daily-challenge.ios.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: DailyChallenge
+schemes:
+  DailyChallenge:
+    build:
+      targets:
+        DailyChallenge: all
+    test:
+      targets: [DailyChallengeTests, DailyChallengeUITests]
+      gatherCoverageData: false
+    archive:
+      config: Release

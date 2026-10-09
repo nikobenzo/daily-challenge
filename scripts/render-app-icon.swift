@@ -6,17 +6,20 @@ import UniformTypeIdentifiers
 // Renders the 1024 px app icon master: a white drop on a deep-blue tile, with
 // one soft glint. No ring, numerals or text (captain's revision of concept 2).
 // Run via scripts/make-app-icon.sh, which also derives Resources/AppIcon.iconset.
-// Usage: swift scripts/render-app-icon.swift <output.png>
-guard CommandLine.arguments.count == 2 else {
-    FileHandle.standardError.write(Data("usage: render-app-icon.swift <output.png>\n".utf8))
+// Usage: swift scripts/render-app-icon.swift [--ios] <output.png>
+// --ios draws the same tile full-bleed and opaque, as iOS requires (the system masks it).
+let arguments = Array(CommandLine.arguments.dropFirst())
+let iOS = arguments.first == "--ios"
+guard arguments.count == (iOS ? 2 : 1) else {
+    FileHandle.standardError.write(Data("usage: render-app-icon.swift [--ios] <output.png>\n".utf8))
     exit(2)
 }
-let output = URL(fileURLWithPath: CommandLine.arguments[1])
+let output = URL(fileURLWithPath: arguments[arguments.count - 1])
 
 let canvas = 1024
 // Apple's macOS icon grid: an 824 pt rounded square centred on the 1024 canvas,
-// leaving room for the system drop shadow.
-let tile = CGRect(x: 100, y: 100, width: 824, height: 824)
+// leaving room for the system drop shadow. iOS icons fill the canvas.
+let tile = iOS ? CGRect(x: 0, y: 0, width: 1024, height: 1024) : CGRect(x: 100, y: 100, width: 824, height: 824)
 
 func rgb(_ hex: UInt32, _ alpha: CGFloat = 1) -> CGColor {
     CGColor(srgbRed: CGFloat((hex >> 16) & 0xff) / 255, green: CGFloat((hex >> 8) & 0xff) / 255,
@@ -65,13 +68,14 @@ func dropPath() -> CGPath {
 
 guard let space = CGColorSpace(name: CGColorSpace.sRGB),
       let context = CGContext(data: nil, width: canvas, height: canvas, bitsPerComponent: 8, bytesPerRow: 0,
-                              space: space, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+                              space: space,
+                              bitmapInfo: (iOS ? CGImageAlphaInfo.noneSkipLast : CGImageAlphaInfo.premultipliedLast).rawValue)
 else { fatalError("could not create bitmap context") }
 // Draw in y-down coordinates; shadow offsets stay in device space (negative y is down).
 context.translateBy(x: 0, y: CGFloat(canvas))
 context.scaleBy(x: 1, y: -1)
 
-let tileShape = continuousRoundedSquare(in: tile)
+let tileShape = iOS ? CGPath(rect: tile, transform: nil) : continuousRoundedSquare(in: tile)
 context.saveGState()
 context.setShadow(offset: CGSize(width: 0, height: -10), blur: 20, color: rgb(0x000000, 0.3))
 context.addPath(tileShape)
