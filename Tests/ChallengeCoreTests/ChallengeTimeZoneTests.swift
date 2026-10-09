@@ -255,7 +255,7 @@ func seventyFiveDayMilestonesFallOnTheZonesLocalDay(_ identifier: String) throws
     try york.record(.pour(450), on: now, at: now)
     let export = try york.exportData()
     let json = try #require(JSONSerialization.jsonObject(with: export) as? [String: Any])
-    #expect(json["formatVersion"] as? Int == 2)
+    #expect(json["formatVersion"] as? Int == ChallengeBackup.currentVersion)
     #expect((json["settings"] as? [String: Any])?["time_zone"] as? String == "America/New_York")
     #expect(try ChallengeBackup.decode(export).encoded() == export)
     #expect(try york.previewImport(export).duplicateCount == 1)
@@ -294,7 +294,7 @@ func seventyFiveDayMilestonesFallOnTheZonesLocalDay(_ identifier: String) throws
     #expect(try jersey.previewImport(legacyData).newCount == 1)
     try jersey.importData(legacyData)
     #expect(jersey.challenge?.summary(on: jerseyNow, asOf: jerseyNow).waterMillilitres == 900)
-    legacy["formatVersion"] = 3
+    legacy["formatVersion"] = ChallengeBackup.currentVersion + 1
     #expect(throws: ChallengeBackupError.unsupportedVersion) {
         try ChallengeBackup.decode(JSONSerialization.data(withJSONObject: legacy))
     }

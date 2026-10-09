@@ -4,12 +4,17 @@ public enum ChallengeError: LocalizedError {
     case invalidWaterAmount
     case dateOutsideChallenge
     case conflictingActivity
+    case invalidExtraTitle, tooManyExtras, unknownExtra, archivedExtra
 
     public var errorDescription: String? {
         switch self {
         case .invalidWaterAmount: "Water amounts must be positive whole millilitres within the supported total."
         case .dateOutsideChallenge: "Only days from the challenge start through today can be edited."
         case .conflictingActivity: "An activity ID was reused with different content. Nothing was changed."
+        case .invalidExtraTitle: "An extra's name must be 1 to 40 characters on one line."
+        case .tooManyExtras: "You can have up to \(Challenge.maximumActiveExtras) extras. Archive one to add another."
+        case .unknownExtra: "That extra doesn't exist. Nothing was changed."
+        case .archivedExtra: "That extra is archived, so it can't be changed for this day."
         }
     }
 }
@@ -23,11 +28,50 @@ public struct Challenge: Codable, Sendable {
         case pending, clean, missed
     }
 
+    /// Synthesized Codable: each event's `action` is a one-key object named after the
+    /// case. These names and labels are the wire format shared with the server and every
+    /// client, so never rename them:
+    ///
+    ///     {"pour":{"_0":450}}                 {"undoLatestPour":{}}
+    ///     {"setHabit":{"_0":"walk","completed":true}}    {"setDiet":{"_0":"clean"}}
+    ///     {"defineExtra":{"id":"<UUID>","title":"Stretch"}}
+    ///     {"archiveExtra":{"id":"<UUID>"}}    {"setExtra":{"id":"<UUID>","completed":true}}
+    ///
+    /// Extras never count toward a complete day. A client that predates a case cannot
+    /// decode that event at all (see HANDOFF.md).
     public enum Action: Codable, Equatable, Sendable {
         case pour(Int)
         case undoLatestPour
         case setHabit(Habit, completed: Bool)
         case setDiet(DietState)
+        /// Adds an extra, or renames it: the last definition in event order wins.
+        case defineExtra(id: UUID, title: String)
+        /// Hides an extra from its archive day on, permanently; earlier days keep their ticks.
+        case archiveExtra(id: UUID)
+        /// Ticks or unticks an extra for the event's day.
+        case setExtra(id: UUID, completed: Bool)
+    }
+
+    /// A personal daily to-do beside the five requirements. Never part of `isComplete`.
+    public struct Extra: Identifiable, Equatable, Sendable {
+        public let id: UUID
+        public let title: String
+        /// The first challenge day it is hidden from, or nil while it is active.
+        public let archivedFrom: Date?
+        public var isArchived: Bool { archivedFrom != nil }
+    }
+
+    public static let maximumActiveExtras = 10
+    public static let maximumExtraTitleLength = 40
+
+    /// The stored form of an extra's name: trimmed, 1 to 40 characters, one line.
+    /// Nil when nothing valid remains.
+    public static func extraTitle(_ raw: String) -> String? {
+        let title = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard (1...maximumExtraTitleLength).contains(title.count),
+              !title.unicodeScalars.contains(where: { CharacterSet.controlCharacters.contains($0)
+                  || CharacterSet.newlines.contains($0) }) else { return nil }
+        return title
     }
 
     public struct Activity: Codable, Identifiable, Equatable, Sendable {
@@ -81,7 +125,14 @@ public struct Challenge: Codable, Sendable {
         public var waterMillilitres: Int { activePours.reduce(0) { $0 + $1.millilitres } }
         public var waterComplete: Bool { waterMillilitres >= 4_000 }
         public let status: DayStatus
+        /// The five requirements only. Extras never change it.
         public var isComplete: Bool { status == .complete }
+        /// The extras shown for this day, in creation order, and which of them are ticked.
+        public let extras: [Extra]
+        public let completedExtras: Set<UUID>
+        public var extrasDone: Int { completedExtras.count }
+        public var extrasTotal: Int { extras.count }
+        public var allExtrasDone: Bool { extrasTotal > 0 && extrasDone == extrasTotal }
     }
 
     public struct StreakSummary: Sendable {
@@ -195,6 +246,25 @@ public struct Challenge: Codable, Sendable {
             }
             target = nil
         case .setHabit, .setDiet: target = nil
+        case .defineExtra(let extraID, let title):
+            guard Self.extraTitle(title) == title else { throw ChallengeError.invalidExtraTitle }
+            let catalog = allExtras
+            if let existing = catalog.first(where: { $0.id == extraID }) {
+                guard !existing.isArchived else { throw ChallengeError.archivedExtra }
+            } else {
+                guard catalog.filter({ !$0.isArchived }).count < Self.maximumActiveExtras else {
+                    throw ChallengeError.tooManyExtras
+                }
+            }
+            target = nil
+        case .archiveExtra(let extraID):
+            guard let existing = allExtras.first(where: { $0.id == extraID }) else { throw ChallengeError.unknownExtra }
+            if existing.isArchived { return nil }
+            target = nil
+        case .setExtra(let extraID, _):
+            guard let existing = allExtras.first(where: { $0.id == extraID }) else { throw ChallengeError.unknownExtra }
+            guard existing.archivedFrom.map({ $0 > day(date) }) ?? true else { throw ChallengeError.archivedExtra }
+            target = nil
         case .undoLatestPour:
             guard let last = summary(on: date, asOf: now).activePours.last else { return nil }
             target = last.id
@@ -216,6 +286,12 @@ public struct Challenge: Codable, Sendable {
         }
         var totals: [Date: Int] = [:]
         let undone = Set(known.values.compactMap(\.undonePourID))
+        // Order-independent on purpose: a device may tick an extra before it hears of
+        // another device's archive, or with a clock behind the definition's. Only an
+        // extra never defined anywhere in the union is invalid.
+        let definedExtras = Set(known.values.compactMap { event -> UUID? in
+            if case .defineExtra(let id, _) = event.action { id } else { nil }
+        })
         for event in known.values {
             guard event.day.timeIntervalSince1970.isFinite,
                   event.recordedAt.timeIntervalSince1970.isFinite,
@@ -234,6 +310,12 @@ public struct Challenge: Codable, Sendable {
                       case .pour = pour.action, pour.day == event.day else { throw ChallengeError.conflictingActivity }
             case .setHabit, .setDiet:
                 guard event.undonePourID == nil else { throw ChallengeError.conflictingActivity }
+            case .defineExtra(_, let title):
+                guard event.undonePourID == nil else { throw ChallengeError.conflictingActivity }
+                guard Self.extraTitle(title) == title else { throw ChallengeError.invalidExtraTitle }
+            case .archiveExtra(let extraID), .setExtra(let extraID, _):
+                guard event.undonePourID == nil else { throw ChallengeError.conflictingActivity }
+                guard definedExtras.contains(extraID) else { throw ChallengeError.unknownExtra }
             }
         }
         activities = known.values.sorted {
@@ -257,15 +339,19 @@ public struct Challenge: Codable, Sendable {
         }
         var completed: Set<Habit> = []
         var diet: DietState = .pending
+        var ticked: Set<UUID> = []
         for record in records {
             switch record.action {
             case .setHabit(let habit, let value):
                 if value { completed.insert(habit) } else { completed.remove(habit) }
             case .setDiet(let value): diet = value
-            case .pour, .undoLatestPour: break
+            case .setExtra(let id, let value):
+                if value { ticked.insert(id) } else { ticked.remove(id) }
+            case .pour, .undoLatestPour, .defineExtra, .archiveExtra: break
             }
         }
         let selected = day(date)
+        let shown = extras(asOf: selected)
         let today = day(now)
         let allMet = pours.reduce(0) { $0 + $1.millilitres } >= 4_000
             && completed.count == Habit.allCases.count && diet == .clean
@@ -277,8 +363,35 @@ public struct Challenge: Codable, Sendable {
         else { status = .inProgress }
         return DailySummary(
             interval: calendar.dateInterval(of: .day, for: selected)!,
-            activePours: pours, completedHabits: completed, diet: diet, status: status
+            activePours: pours, completedHabits: completed, diet: diet, status: status,
+            extras: shown, completedExtras: ticked.intersection(shown.map(\.id))
         )
+    }
+
+    /// Every extra ever defined, archived ones included, in creation order (the first
+    /// definition's place in event order). A definition's own `day` is ignored.
+    public var allExtras: [Extra] {
+        var order: [UUID] = []
+        var titles: [UUID: String] = [:]
+        var archived: [UUID: Date] = [:]
+        for activity in activities {
+            switch activity.action {
+            case .defineExtra(let id, let title):
+                if titles[id] == nil { order.append(id) }
+                titles[id] = title
+            case .archiveExtra(let id):
+                archived[id] = min(archived[id] ?? activity.day, activity.day)
+            default: break
+            }
+        }
+        return order.compactMap { id in titles[id].map { Extra(id: id, title: $0, archivedFrom: archived[id]) } }
+    }
+
+    /// The extras shown for the day of `date`, in creation order: every defined extra
+    /// except those archived on or before that day. Asked for today, the active list.
+    public func extras(asOf date: Date) -> [Extra] {
+        let selected = day(date)
+        return allExtras.filter { $0.archivedFrom.map { $0 > selected } ?? true }
     }
 
     public func streaks(asOf now: Date) -> StreakSummary {
