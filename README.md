@@ -1,6 +1,8 @@
 # Daily Challenge
 
-A personal native macOS menu-bar challenge tracker. The agreed product plan is in [PLAN.md](PLAN.md).
+A personal native macOS menu-bar challenge tracker, with an iPhone companion app for TestFlight. The agreed product plan is in [PLAN.md](PLAN.md).
+
+**iPhone app:** `iOS/DailyChallenge.xcodeproj` (generated from `iOS/project.yml`, committed) builds a SwiftUI iPhone app sharing `ChallengeCore` and `ChallengeSyncKit` with the Mac: the same account, sync, conflict rules and reminders planner, with Today, History, Account, setup and the sign-in flow. It reaches family through TestFlight internal testing. Build, test, screenshot and TestFlight owner steps: [iPhone app](docs/ios-testflight.md); screenshots in `docs/screenshots/ios/`.
 
 ## Current state: functional tracker with production sync
 
@@ -111,7 +113,8 @@ Local proof data lives under `~/Library/Application Support/DailyChallengeProof/
 - `Sources/ChallengeCore/`: challenge rules, convergent event merge, versioned durable queue/storage, and transport seam; no SDK or UI dependency.
 - `Sources/ProbeCore/`: durable account-scoped test journal; no SDK or UI dependency.
 - `Sources/ChallengeSyncKit/`: platform-neutral library shared by the Mac and iPhone apps: Supabase transport, the sync coordinator and its status (`TrackerModel`), email/password/code authentication (`AuthModel`), water-reminder scheduling, challenge-zone dates and the finite motion clocks. Depends only on `ChallengeCore` and `supabase-swift`; no AppKit, UIKit, Sparkle or popup code.
-- `Sources/DailyChallengeProof/`: the Mac menu-bar app: popup, views, Sparkle updates, login item, the Mac's reminder lifecycle and the separate proof-sync diagnostics, consuming the kit.
+- `Sources/DailyChallengeProof/`: the Mac menu-bar app: popup, views, Sparkle updates, login item, the Mac's reminder lifecycle and the separate proof-sync diagnostics, consuming the kit. Its `Shared/` folder (design tokens, ring gauge, jug, completion effect, buttons and badges) also compiles into the iPhone app, so it must stay free of AppKit and UIKit.
+- `iOS/`: the iPhone app (`project.yml`, the generated Xcode project, `DailyChallenge/` sources, unit and UI tests, and the configuration build phase); `scripts/ios-archive.sh` archives and uploads it for TestFlight.
 - `supabase/migrations/`: versioned database changes.
 - `Tests/ChallengeCoreTests/`, `Tests/ChallengeSyncKitTests/`, `Tests/TrackerInterfaceTests/`, `Tests/ProbeCoreTests/`, `Tests/ProofAuthTests/`, and `supabase/tests/`: automated local checks.
 
