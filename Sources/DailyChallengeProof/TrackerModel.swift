@@ -60,11 +60,13 @@ final class TrackerModel {
     var reminders: WaterReminderController?
     private(set) var celebration: CelebrationEvent?
     @ObservationIgnored private var localCompletionDay: Date?
+    @ObservationIgnored private var localExtrasDay: Date?
 
     private func observeCompletion() {
         guard let challenge, let record = store?.record else { return }
         let ledger = CelebrationLedger(file: directory.appendingPathComponent("celebrations-\(challenge.ownerID.uuidString).json"))
-        if let kind = ledger.observe(challenge, challengeID: record.id, now: clock(), localCompletionDay: localCompletionDay) {
+        if let kind = ledger.observe(challenge, challengeID: record.id, now: clock(), localCompletionDay: localCompletionDay,
+                                     localExtrasDay: localExtrasDay) {
             celebration = CelebrationEvent(kind: kind, started: clock())
         }
     }
@@ -347,5 +349,58 @@ final class TrackerModel {
             errorMessage = nil
             requestSync()
         } catch { errorMessage = "Could not save. Your previous history is intact. \(error.localizedDescription)" }
+    }
+}
+
+// MARK: Extras
+
+/// Personal daily to-dos beside the five requirements; they never make a day complete.
+/// Ticks follow the selected day like habit marks. Adding, renaming and archiving
+/// belong to the challenge rather than a day, so they are recorded on today without
+/// the History correction lock.
+extension TrackerModel {
+    /// Not archived, in creation order: what Manage extras lists and the cap counts.
+    var activeExtras: [Challenge.Extra] { challenge?.allExtras.filter { !$0.isArchived } ?? [] }
+    var canAddExtra: Bool { challenge != nil && activeExtras.count < Challenge.maximumActiveExtras }
+
+    func toggleExtra(_ id: UUID) {
+        refresh()
+        let done = summary?.completedExtras.contains(id) ?? false
+        // Only a tick made here, today, may celebrate; opening or syncing never does.
+        localExtrasDay = !done && selectedDay == today ? today : nil
+        defer { localExtrasDay = nil }
+        record(.setExtra(id: id, completed: !done))
+    }
+
+    /// Each returns nil once saved, otherwise the reason nothing was saved.
+    func addExtra(_ title: String) -> String? { defineExtra(id: UUID(), title: title) }
+
+    func renameExtra(_ id: UUID, to title: String) -> String? {
+        guard Challenge.extraTitle(title) != activeExtras.first(where: { $0.id == id })?.title else { return nil }
+        return defineExtra(id: id, title: title)
+    }
+
+    func archiveExtra(_ id: UUID) -> String? { recordExtraSetting(.archiveExtra(id: id)) }
+
+    private func defineExtra(id: UUID, title: String) -> String? {
+        guard let title = Challenge.extraTitle(title) else { return ChallengeError.invalidExtraTitle.localizedDescription }
+        return recordExtraSetting(.defineExtra(id: id, title: title))
+    }
+
+    private func recordExtraSetting(_ action: Challenge.Action) -> String? {
+        refresh()
+        guard var candidate = store, candidate.challenge != nil else {
+            return ChallengeStoreError.notStarted.localizedDescription
+        }
+        do {
+            try candidate.record(action, on: now, at: now)
+            store = candidate
+            requestSync()
+            return nil
+        } catch let error as ChallengeError {
+            return error.localizedDescription
+        } catch {
+            return "Could not save. Your previous history is intact. \(error.localizedDescription)"
+        }
     }
 }

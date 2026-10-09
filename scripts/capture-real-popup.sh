@@ -63,7 +63,7 @@ run() { # screen appearance [steps]
   fi
 }
 for appearance in light dark; do
-  for screen in setup today history account sign-in; do run "$screen" "$appearance"; done
+  for screen in setup today today-extras history account sign-in; do run "$screen" "$appearance"; done
   run today "$appearance" history,account,today
 done
 sw_vers > "$OUT/macos.txt"
@@ -79,7 +79,7 @@ if (( DOCS )); then
   DEST=docs/screenshots/real-popup
   mkdir -p "$DEST"
   for appearance in light dark; do
-    for screen in setup today history account sign-in; do
+    for screen in setup today today-extras history account sign-in; do
       cp "$OUT/$screen-$appearance.png" "$OUT/$screen-$appearance.json" "$DEST/"
     done
     for step in "$OUT"/today-"$appearance"-*-to-*.json; do

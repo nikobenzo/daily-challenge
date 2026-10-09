@@ -17,12 +17,12 @@ import SwiftUI
 /// recording, a video of the header switcher while its selection moves.
 ///
 ///     DAILY_CHALLENGE_POPUP_PROBE=<directory>                                  required
-///     DAILY_CHALLENGE_POPUP_PROBE_SCREEN=sign-in|setup|today|history|account   (today)
+///     DAILY_CHALLENGE_POPUP_PROBE_SCREEN=sign-in|setup|today|today-extras|history|account   (today)
 ///     DAILY_CHALLENGE_POPUP_PROBE_APPEARANCE=light|dark                        (light)
 ///     DAILY_CHALLENGE_POPUP_PROBE_STEPS=history,account,today                  (none)
 @MainActor
 struct PopupProbe {
-    enum Screen: String { case signIn = "sign-in", setup, today, history, account }
+    enum Screen: String { case signIn = "sign-in", setup, today, todayExtras = "today-extras", history, account }
 
     static let productionBundleID = "app.daily-challenge.proof"
     /// Switches the popup's section (object: TrackerSection) the way the header control does.
@@ -69,11 +69,18 @@ struct PopupProbe {
             tracker.addWater()
             tracker.addWater()
         }
+        if screen == .todayExtras { Self.seedExtras(tracker) }
         let defaults = UserDefaults(suiteName: Self.defaultsSuite)!
         defaults.removePersistentDomain(forName: Self.defaultsSuite)
         let appearance = AppAppearance(defaults: defaults)
         appearance.preference = self.appearance
         return (auth, tracker, appearance)
+    }
+
+    /// Three extras, one ticked: Today's Extras section in the same fixture as the renders.
+    static func seedExtras(_ tracker: TrackerModel) {
+        for title in ["Stretch for ten minutes", "No phone after 10 pm", "Journal one page"] { _ = tracker.addExtra(title) }
+        if let first = tracker.activeExtras.first { tracker.toggleExtra(first.id) }
     }
 
     // MARK: Run

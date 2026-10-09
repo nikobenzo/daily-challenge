@@ -98,6 +98,51 @@ struct AppearanceTests {
         }
     }
 
+    /// Today's Extras section on the production root in Light and Dark: hidden entirely
+    /// with no extras, a section under the rings (collapsible) with them, plus History's
+    /// extras pill and the Manage extras popover, empty, in use and at the cap.
+    @Test func extrasSectionHasAdaptiveGlassInBothAppearances() throws {
+        try withPreferences { appearance, _ in
+            let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+            defer { try? FileManager.default.removeItem(at: directory) }
+            let owner = UUID()
+            let now = ISO8601DateFormatter().date(from: "2026-10-08T12:00:00Z")!
+            let model = TrackerModel(directory: directory, clock: { now })
+            model.activate(ownerID: owner)
+            model.startChallenge(on: now)
+            model.addWater()
+            model.addWater()
+            let auth = ProofModel(fixtureOwnerID: owner, directory: directory)
+            func todayHeight() -> CGFloat {
+                let host = NSHostingView(rootView: TodayTrackerView(model: model).environment(\.trackerLiquidGlassOverride, false))
+                return host.fittingSize.height
+            }
+            let without = todayHeight()
+            try renderLiveModes(ManageExtrasView(model: model), name: "manage-extras-empty", appearance: appearance, surface: .opaque)
+            PopupProbe.seedExtras(model)
+            #expect(model.summary?.extrasTotal == 3 && model.summary?.extrasDone == 1)
+            #expect(model.summary?.isComplete == false)
+            let with = todayHeight()
+            #expect(with > without + 3 * 30, "Three extra rows and the section header appear under the rings")
+            let collapsed = NSHostingView(rootView: VStack(spacing: 0) { ExtrasSection(model: model, expanded: false) }
+                .frame(width: 380)).fittingSize.height
+            let expanded = NSHostingView(rootView: VStack(spacing: 0) { ExtrasSection(model: model) }
+                .frame(width: 380)).fittingSize.height
+            #expect(collapsed < 50 && expanded > collapsed + 3 * 30, "Collapsed shows only the header (\(collapsed), \(expanded))")
+            try renderLiveModes(TrackerPopup(model: model, auth: auth, appearance: appearance), name: "today-extras", appearance: appearance)
+            try renderLiveModes(ManageExtrasView(model: model), name: "manage-extras", appearance: appearance, surface: .opaque)
+            model.selectHistoryDay(now)
+            try renderLiveModes(TrackerPopup(model: model, auth: auth, appearance: appearance, section: .history),
+                                name: "history-extras", appearance: appearance)
+            model.showToday()
+            while model.canAddExtra { #expect(model.addExtra("Extra \(model.activeExtras.count + 1)") == nil) }
+            try renderLiveModes(ManageExtrasView(model: model), name: "manage-extras-full", appearance: appearance, surface: .opaque)
+            // Archiving every extra hides the section again.
+            for extra in model.activeExtras { #expect(model.archiveExtra(extra.id) == nil) }
+            #expect(todayHeight() == without)
+        }
+    }
+
     /// Every signed-out auth screen on the production root, Light and Dark. Offline
     /// fixtures only: no SDK client, Keychain, network or real account.
     @Test func signedOutAuthScreensHaveAdaptiveGlass() throws {

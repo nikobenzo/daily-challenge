@@ -40,7 +40,7 @@ struct WaterMotion: Equatable {
     var spills: Bool { to > 4_000 && to > from }
 }
 
-enum CompletionCelebration: String, Codable { case daily, milestone }
+enum CompletionCelebration: String, Codable { case daily, milestone, extras }
 
 /// Separate from synced history and backups. Observed completions are consumed even
 /// on open/sync/import, so undo/recomplete cannot replay an existing achievement.
@@ -48,8 +48,10 @@ enum CompletionCelebration: String, Codable { case daily, milestone }
 struct CelebrationLedger {
     let file: URL
 
+    /// Extras have their own key: ticking the last extra today celebrates once, even
+    /// on a day the five were already complete, and never after undo and re-tick.
     func observe(_ challenge: Challenge, challengeID: UUID, now: Date,
-                 localCompletionDay: Date? = nil) -> CompletionCelebration? {
+                 localCompletionDay: Date? = nil, localExtrasDay: Date? = nil) -> CompletionCelebration? {
         do {
             var seen: Set<String> = FileManager.default.fileExists(atPath: file.path)
                 ? try JSONDecoder().decode(Set<String>.self, from: Data(contentsOf: file)) : []
@@ -64,14 +66,19 @@ struct CelebrationLedger {
             let eligible = localCompletionDay == today && completeDays.contains(today)
             let daily = eligible && !seen.contains(key("day", today))
             let milestone = eligible && milestones.contains(today) && !seen.contains(key("milestone", today))
+            let extrasDays = Set(challenge.allActivities.map(\.day)).filter {
+                challenge.summary(on: $0, asOf: now).allExtrasDone
+            }
+            let extras = localExtrasDay == today && extrasDays.contains(today) && !seen.contains(key("extras", today))
             let previous = seen
             completeDays.forEach { seen.insert(key("day", $0)) }
             milestones.forEach { seen.insert(key("milestone", $0)) }
+            extrasDays.forEach { seen.insert(key("extras", $0)) }
             if seen != previous {
                 try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
                 try JSONEncoder().encode(seen).write(to: file, options: .atomic)
             }
-            return milestone ? .milestone : daily ? .daily : nil
+            return milestone ? .milestone : daily ? .daily : extras ? .extras : nil
         } catch { return nil }
     }
 }

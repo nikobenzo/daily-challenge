@@ -224,7 +224,22 @@ struct HistoryTrackerView: View {
         case .undoLatestPour: ("arrow.uturn.backward", Theme.textSecondary)
         case .setDiet(let value): ("leaf", value == .clean ? Theme.done : value == .missed ? Theme.danger : Theme.textTertiary)
         case .setHabit(let habit, let completed): (Self.symbol(habit), completed ? Theme.done : Theme.textTertiary)
+        case .defineExtra: ("checklist", Theme.textSecondary)
+        case .archiveExtra: ("archivebox", Theme.textTertiary)
+        case .setExtra(_, let completed): ("checklist.checked", completed ? Theme.done : Theme.textTertiary)
         }
+    }
+
+    /// The extra's current name; renames show under the name they were given.
+    private func extraTitle(_ id: UUID) -> String {
+        "“\(model.challenge?.allExtras.first { $0.id == id }?.title ?? "Extra")”"
+    }
+
+    /// True when this definition is the extra's first, so it added rather than renamed it.
+    private func addsExtra(_ activity: Challenge.Activity, id: UUID) -> Bool {
+        model.challenge?.allActivities.first { event in
+            if case .defineExtra(let extraID, _) = event.action { extraID == id } else { false }
+        }?.id == activity.id
     }
 
     static func symbol(_ habit: Challenge.Habit) -> String {
@@ -266,6 +281,9 @@ struct HistoryTrackerView: View {
         case .setDiet(let value): "Diet \(value.rawValue)"
         case .setHabit(let habit, let completed):
             "\(habit == .bibleReading ? "Bible reading" : habit.rawValue.capitalized) \(completed ? "complete" : "not complete")"
+        case .defineExtra(let id, let title): addsExtra(activity, id: id) ? "Added “\(title)”" : "Renamed “\(title)”"
+        case .archiveExtra(let id): "Archived \(extraTitle(id))"
+        case .setExtra(let id, let completed): "\(extraTitle(id)) \(completed ? "done" : "not done")"
         }
     }
     private func description(_ activity: Challenge.Activity) -> String {
@@ -275,6 +293,9 @@ struct HistoryTrackerView: View {
         case .setDiet(let value): "Diet → \(value.rawValue)"
         case .setHabit(let habit, let completed):
             "\(habit == .bibleReading ? "Bible reading" : habit.rawValue.capitalized) → \(completed ? "complete" : "not complete")"
+        case .defineExtra(let id, let title): addsExtra(activity, id: id) ? "Added extra “\(title)”" : "Renamed extra to “\(title)”"
+        case .archiveExtra(let id): "Archived extra \(extraTitle(id))"
+        case .setExtra(let id, let completed): "Extra \(extraTitle(id)) → \(completed ? "done" : "not done")"
         }
     }
 }
@@ -289,6 +310,7 @@ struct HabitControls: View {
             habit(.walk, title: "Walk", detail: "45 minutes")
             diet
             habit(.bibleReading, title: "Bible", detail: "10 pages")
+            if model.summary?.extrasTotal ?? 0 > 0 { ExtrasDayPill(model: model) }
         }
     }
 

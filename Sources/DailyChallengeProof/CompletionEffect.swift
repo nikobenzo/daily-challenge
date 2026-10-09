@@ -59,8 +59,8 @@ struct CompletionEffect: View {
     }
 
     private func badge(_ kind: CompletionCelebration) -> some View {
-        Label(kind == .milestone ? "75 consecutive days!" : "All five complete!",
-              systemImage: kind == .milestone ? "trophy.fill" : "checkmark.seal.fill")
+        Label(kind == .milestone ? "75 consecutive days!" : kind == .extras ? "All extras done!" : "All five complete!",
+              systemImage: kind == .milestone ? "trophy.fill" : kind == .extras ? "checklist.checked" : "checkmark.seal.fill")
             .font(kind == .milestone ? Theme.Fonts.appName : Theme.Fonts.pill)
             .foregroundStyle(Theme.doneText)
             .padding(.horizontal, 14).padding(.vertical, 9)
