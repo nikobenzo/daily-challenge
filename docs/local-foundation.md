@@ -52,6 +52,8 @@ Storage is versioned JSON, with a separate `challenge-<owner-uuid>.json` file pe
 
 Use **one serialized writer per account per device**. This value-based snapshot store does not coordinate multiple processes or separately loaded writers. The UI keeps one store in its account model. Version 2 adds an atomic outbound queue; opening version 1 first validates it, writes an exclusive timestamped backup, then migrates without restarting the challenge. See [migration details](production-sync.md#local-migration-and-durability). For manual export/import and recovery-copy guidance, see [personal-data backups](../README.md#personal-data-backups).
 
+Exports (`ChallengeBackup`) carry their own `formatVersion`, separate from the snapshot version: **3** since [daily checklist extras](tracker-interface.md#daily-checklist-extras), which may contain the three extras event kinds. Versions 1 and 2 still import (version 1 as a Europe/Jersey challenge). The version is checked before any activity is read, so an app that supports only up to version 2 reports "This export format version is not supported" rather than a malformed file. The local snapshot keeps version 2: extras are ordinary events in it, and a snapshot holding them cannot be opened by an app that predates extras (it shows the "could not be opened" recovery state and resets nothing).
+
 ## Verification
 
 ```bash
