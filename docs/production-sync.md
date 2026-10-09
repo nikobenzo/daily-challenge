@@ -33,7 +33,7 @@ Version 2 stores challenge/settings, full history, per-account device identity, 
 
 ## Scheduling and status
 
-Sync starts with session activation at app launch, polls every 30 seconds, and is requested on popup foreground, app activation, wake, reconnect, and local edits. Failed attempts back off exponentially (10 seconds initially, up to 15 minutes); automatic triggers respect this deadline. **Sync challenge now** explicitly retries immediately. Relaunch retains pending work and starts a fresh retry schedule.
+Sync starts with session activation at app launch, polls every 30 seconds, and is requested on popup foreground, app activation, wake, reconnect, and local edits. Failed attempts back off exponentially (10 seconds initially, up to 15 minutes); automatic triggers respect this deadline. Clicking the footer's sync status (or Account's Sync now icon) explicitly retries immediately. Relaunch retains pending work and starts a fresh retry schedule.
 
 The footer distinguishes waiting/checking, locally saved pending work, unavailable/error with pending count, and a timestamped successful sync. Pending count includes unacknowledged challenge settings. “Synced” means the last server check succeeded, not that another offline Mac has uploaded its newest work. Diagnostic Pause sync affects test messages only; disconnect the network to test production offline behavior.
 

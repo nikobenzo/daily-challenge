@@ -1,5 +1,12 @@
 # Popup edge fill — 8 October 2026 follow-up
 
+> **Superseded by the glass redesign (9 October 2026).** The window is now transparent outside the
+> glass sheet and footer, so retained window space is invisible rather than a band, and
+> `PopupWindowAdapter` fits the MenuBarExtra panel to the content with its top edge anchored; see
+> [design system](design-system.md#window-height). The diagnosis below still explains why both
+> matter. The `account-dark-oversized-host` and `setup-light-oversized-host` renders are refreshed
+> with the new look; `account-before`/`account-after` remain the original evidence.
+
 ## Confirmed cause
 
 The captain's post-appearance-fix screenshot shows **Account**, with exposed bands above the header and below the footer. The earlier backing already ignored safe areas. Adding that modifier again would not help.

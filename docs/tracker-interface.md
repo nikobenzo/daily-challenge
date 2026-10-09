@@ -5,15 +5,15 @@
 The user approved connecting the local foundation to the native menu-bar popup.
 
 - Authenticated account → server adoption or explicit start-date and timezone setup (searchable picker defaulting to this Mac's zone; never shown when adopting); see [setup behavior](../README.md#first-mac-tracker-checks). All five requirements are explained.
-- Today → drawn 4 L jug, actual uncapped ml count, +450 ml, latest-pour undo, and validated custom amounts.
-- Workout (45 minutes, home/gym), walk (45 minutes), Bible (10 pages) → one-tap reversible marks.
+- Today → five ring gauges (water %, workout, walk, diet, Bible), drawn 4 L jug, actual uncapped ml count, +450 ml, latest-pour undo, and validated custom amounts.
+- Workout (45 minutes, home/gym), walk (45 minutes), Bible (10 pages) → one-tap reversible marks on their Today rings and History pills.
 - Diet → pending/clean/missed cycle; right-click for direct selection. No invented food rules.
 - Current streak / 75, best streak, and number of currently valid milestones. Tracking does not stop at 75.
-- History → Monday-first monthly calendar, distinct day-state symbols, explicit Edit this day unlock, selected-day water/habit corrections, and newest-first activity/correction audit.
+- History → Monday-first monthly calendar, distinct day-state symbols, explicit Edit this day unlock (pencil), selected-day water/habit corrections, and newest-first activity/correction audit.
 - Account → the preexisting sign-in/session and separate test-message sync diagnostics, plus [personal-data backups](../README.md#personal-data-backups).
 - Production challenge footer and manual retry; see [sync scheduling and status](production-sync.md#scheduling-and-status).
 
-No Dock icon or ordinary main window. Supported system materials are used as the macOS 14+ fallback. See [motion usage](../README.md#current-state-functional-tracker-with-production-sync) and the [bounded motion implementation](motion-verification.md#implementation) for jug effects, celebrations and accessibility fallback. The calendar is a fixed-height native scroll surface: scroll to reach all marks and the audit.
+No Dock icon or ordinary main window. The popup follows the [design system](design-system.md): a glass sheet and detached footer. See [motion usage](../README.md#current-state-functional-tracker-with-production-sync) and the [bounded motion implementation](motion-verification.md#implementation) for jug effects, celebrations and accessibility fallback. History and Account share one fixed height; the History Activity list scrolls inside it.
 
 ## State and safety
 

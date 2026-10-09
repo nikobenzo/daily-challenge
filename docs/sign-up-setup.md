@@ -191,7 +191,7 @@ Signs: friends' codes stop arriving, Resend shows unfamiliar recipients, or the 
 
 ```bash
 swift test --filter ProofAuthTests
-DAILY_CHALLENGE_SNAPSHOT_DIR=/tmp/daily-challenge-auth swift test --filter signedOutAuthScreensHaveOpaqueAdaptiveBacking
+DAILY_CHALLENGE_SNAPSHOT_DIR=/tmp/daily-challenge-auth swift test --filter signedOutAuthScreensHaveAdaptiveGlass
 ```
 
-`Tests/ProofAuthTests/SignUpFlowTests.swift` drives the real SDK against an intercepted, stateless synthetic Auth server: sign-up without a session, confirmation with 6, 8 and 10-digit codes, an existing account (decoy user and `user_already_exists`), wrong or expired codes, the 60-second resend limit, recovery and its resend, a recovery whose password is not saved (failed or interrupted) signing out on this Mac, the new-password rule, password update and `same_password`, sign-in before confirming, and field clearing after every attempt. Sessions live in an in-memory store. No real credentials, Keychain, network or email sends are involved. The fixture renders are never-shown native windows, so buttons look inactive; they prove layout and adaptive backing, not real-popup behaviour.
+`Tests/ProofAuthTests/SignUpFlowTests.swift` drives the real SDK against an intercepted, stateless synthetic Auth server: sign-up without a session, confirmation with 6, 8 and 10-digit codes, an existing account (decoy user and `user_already_exists`), wrong or expired codes, the 60-second resend limit, recovery and its resend, a recovery whose password is not saved (failed or interrupted) signing out on this Mac, the new-password rule, password update and `same_password`, sign-in before confirming, and field clearing after every attempt. Sessions live in an in-memory store. No real credentials, Keychain, network or email sends are involved. The fixture renders are never-shown native windows, so buttons look inactive; they prove layout and the adaptive glass tint, not real-popup behaviour.

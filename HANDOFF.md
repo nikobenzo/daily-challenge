@@ -12,6 +12,10 @@ The owner must follow the [exact hosted migration/install steps](docs/production
 
 Appearance backing and the device-local setting remain implemented; [appearance verification](docs/appearance-verification.md) still distinguishes in-process renders from real-popup acceptance. Automated testing must never quit or replace the running app.
 
+## Visual redesign (9 October)
+
+Every screen now follows the captain-approved Paper design system: a 420 pt glass sheet with hairline sections, a detached footer capsule, five ring gauges on Today, an icon-only section switcher, icon-first controls with tooltips, and animated (never cut) height changes; History and Account share one height. [Design system](docs/design-system.md) lists the tokens (`Theme.swift`), components, window-height policy and the board ambiguities decided in code. Presentation only: behaviour, sync, auth, reminders, backups, updates and timezone logic are unchanged. Regressions: `productionPopupSurfacesHaveAdaptiveGlass`, `signedOutAuthScreensHaveAdaptiveGlass`, `PopupResizeTests`. **Real-popup acceptance is pending:** an isolated copy of the ad-hoc build (separate bundle ID, no configuration, so no Keychain or data) launched and quit cleanly, but no agent could open the real MenuBarExtra popup (no assistive access), so glass compositing over the desktop and the animated resize in the real popup are captain checks.
+
 ## Per-challenge timezone (9 October)
 
 Each challenge now has an immutable IANA timezone, chosen at setup next to the start date and synced like it; every day boundary, streak, milestone, reminder window, midnight refresh and displayed date follows it instead of a fixed Europe/Jersey. Setup (`TrackerView.setup`, `TimeZonePicker.swift`) defaults to the Mac's zone with a searchable, region-grouped list showing each identifier and its current offset; adopting an existing challenge never shows it. `ChallengeDates.swift` (formerly `JerseyDates.swift`) is the per-challenge display/navigation helper. Europe/Jersey survives only as the default for legacy data: v2 snapshots and server rows without a zone, and version-1 exports (exports are now format 2). A zone-only settings difference is a conflict under the existing rule.
@@ -50,7 +54,7 @@ Fixture tests cover validation, round trips, undo, derived recalculation, backup
 - **Setup:** authenticated account, server adoption/preflight, explicit start-date and timezone choice only when no challenge exists, all five requirements explained. Setup cannot overwrite an existing challenge.
 - **Today:** drawn 4 L jug, uncapped actual ml count, +450 ml, latest-active-pour undo, custom positive whole-ml pours; reversible workout/walk/Bible marks; pending/clean/missed diet cycle and direct context-menu selection.
 - **Streaks:** current / 75, best, and valid milestone count. Tracking continues beyond 75.
-- **History:** monthly Monday-first calendar, day-state symbols, explicit **Edit this day** unlock, immediate selected-day corrections, and newest-first activity audit. Scroll to reach all controls/audit. Selection is not an edit; selecting another date exits correction mode.
+- **History:** monthly Monday-first calendar, day-state symbols, explicit **Edit this day** (pencil) unlock, immediate selected-day corrections, and newest-first activity audit, which scrolls inside the fixed History height. Selection is not an edit; selecting another date exits correction mode.
 - **Account:** retained email/password authentication and separate test-message sync diagnostics.
 - **Bounded motion:** procedural rise/fall, settling slosh and clipped overflow; daily/75-day celebrations consumed in a separate device-local ledger, never replayed from open/sync/import. Reduce Motion uses static levels and a brief completion badge. [Fixture CPU evidence and owner checks](docs/motion-verification.md); the final 60-second settled fixture run became occluded, so final energy and real MenuBarExtra acceptance remain pending.
 
@@ -65,11 +69,12 @@ Fixture tests cover validation, round trips, undo, derived recalculation, backup
 | `Sources/ChallengeCore/ChallengeSync.swift` | Immutable challenge settings/event wire records and injected transport seam |
 | `Sources/DailyChallengeProof/SupabaseChallengeTransport.swift` | Authenticated insert-ignore batches, owner-scoped paginated reads; proof-style transport |
 | `Sources/DailyChallengeProof/TrackerModel.swift` | Main-actor UI/sync coordinator, account generations, backoff, setup preflight and truthful status; one active writer |
-| `Sources/DailyChallengeProof/TrackerView.swift`, `TimeZonePicker.swift`, `ChallengeDates.swift` | Root navigation/setup and its timezone picker, Today, water/habit controls; visible-window/midnight/wake refresh; dates in the challenge's zone |
+| `Sources/DailyChallengeProof/Theme.swift`, `Components.swift`, `PopupWindow.swift` | Design-system tokens, shared glass components, transparent MenuBarExtra panel and animated height ([design system](docs/design-system.md)) |
+| `Sources/DailyChallengeProof/TrackerView.swift`, `TodayView.swift`, `TimeZonePicker.swift`, `ChallengeDates.swift` | Root sheet, header, footer and setup with its timezone picker; Today rings, water and streak; visible-window/midnight/wake refresh; dates in the challenge's zone |
 | `Sources/DailyChallengeProof/WaterJugView.swift`, `TrackerMotion.swift`, `CompletionEffect.swift`, `PopupVisibility.swift` | Finite motion schedules, local celebration ledger, noninteractive effects and native visibility gating |
 | `Sources/DailyChallengeProof/HistoryTrackerView.swift` | Calendar, correction unlock, audit |
-| `Sources/DailyChallengeProof/DailyChallengeProofApp.swift` | App entry, MenuBarExtra, signed-out sign-in view (`ProofView`) |
-| `Sources/DailyChallengeProof/AccountView.swift`, `AdvancedDiagnosticsView.swift` | Signed-in Account tab as a grouped settings list; sync line rephrases `TrackerModel.syncState` (same source as the footer); test-message diagnostics moved unchanged behind a collapsed Advanced disclosure |
+| `Sources/DailyChallengeProof/DailyChallengeProofApp.swift`, `AuthView.swift` | App entry and MenuBarExtra (drop.circle, filled while open); signed-out sheet (`ProofView`) and auth steps |
+| `Sources/DailyChallengeProof/AccountView.swift`, `AdvancedDiagnosticsView.swift` | Signed-in Account tab as hairline-separated settings rows; sync line rephrases `TrackerModel.syncState` (same source as the footer); test-message diagnostics moved unchanged behind a collapsed Advanced disclosure |
 | `Sources/DailyChallengeProof/SoftwareUpdates.swift` | Sparkle updater, Dock-less window activation, About-group update row |
 | `Sources/DailyChallengeProof/ProofModel.swift` | Supabase password auth, Keychain sessions, proof queue/polling; not production challenge sync |
 | `Sources/ProbeCore/ProbeJournal.swift` | Durable independent test-message queue, retry IDs, validated remote acknowledgments |
