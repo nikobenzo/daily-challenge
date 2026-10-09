@@ -30,7 +30,7 @@ in that file too). The code is the source of truth for values:
   so the device-local System / Light / Dark setting, popovers and renders all follow it.
   Reduce Transparency draws the tint opaque; Increase Contrast strengthens borders.
 - **Motion.** Section changes cross-fade (0.2 s) while the glass height animates (ease-in-out
-  0.28 s); rings ease 0.35 s and pop 1.06 when done; the completion band slides in 0.4 s. Reduce
+  0.28 s) and the switcher's glass capsule slides to the new cell (ease-in-out 0.28 s); rings ease 0.35 s and pop 1.06 when done; the completion band slides in 0.4 s. Reduce
   Motion uses opacity only and a short linear resize. The jug keeps its bounded, finite motion
   engine (`TrackerMotion.swift`), whose energy behaviour is measured in `motion-verification.md`.
 
@@ -40,7 +40,12 @@ Buttons (`PrimaryPillStyle`, `TintedPillStyle`, `RoundIconStyle`, `LinkStyle`) d
 ring + halo themselves (`focusHalo`); the popup root disables the system focus effect, which on
 custom shapes renders as a stray rectangle. Toggles use `GlassToggleStyle` (52 × 30, knob 26).
 `IconSegmented` is the section switcher (36 pt track, 44 × 30 cells) and the Appearance control
-(34 pt track, 40 × 28 cells). `PillStepper`, `Badge`, `AppMark`, `HeroIcon`, `SettingRow`,
+(34 pt track, 40 × 28 cells). On macOS 26 and later its selected cell is one Liquid Glass capsule
+(`.regular` glass in a `GlassEffectContainer`, tinted with `segmentGlassTint`) over the translucent
+`controlFill` track, and it slides to the new cell; Reduce Transparency draws the opaque
+`segmentSelected` pill, Reduce Motion cross-fades, and earlier systems slide the opaque pill.
+In-process renders draw it as a flat translucent capsule (`trackerLiquidGlassOverride`), since
+cacheDisplay cannot draw Liquid Glass and drops everything the glass samples. `PillStepper`, `Badge`, `AppMark`, `HeroIcon`, `SettingRow`,
 `Eyebrow`, `GlassField` (46 pt, focus / error / valid / password reveal), `FieldError`,
 `RingGauge` (64 pt, stroke 6), `RuleChips` and `CodeBoxes` complete the set.
 
@@ -91,6 +96,13 @@ width (`popupRootReportsTheSheetWidth`), so no host can squeeze it again.
 - Selected segmented cell, Day badge, Today pill, best-streak badge, jug outline and the numerals on
   a green day disc use board-derived pairings (`dayBadgeFill`, `bestBadgeFill`, `segmentSelected`,
   `jugOutline`, `onDone`, `accentTint`) rather than tokens from the report's table.
+- **Switcher glass (9 October 2026), measured on screen on macOS 27.0.1** with the real-popup
+  probe's switch videos: handing a `glassEffectID` from cell to cell made the glass jump instead
+  of moving, so the capsule is one view offset to the selected cell; `.interactive()` lifted the
+  glass over the icons while moving (and the buttons above take the clicks), so it is off; glass
+  inside the cells' own container covered the selected icon, so the glass row sits under the
+  icons. While it moves the glass still covers the glyph it passes for a few frames (about 4 of
+  16 at 60 Hz); at rest every icon is above it.
 - Setup keeps the section switcher so Account (and Sign out) stays reachable before a challenge
   exists; the Setup board omits it.
 - The calendar's "past open" disc maps to a selectable day that is neither complete nor missed;

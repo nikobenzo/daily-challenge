@@ -1,4 +1,5 @@
 {
+  "capture" : "window-server",
   "clearBackground" : true,
   "footer" : [
     60,
@@ -10,8 +11,8 @@
 
   ],
   "frame" : [
-    1899,
-    1594,
+    900,
+    152,
     540,
     797
   ],
@@ -28,8 +29,8 @@
     "coveredBox" : [
       16,
       0,
-      523,
-      783
+      524.5,
+      783.5
     ],
     "sizePoints" : [
       540,
@@ -37,10 +38,10 @@
     ]
   },
   "screen" : [
-    -934,
-    982,
-    3440,
-    1440
+    0,
+    0,
+    1512,
+    982
   ],
   "sheet" : [
     60,
@@ -49,16 +50,16 @@
     661
   ],
   "statusItem" : [
-    1959,
-    2391,
+    960,
+    949,
     32,
     33
   ],
   "visibleFrame" : [
-    -934,
-    982,
-    3440,
-    1410
+    0,
+    87,
+    1512,
+    862
   ],
   "windowClass" : "DailyChallengeProof.PopupPanel",
   "windowShadow" : false

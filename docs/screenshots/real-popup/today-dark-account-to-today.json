@@ -1,4 +1,5 @@
 {
+  "capture" : "window-server",
   "clearBackground" : true,
   "footer" : [
     60,
@@ -10,8 +11,8 @@
 
   ],
   "frame" : [
-    1899,
-    1849,
+    900,
+    407,
     540,
     542
   ],
@@ -28,8 +29,8 @@
     "coveredBox" : [
       16,
       0,
-      523,
-      527
+      523.5,
+      528.5
     ],
     "sizePoints" : [
       540,
@@ -37,10 +38,10 @@
     ]
   },
   "screen" : [
-    -934,
-    982,
-    3440,
-    1440
+    0,
+    0,
+    1512,
+    982
   ],
   "sheet" : [
     60,
@@ -49,8 +50,8 @@
     406
   ],
   "statusItem" : [
-    1959,
-    2391,
+    960,
+    949,
     32,
     33
   ],
@@ -59,936 +60,992 @@
       "footerTop" : 116,
       "sheetHeight" : 661,
       "sheetTop" : 789,
-      "t" : 0,
+      "t" : 9.5367431640625e-07,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 661,
       "sheetTop" : 789,
-      "t" : 0.011394023895263672,
+      "t" : 0.035264015197753906,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
-      "footerTop" : 116.60602188110352,
-      "sheetHeight" : 660.39397811889648,
+      "footerTop" : 116.03915309906006,
+      "sheetHeight" : 660.96084690093994,
       "sheetTop" : 789,
-      "t" : 0.026363968849182129,
+      "t" : 0.044745922088623047,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
-      "footerTop" : 117.53450965881348,
-      "sheetHeight" : 659.46549034118652,
+      "footerTop" : 117.3844633102417,
+      "sheetHeight" : 659.6155366897583,
       "sheetTop" : 789,
-      "t" : 0.036550998687744141,
+      "t" : 0.053902029991149902,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
-      "footerTop" : 122.23069286346436,
-      "sheetHeight" : 654.76930713653564,
+      "footerTop" : 127.57545566558838,
+      "sheetHeight" : 649.42454433441162,
       "sheetTop" : 789,
-      "t" : 0.048897027969360352,
+      "t" : 0.080057978630065918,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
-      "footerTop" : 128.4689245223999,
-      "sheetHeight" : 648.5310754776001,
+      "footerTop" : 132.05033874511719,
+      "sheetHeight" : 644.94966125488281,
       "sheetTop" : 789,
-      "t" : 0.060446023941040039,
+      "t" : 0.092553973197937012,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
-      "footerTop" : 138.31070041656494,
-      "sheetHeight" : 638.68929958343506,
+      "footerTop" : 145.46501731872559,
+      "sheetHeight" : 631.53498268127441,
       "sheetTop" : 789,
-      "t" : 0.081454992294311523,
+      "t" : 0.1093209981918335,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
-      "footerTop" : 147.40224456787109,
-      "sheetHeight" : 629.59775543212891,
+      "footerTop" : 161.4453182220459,
+      "sheetHeight" : 615.5546817779541,
       "sheetTop" : 789,
-      "t" : 0.091781973838806152,
+      "t" : 0.11990892887115479,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
-      "footerTop" : 170.38000679016113,
-      "sheetHeight" : 606.61999320983887,
+      "footerTop" : 171.63047409057617,
+      "sheetHeight" : 605.36952590942383,
       "sheetTop" : 789,
-      "t" : 0.10653507709503174,
+      "t" : 0.129006028175354,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
-      "footerTop" : 185.15701866149902,
-      "sheetHeight" : 591.84298133850098,
+      "footerTop" : 193.99054145812988,
+      "sheetHeight" : 583.00945854187012,
       "sheetTop" : 789,
-      "t" : 0.11787796020507812,
+      "t" : 0.1452019214630127,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
-      "footerTop" : 202.03516578674316,
-      "sheetHeight" : 574.96483421325684,
+      "footerTop" : 206.4755163192749,
+      "sheetHeight" : 570.5244836807251,
       "sheetTop" : 789,
-      "t" : 0.12965905666351318,
+      "t" : 0.15455400943756104,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
-      "footerTop" : 219.94928932189941,
-      "sheetHeight" : 557.05071067810059,
+      "footerTop" : 219.30241203308105,
+      "sheetHeight" : 557.69758796691895,
       "sheetTop" : 789,
-      "t" : 0.14162003993988037,
+      "t" : 0.16699600219726562,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
-      "footerTop" : 237.66351318359375,
-      "sheetHeight" : 539.33648681640625,
+      "footerTop" : 245.11524772644043,
+      "sheetHeight" : 531.88475227355957,
       "sheetTop" : 789,
-      "t" : 0.15308606624603271,
+      "t" : 0.17868196964263916,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
-      "footerTop" : 256.70796966552734,
-      "sheetHeight" : 520.29203033447266,
+      "footerTop" : 269.07572841644287,
+      "sheetHeight" : 507.92427158355713,
       "sheetTop" : 789,
-      "t" : 0.16543996334075928,
+      "t" : 0.19370293617248535,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
-      "footerTop" : 274.8161563873291,
-      "sheetHeight" : 502.1838436126709,
+      "footerTop" : 281.68156719207764,
+      "sheetHeight" : 495.31843280792236,
       "sheetTop" : 789,
-      "t" : 0.1771930456161499,
+      "t" : 0.20281600952148438,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
-      "footerTop" : 292.78791522979736,
-      "sheetHeight" : 484.21208477020264,
+      "footerTop" : 294.61449241638184,
+      "sheetHeight" : 482.38550758361816,
       "sheetTop" : 789,
-      "t" : 0.18946397304534912,
+      "t" : 0.21124899387359619,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
-      "footerTop" : 308.79885768890381,
-      "sheetHeight" : 468.20114231109619,
+      "footerTop" : 305.35435771942139,
+      "sheetHeight" : 471.64564228057861,
       "sheetTop" : 789,
-      "t" : 0.20124304294586182,
+      "t" : 0.22038793563842773,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
-      "footerTop" : 325.04253005981445,
-      "sheetHeight" : 451.95746994018555,
+      "footerTop" : 325.510178565979,
+      "sheetHeight" : 451.489821434021,
       "sheetTop" : 789,
-      "t" : 0.22204101085662842,
+      "t" : 0.23559403419494629,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
-      "footerTop" : 341.60088634490967,
-      "sheetHeight" : 435.39911365509033,
+      "footerTop" : 330.45027828216553,
+      "sheetHeight" : 446.54972171783447,
       "sheetTop" : 789,
-      "t" : 0.23308205604553223,
+      "t" : 0.24471700191497803,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
-      "footerTop" : 348.72845268249512,
-      "sheetHeight" : 428.27154731750488,
+      "footerTop" : 338.89737701416016,
+      "sheetHeight" : 438.10262298583984,
       "sheetTop" : 789,
-      "t" : 0.24136805534362793,
+      "t" : 0.25365793704986572,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
-      "footerTop" : 354.80447864532471,
-      "sheetHeight" : 422.19552135467529,
+      "footerTop" : 352.77848815917969,
+      "sheetHeight" : 424.22151184082031,
       "sheetTop" : 789,
-      "t" : 0.25151097774505615,
+      "t" : 0.26457893848419189,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
-      "footerTop" : 359.88830184936523,
-      "sheetHeight" : 417.11169815063477,
+      "footerTop" : 358.22611904144287,
+      "sheetHeight" : 418.77388095855713,
       "sheetTop" : 789,
-      "t" : 0.26167106628417969,
+      "t" : 0.27366495132446289,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
-      "footerTop" : 367.15010738372803,
-      "sheetHeight" : 409.84989261627197,
+      "footerTop" : 362.6917610168457,
+      "sheetHeight" : 414.3082389831543,
       "sheetTop" : 789,
-      "t" : 0.2720789909362793,
+      "t" : 0.28277301788330078,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
-      "footerTop" : 369.34049224853516,
-      "sheetHeight" : 407.65950775146484,
+      "footerTop" : 366.15620231628418,
+      "sheetHeight" : 410.84379768371582,
       "sheetTop" : 789,
-      "t" : 0.28219103813171387,
+      "t" : 0.29189801216125488,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
-      "footerTop" : 370.61187362670898,
-      "sheetHeight" : 406.38812637329102,
+      "footerTop" : 368.68145561218262,
+      "sheetHeight" : 408.31854438781738,
       "sheetTop" : 789,
-      "t" : 0.29068398475646973,
+      "t" : 0.30099296569824219,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
+    },
+    {
+      "footerTop" : 370.26849365234375,
+      "sheetHeight" : 406.73150634765625,
+      "sheetTop" : 789,
+      "t" : 0.31008803844451904,
+      "windowHeight" : 797,
+      "windowTop" : 949
+    },
+    {
+      "footerTop" : 370.96181964874268,
+      "sheetHeight" : 406.03818035125732,
+      "sheetTop" : 789,
+      "t" : 0.31912899017333984,
+      "windowHeight" : 797,
+      "windowTop" : 949
     },
     {
       "footerTop" : 371,
       "sheetHeight" : 406,
       "sheetTop" : 789,
-      "t" : 0.30020105838775635,
+      "t" : 0.32827901840209961,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 371,
       "sheetHeight" : 406,
       "sheetTop" : 789,
-      "t" : 0.31030404567718506,
+      "t" : 0.3371279239654541,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 371,
       "sheetHeight" : 406,
       "sheetTop" : 789,
-      "t" : 0.31856906414031982,
+      "t" : 0.34622502326965332,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 371,
       "sheetHeight" : 406,
       "sheetTop" : 789,
-      "t" : 0.32872498035430908,
+      "t" : 0.35531902313232422,
       "windowHeight" : 797,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
-      "footerTop" : 371,
+      "footerTop" : 116,
+      "sheetHeight" : 406,
+      "sheetTop" : 534,
+      "t" : 0.36447501182556152,
+      "windowHeight" : 542,
+      "windowTop" : 949
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 406,
+      "sheetTop" : 534,
+      "t" : 0.37358999252319336,
+      "windowHeight" : 542,
+      "windowTop" : 949
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 406,
+      "sheetTop" : 534,
+      "t" : 0.3827279806137085,
+      "windowHeight" : 542,
+      "windowTop" : 949
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 406,
+      "sheetTop" : 534,
+      "t" : 0.3918689489364624,
+      "windowHeight" : 542,
+      "windowTop" : 949
+    },
+    {
+      "footerTop" : 116,
+      "sheetHeight" : 406,
+      "sheetTop" : 534,
+      "t" : 0.40101492404937744,
+      "windowHeight" : 542,
+      "windowTop" : 949
+    },
+    {
+      "footerTop" : 116,
       "sheetHeight" : 406,
-      "sheetTop" : 789,
-      "t" : 0.33899199962615967,
-      "windowHeight" : 797,
-      "windowTop" : 2391
+      "sheetTop" : 534,
+      "t" : 0.41018795967102051,
+      "windowHeight" : 542,
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.34749305248260498,
+      "t" : 0.41936194896697998,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.35628306865692139,
+      "t" : 0.42852497100830078,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.36647796630859375,
+      "t" : 0.4378049373626709,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.37672197818756104,
+      "t" : 0.4470670223236084,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.38698101043701172,
+      "t" : 0.45634901523590088,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.397225022315979,
+      "t" : 0.46560502052307129,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.40735197067260742,
+      "t" : 0.47490394115447998,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.41745400428771973,
+      "t" : 0.48382794857025146,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.42780005931854248,
+      "t" : 0.49305093288421631,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.43808197975158691,
+      "t" : 0.50199997425079346,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.44826400279998779,
+      "t" : 0.5112309455871582,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.45846796035766602,
+      "t" : 0.52036392688751221,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.4687429666519165,
+      "t" : 0.52943897247314453,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.47852706909179688,
+      "t" : 0.53832101821899414,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.48808503150939941,
+      "t" : 0.54770195484161377,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.49842703342437744,
+      "t" : 0.55696702003479004,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.5078730583190918,
+      "t" : 0.56636297702789307,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.5181419849395752,
+      "t" : 0.57551002502441406,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.52833902835845947,
+      "t" : 0.58474695682525635,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.53658103942871094,
+      "t" : 0.59395003318786621,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.54682397842407227,
+      "t" : 0.60322296619415283,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.55552399158477783,
+      "t" : 0.61210298538208008,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.56577706336975098,
+      "t" : 0.62105298042297363,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.57607400417327881,
+      "t" : 0.63025403022766113,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.58627998828887939,
+      "t" : 0.63934695720672607,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.59651899337768555,
+      "t" : 0.64858996868133545,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.6060110330581665,
+      "t" : 0.65797102451324463,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.61624205112457275,
+      "t" : 0.66688299179077148,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.62513899803161621,
+      "t" : 0.67612898349761963,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.63541507720947266,
+      "t" : 0.68523299694061279,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.64498603343963623,
+      "t" : 0.69443297386169434,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.65486502647399902,
+      "t" : 0.7036290168762207,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.66517996788024902,
+      "t" : 0.71280598640441895,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.67523705959320068,
+      "t" : 0.72163200378417969,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.68555700778961182,
+      "t" : 0.7308659553527832,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.69467997550964355,
+      "t" : 0.74001193046569824,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.70493996143341064,
+      "t" : 0.74928092956542969,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.71523499488830566,
+      "t" : 0.75861501693725586,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.72551405429840088,
+      "t" : 0.76791596412658691,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.7357640266418457,
+      "t" : 0.77716100215911865,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.74597799777984619,
+      "t" : 0.7863849401473999,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.75558996200561523,
+      "t" : 0.79484295845031738,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.76584804058074951,
+      "t" : 0.80376696586608887,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.77606296539306641,
+      "t" : 0.81301498413085938,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.78585398197174072,
+      "t" : 0.82226693630218506,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.79483199119567871,
+      "t" : 0.83148598670959473,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.80509006977081299,
+      "t" : 0.84073793888092041,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.81525599956512451,
+      "t" : 0.84944295883178711,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.82543206214904785,
+      "t" : 0.85876595973968506,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.83444404602050781,
+      "t" : 0.86809396743774414,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.84461402893066406,
+      "t" : 0.87742400169372559,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.85483002662658691,
+      "t" : 0.88644492626190186,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.8650439977645874,
+      "t" : 0.89557695388793945,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.87343406677246094,
+      "t" : 0.90477192401885986,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.88366103172302246,
+      "t" : 0.91387295722961426,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.89388799667358398,
+      "t" : 0.92300093173980713,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.9040520191192627,
+      "t" : 0.93211603164672852,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.91427099704742432,
+      "t" : 0.94122803211212158,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.92419302463531494,
+      "t" : 0.95033693313598633,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.93332207202911377,
+      "t" : 0.9595639705657959,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.94245600700378418,
+      "t" : 0.96884095668792725,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.95136499404907227,
+      "t" : 0.97777903079986572,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.96098697185516357,
+      "t" : 0.9870150089263916,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.97120499610900879,
+      "t" : 0.99537599086761475,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.9813610315322876,
+      "t" : 1.0045590400695801,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 0.99151003360748291,
+      "t" : 1.013888955116272,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 1.0016130208969116,
+      "t" : 1.0231620073318481,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 1.0117720365524292,
+      "t" : 1.0324499607086182,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 1.0219449996948242,
+      "t" : 1.0417560338973999,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 1.0320479869842529,
+      "t" : 1.0509170293807983,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 1.0422120094299316,
+      "t" : 1.0601879358291626,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 1.0523560047149658,
+      "t" : 1.0694429874420166,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 1.0625710487365723,
+      "t" : 1.0777809619903564,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 1.0708390474319458,
+      "t" : 1.0865069627761841,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 1.0807600021362305,
+      "t" : 1.0954049825668335,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 1.0897480249404907,
+      "t" : 1.1047779321670532,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 1.0999289751052856,
+      "t" : 1.1141629219055176,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 1.1101310253143311,
+      "t" : 1.123445987701416,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 1.1187649965286255,
+      "t" : 1.1327140331268311,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 1.1289210319519043,
+      "t" : 1.1412340402603149,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 1.1391670703887939,
+      "t" : 1.1504949331283569,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 1.1494460105895996,
+      "t" : 1.159716010093689,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 1.159013032913208,
+      "t" : 1.1689109802246094,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 1.1693869829177856,
+      "t" : 1.1777859926223755,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 1.1796829700469971,
+      "t" : 1.1864930391311646,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     },
     {
       "footerTop" : 116,
       "sheetHeight" : 406,
       "sheetTop" : 534,
-      "t" : 1.1899360418319702,
+      "t" : 1.1952619552612305,
       "windowHeight" : 542,
-      "windowTop" : 2391
+      "windowTop" : 949
     }
   ],
   "visibleFrame" : [
-    -934,
-    982,
-    3440,
-    1410
+    0,
+    87,
+    1512,
+    862
   ],
   "windowClass" : "DailyChallengeProof.PopupPanel",
   "windowShadow" : false

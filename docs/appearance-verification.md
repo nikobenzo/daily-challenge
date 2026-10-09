@@ -36,18 +36,25 @@ the copy once per screen and appearance through a developer-only launch path (`P
 In probe mode the app runs on the committed renders' offline fixtures (8 October 2026 at noon, Day 1,
 900 ml) inside that directory: no Supabase client, Keychain, Sparkle, reminders or production data
 paths. It clicks its own status item (the item's own action), then writes `<screen>-<appearance>.png`
-from the popup window's `contentView` (`bitmapImageRepForCachingDisplay` and `cacheDisplay`) and a
-`.json` report: window and status-item frames, sheet and footer frames, opacity, window shadow, key
-state, any system material behind the glass, and pixel coverage. Each step switches section the way
-the header control does and records the window height and top edge and the sheet height about
-every 8 ms while the height animates. Escape then closes the popup and the copy quits. It never
-touches the installed app, a real account or the Keychain.
+and a `.json` report: window and status-item frames, sheet and footer frames, opacity, window
+shadow, key state, any system material behind the glass, pixel coverage and which capture was used
+(`capture`). Each step switches section the way the header control does, records the window height
+and top edge and the sheet height about every 8 ms while the height animates, and writes the
+after-switch capture as `<screen>-<appearance>-<from>-to-<to>.png`. Escape then closes the popup and
+the copy quits. It never touches the installed app, a real account or the Keychain.
 
-A capture is the popup window's own drawing, not the WindowServer composite: the behind-window blur
-renders as its flat fallback, and cacheDisplay draws Core Animation shadows upside down, which
-affects only small control glows (the sheet and footer shadows are images). Window position, size,
-transparency, clipping, corners, shadows and the resize are the real ones. The isolated copy is an
-unregistered bundle, so its Launch at login row reports "Login item not found".
+When the terminal that runs the script may record the screen (Privacy & Security > Screen
+Recording), a capture is `screencapture -l`: the WindowServer's composite of the popup window alone,
+without the desktop, which draws the switcher's Liquid Glass (`"capture": "window-server"`). Each
+step then also records a two-second `.mov` of only the header switcher (4 pt around its track, on
+the glass) while the selection moves, and with ffmpeg installed the script stacks its changing
+frames, top to bottom, into `<…>-frames.png`. Without that permission the probe falls back to the
+window's own drawing (`cacheDisplay`, `"capture": "cacheDisplay"`), which cannot draw Liquid Glass
+and drops everything the glass samples, so the header is blank there; it also draws the
+behind-window blur as its flat fallback and Core Animation shadows upside down. Window position,
+size, transparency, clipping, corners, shadows and the resize are the real ones either way. The
+isolated copy is an unregistered bundle, so its Launch at login row reports "Login item not
+found".
 
 ### Evidence (macOS 27.0.1, 26A434)
 
@@ -60,6 +67,10 @@ window is non-opaque and clear with no window shadow and no foreign material, an
 (Sign in shows the focused email field). In the traces the top edge never moves: Today → History
 grows the transparent window first, then the glass eases 406 → 661 pt over about 0.28 s; History →
 Account changes nothing; Account → Today eases the glass down and shrinks the window afterwards.
+Since the switcher glass (9 October) every capture is a WindowServer composite of the real window,
+and the `*-to-*-frames.png` sheets (from the `.mov` recordings) show the glass capsule sliding
+cell to cell over about 0.28 s in both appearances: a slide, not a jump, with the glyph it passes
+covered for a few mid-slide frames.
 
 [`screenshots/real-popup/before/`](screenshots/real-popup/before/) is the same popup in the
 `MenuBarExtra` build the captain reported (main at dadb0f6), captured by a temporary probe build
