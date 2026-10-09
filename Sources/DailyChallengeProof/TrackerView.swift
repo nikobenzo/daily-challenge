@@ -97,17 +97,18 @@ struct TrackerView: View {
     // MARK: Header
 
     private var header: some View {
-        HStack(spacing: 10) {
-            AppMark()
-            Text("Daily Challenge").font(Theme.Fonts.appName).tracking(Theme.Tracking.appName)
-                .foregroundStyle(Theme.textPrimary)
-                .lineLimit(1).fixedSize()
-            if auth.ownerID != nil, model.challenge != nil, model.dayNumber > 0 { dayBadge }
-            Spacer(minLength: 4)
+        // Two groups pushed apart, as on the boards: with the Day badge the row is full.
+        HStack(spacing: 0) {
+            HStack(spacing: 10) {
+                AppMark()
+                Text("Daily Challenge").font(Theme.Fonts.appName).tracking(Theme.Tracking.appName)
+                    .foregroundStyle(Theme.textPrimary)
+                    .lineLimit(1).fixedSize()
+                if auth.ownerID != nil, model.challenge != nil, model.dayNumber > 0 { dayBadge }
+            }
+            Spacer(minLength: 0)
             if auth.ownerID != nil {
-                IconSegmented(selection: Binding(get: { section }, set: { value in
-                    withAnimation(reduceMotion ? nil : Theme.Motion.crossFade) { section = value }
-                }), options: [
+                IconSegmented(selection: Binding(get: { section }, set: select), options: [
                     .init(value: .today, symbol: "sun.max", label: "Today"),
                     .init(value: .history, symbol: "calendar", label: "History"),
                     .init(value: .account, symbol: "person", label: "Account")
@@ -118,6 +119,10 @@ struct TrackerView: View {
         }
         .padding(.horizontal, Theme.Size.sectionHorizontal)
         .frame(height: Theme.Size.headerHeight)
+    }
+
+    private func select(_ value: TrackerSection) {
+        withAnimation(reduceMotion ? nil : Theme.Motion.crossFade) { section = value }
     }
 
     private var dayBadge: some View {
