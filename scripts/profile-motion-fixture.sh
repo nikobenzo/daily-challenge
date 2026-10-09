@@ -20,7 +20,8 @@ xcrun swiftc -swift-version 6 -O -parse-as-library -emit-library -emit-module -I
 xcrun swiftc -swift-version 6 -O -parse-as-library -I "$fixture" \
   -L "$app/Contents/Frameworks" -lChallengeCore -lChallengeSyncKit \
   -Xlinker -rpath -Xlinker @executable_path/../Frameworks \
-  Sources/DailyChallengeProof/{Theme,PopupVisibility,WaterJugView,CompletionEffect}.swift \
+  Sources/DailyChallengeProof/PopupVisibility.swift \
+  Sources/DailyChallengeProof/Shared/{Theme,WaterJugView,CompletionEffect,TrackerEnvironment}.swift \
   scripts/motion-fixture-visibility.swift scripts/motion-fixture.swift -o "$app/Contents/MacOS/MotionFixture"
 /usr/bin/plutil -create xml1 "$app/Contents/Info.plist"
 /usr/bin/plutil -replace CFBundleIdentifier -string app.daily-challenge.motion-fixture "$app/Contents/Info.plist"

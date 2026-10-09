@@ -11,15 +11,27 @@ public enum WaterNotificationPermission: Equatable, Sendable {
 public protocol WaterNotificationCenter: AnyObject {
     func permission() async -> WaterNotificationPermission
     func requestPermission() async throws
+    /// Removes every pending water reminder this app scheduled.
     func cancel()
     func schedule(at date: Date, timeZone: TimeZone) async throws
+    /// Queues several reminders at once (`ReminderPolicy.queued`); `cancel()` removes them all.
+    func schedule(_ dates: [Date], timeZone: TimeZone) async throws
 }
 
-/// Owns just one identifier; never removes another feature's notifications.
+extension WaterNotificationCenter {
+    /// A centre that holds one request at a time keeps only the earliest date.
+    public func schedule(_ dates: [Date], timeZone: TimeZone) async throws {
+        if let first = dates.first { try await schedule(at: first, timeZone: timeZone) }
+    }
+}
+
+/// Owns only its own identifiers; never removes another feature's notifications.
 @MainActor
 public final class NativeWaterNotificationCenter: NSObject, WaterNotificationCenter, UNUserNotificationCenterDelegate {
     private let center = UNUserNotificationCenter.current()
     private let identifier = "daily-challenge.water.next"
+    /// Queued reminders use numbered identifiers below this bound (iOS keeps at most 64 pending).
+    private static let queuedLimit = ReminderPolicy.queuedLimit
 
     override public init() {
         super.init()
@@ -45,10 +57,21 @@ public final class NativeWaterNotificationCenter: NSObject, WaterNotificationCen
     }
 
     public func cancel() {
-        center.removePendingNotificationRequests(withIdentifiers: [identifier])
+        center.removePendingNotificationRequests(
+            withIdentifiers: [identifier] + (0..<Self.queuedLimit).map { "\(identifier).\($0)" })
     }
 
     public func schedule(at date: Date, timeZone: TimeZone) async throws {
+        try await add(identifier: identifier, at: date, timeZone: timeZone)
+    }
+
+    public func schedule(_ dates: [Date], timeZone: TimeZone) async throws {
+        for (index, date) in dates.prefix(Self.queuedLimit).enumerated() {
+            try await add(identifier: "\(identifier).\(index)", at: date, timeZone: timeZone)
+        }
+    }
+
+    private func add(identifier: String, at date: Date, timeZone: TimeZone) async throws {
         let content = UNMutableNotificationContent()
         content.title = "Water check-in"
         content.body = "Check today's water log. If you're below 4,000 ml, drink only what you still need toward your goal."
@@ -61,9 +84,29 @@ public final class NativeWaterNotificationCenter: NSObject, WaterNotificationCen
     }
 }
 
-/// Reconciles independently of any window's lifetime. A short rolling horizon
-/// keeps at most one pending request. Sleep clears it; wake plans future slots
-/// only. The system still owns actual delivery (including Focus and system delays).
+/// How far ahead reminders are handed to the system.
+public enum ReminderPolicy: Sendable, Equatable {
+    /// At most one request within the next minute, re-planned every few seconds while
+    /// the app runs (the Mac: a menu-bar app that stays running and awake).
+    case nextSlot
+    /// Every remaining slot today and tomorrow, so reminders still arrive while the
+    /// app is suspended (iOS). Re-planned whenever the app learns a new total.
+    case queued
+
+    static let queuedLimit = 48
+
+    func horizon(from now: Date) -> Date {
+        switch self {
+        case .nextSlot: now.addingTimeInterval(60)
+        case .queued: now.addingTimeInterval(48 * 3_600)
+        }
+    }
+}
+
+/// Reconciles independently of any window's lifetime. With `.nextSlot`, a short rolling
+/// horizon keeps at most one pending request; with `.queued`, the remaining slots of
+/// today and tomorrow are pending. Sleep clears them; wake plans future slots only.
+/// The system still owns actual delivery (including Focus and system delays).
 /// Each app drives `sleep()`, `wake()` and periodic refreshes from its own lifecycle.
 @MainActor @Observable
 public final class WaterReminderController {
@@ -71,7 +114,10 @@ public final class WaterReminderController {
     public private(set) var settings: WaterReminderSettings
     public private(set) var permission: WaterNotificationPermission = .unknown
     public private(set) var errorMessage: String?
-    public private(set) var scheduledDate: Date?
+    /// The earliest pending reminder.
+    public var scheduledDate: Date? { scheduledDates.first }
+    public private(set) var scheduledDates: [Date] = []
+    public let policy: ReminderPolicy
     /// The challenge's zone: the reminder window is wall-clock time there.
     public private(set) var timeZone: TimeZone = .current
     public let wording: DeviceWording
@@ -87,8 +133,9 @@ public final class WaterReminderController {
     @ObservationIgnored private var worker: Task<Void, Never>?
 
     public init(defaults: UserDefaults, center: any WaterNotificationCenter, wording: DeviceWording,
-                clock: @escaping () -> Date = Date.init) {
+                policy: ReminderPolicy = .nextSlot, clock: @escaping () -> Date = Date.init) {
         self.wording = wording
+        self.policy = policy
         self.defaults = defaults
         self.center = center
         self.clock = clock
@@ -148,7 +195,7 @@ public final class WaterReminderController {
         // Synchronous cancellation even if a previous async add is still in flight.
         if cancel {
             center.cancel()
-            scheduledDate = nil
+            scheduledDates = []
         }
         guard worker == nil else { return }
         worker = Task { await reconcile() }
@@ -169,17 +216,22 @@ public final class WaterReminderController {
             guard token == revision else { continue }
             let now = clock()
             let zone = timeZone
-            let next = WaterReminderPlanner(timeZone: zone, clock: { now }).upcoming(
-                settings: settings, through: now.addingTimeInterval(60),
-                waterMillilitres: { waterByDay[$0] }).first
-            let desired = !asleep && permission == .allowed ? next : nil
-            if desired != scheduledDate || desired == nil {
+            let upcoming = WaterReminderPlanner(timeZone: zone, clock: { now }).upcoming(
+                settings: settings, through: policy.horizon(from: now),
+                waterMillilitres: { waterByDay[$0] })
+            let planned = policy == .nextSlot ? Array(upcoming.prefix(1)) : Array(upcoming.prefix(ReminderPolicy.queuedLimit))
+            let desired = !asleep && permission == .allowed ? planned : []
+            if desired != scheduledDates || desired.isEmpty {
                 center.cancel()
-                scheduledDate = nil
-                if let desired {
+                scheduledDates = []
+                if !desired.isEmpty {
                     do {
-                        try await center.schedule(at: desired, timeZone: zone)
-                        if token == revision { scheduledDate = desired; errorMessage = nil }
+                        if policy == .nextSlot {
+                            try await center.schedule(at: desired[0], timeZone: zone)
+                        } else {
+                            try await center.schedule(desired, timeZone: zone)
+                        }
+                        if token == revision { scheduledDates = desired; errorMessage = nil }
                     } catch { errorMessage = "Could not schedule water reminder: \(error.localizedDescription)" }
                 }
             }

@@ -6,7 +6,8 @@ cd "$(dirname "$0")/.."
 fixture="$PWD/build/login-item-fixture"
 app="$fixture/Daily Challenge Login FIXTURE.app"
 mkdir -p "$app/Contents/MacOS"
-/usr/bin/swiftc -parse-as-library Sources/DailyChallengeProof/{LaunchAtLogin,Theme,Components,PopupVisibility}.swift \
+/usr/bin/swiftc -parse-as-library Sources/DailyChallengeProof/{LaunchAtLogin,Components,PopupVisibility}.swift \
+  Sources/DailyChallengeProof/Shared/{Theme,SharedComponents,TrackerEnvironment}.swift \
   scripts/login-item-fixture.swift -o "$app/Contents/MacOS/LoginFixture"
 rm -f "$app/Contents/Info.plist"
 /usr/bin/plutil -create xml1 "$app/Contents/Info.plist"

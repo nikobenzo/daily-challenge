@@ -1,4 +1,8 @@
+#if canImport(AppKit)
 import AppKit
+#else
+import UIKit
+#endif
 import SwiftUI
 
 /// The Daily Challenge design system (Paper file "Daily Challenge · Design System").
@@ -86,6 +90,7 @@ enum Theme {
 
     // MARK: Type scale (SF Pro; rounded design for counts)
 
+    #if canImport(AppKit)
     enum Fonts {
         static let hero = Font.system(size: 32, weight: .heavy, design: .rounded)
         static let screenTitle = Font.system(size: 24, weight: .heavy)
@@ -100,6 +105,33 @@ enum Theme {
         static let ringLabel = Font.system(size: 10, weight: .bold)
         static let eyebrow = Font.system(size: 10, weight: .bold)
     }
+    #else
+    /// The same sizes at the default text size, scaled with Dynamic Type. Computed on each
+    /// use, so a view rebuilt after a text-size change picks up the new size.
+    enum Fonts {
+        static var hero: Font { scaled(32, .heavy, rounded: true, relativeTo: .largeTitle) }
+        static var screenTitle: Font { scaled(24, .heavy, relativeTo: .title2) }
+        static var streak: Font { scaled(22, .heavy, rounded: true, relativeTo: .title2) }
+        static var appName: Font { scaled(16, .bold, relativeTo: .callout) }
+        static var rowLabel: Font { scaled(16, .semibold, relativeTo: .callout) }
+        static var pill: Font { scaled(15, .bold, relativeTo: .subheadline) }
+        static var field: Font { scaled(14, .medium, relativeTo: .subheadline) }
+        static var link: Font { scaled(13, .bold, relativeTo: .footnote) }
+        static var caption: Font { scaled(12, .semibold, relativeTo: .caption1) }
+        static var badge: Font { scaled(12, .bold, relativeTo: .caption1) }
+        static var ringLabel: Font { scaled(10, .bold, relativeTo: .caption2) }
+        static var eyebrow: Font { scaled(10, .bold, relativeTo: .caption2) }
+
+        static func scaled(_ size: CGFloat, _ weight: UIFont.Weight, rounded: Bool = false,
+                           relativeTo style: UIFont.TextStyle) -> Font {
+            var font = UIFont.systemFont(ofSize: size, weight: weight)
+            if rounded, let descriptor = font.fontDescriptor.withDesign(.rounded) {
+                font = UIFont(descriptor: descriptor, size: size)
+            }
+            return Font(UIFontMetrics(forTextStyle: style).scaledFont(for: font) as CTFont)
+        }
+    }
+    #endif
 
     /// Tracking in points for the sizes above (em × size).
     enum Tracking {
@@ -168,6 +200,9 @@ enum Theme {
 
     // MARK: Helpers
 
+    // The tokens above are shared with the iPhone app (iOS/project.yml); only these
+    // helpers differ, resolving each pair against the platform's own appearance.
+    #if canImport(AppKit)
     static func isDark(_ appearance: NSAppearance) -> Bool {
         appearance.bestMatch(from: [.aqua, .darkAqua, .accessibilityHighContrastAqua, .accessibilityHighContrastDarkAqua])
             .map { $0 == .darkAqua || $0 == .accessibilityHighContrastDarkAqua } ?? false
@@ -184,4 +219,17 @@ enum Theme {
     static func hex(_ value: Int) -> NSColor {
         rgba((value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF)
     }
+    #else
+    static func color(dark: UIColor, light: UIColor) -> Color {
+        Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? dark : light })
+    }
+
+    static func rgba(_ red: Int, _ green: Int, _ blue: Int, _ alpha: CGFloat = 1) -> UIColor {
+        UIColor(red: CGFloat(red) / 255, green: CGFloat(green) / 255, blue: CGFloat(blue) / 255, alpha: alpha)
+    }
+
+    static func hex(_ value: Int) -> UIColor {
+        rgba((value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF)
+    }
+    #endif
 }

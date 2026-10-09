@@ -7,8 +7,9 @@ in that file too). The code is the source of truth for values:
 
 | What | Where |
 | --- | --- |
-| Tokens: dark/light palette, type scale, spacing, radii, sizes, motion | `Sources/DailyChallengeProof/Theme.swift` |
-| Shared components | `Sources/DailyChallengeProof/Components.swift` |
+| Tokens: dark/light palette, type scale, spacing, radii, sizes, motion | `Sources/DailyChallengeProof/Shared/Theme.swift` (shared with the iPhone app, whose type scale follows Dynamic Type) |
+| Shared components | `Sources/DailyChallengeProof/Shared/SharedComponents.swift` (also in the iPhone app), Mac-only ones in `Components.swift` |
+| iPhone screens | `iOS/DailyChallenge/` ([iPhone app](ios-testflight.md)): full-screen glass cards on a backdrop and a tab bar instead of the icon switcher |
 | The status item, the popup panel and the animated height | `Sources/DailyChallengeProof/PopupWindow.swift` |
 | Screens | `TrackerView.swift` (root, header, footer, setup), `TodayView.swift`, `HistoryTrackerView.swift`, `AccountView.swift`, `AuthView.swift` |
 
