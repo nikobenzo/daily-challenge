@@ -26,10 +26,13 @@ targets:
     sources:
       - path: DailyChallenge # Includes phone-only extras views and Debug fixtures.
       - path: Shared
+      - path: DailyChallengeWidgets/WidgetTimeline.swift
       # Design-system tokens and components shared with the Mac app (no AppKit or UIKit there,
       # apart from Theme's colour and font helpers).
       - path: ../Sources/DailyChallengeProof/Shared
     dependencies:
+      - target: DailyChallengeWidgets
+        embed: true
       - package: DailyChallenge
         product: ChallengeCore
       - package: DailyChallenge
@@ -40,6 +43,8 @@ targets:
         CFBundleDisplayName: Daily Challenge
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        CFBundleURLTypes:
+          - CFBundleURLSchemes: [daily-challenge]
         LSRequiresIPhoneOS: true
         ITSAppUsesNonExemptEncryption: false
         UILaunchScreen:
@@ -70,6 +75,43 @@ targets:
       - name: Bundle configuration and version
         script: bash "$SRCROOT/scripts/bundle-configuration.sh"
         # The processed Info.plist as an input orders this phase after Xcode writes it.
+        inputFiles: ["$(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)"]
+        basedOnDependencyAnalysis: false
+  DailyChallengeWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: DailyChallengeWidgets
+      - path: Shared
+      - path: ../Sources/DailyChallengeProof/Shared/Theme.swift
+    dependencies:
+      - package: DailyChallenge
+        product: ChallengeCore
+      - package: DailyChallenge
+        product: ChallengeSyncKit
+    info:
+      path: DailyChallengeWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: Daily Challenge
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: DailyChallengeWidgets/DailyChallengeWidgets.entitlements
+      properties:
+        com.apple.security.application-groups: [group.app.daily-challenge.ios]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.daily-challenge.ios.widgets
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SKIP_INSTALL: YES
+        MARKETING_VERSION: "0.0.0"
+        CURRENT_PROJECT_VERSION: "0"
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+    postBuildScripts:
+      - name: Bundle version only
+        script: bash "$SRCROOT/scripts/bundle-configuration.sh" --version-only
         inputFiles: ["$(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)"]
         basedOnDependencyAnalysis: false
   DailyChallengeTests:

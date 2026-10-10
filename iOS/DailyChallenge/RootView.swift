@@ -24,6 +24,11 @@ struct RootView: View {
         }
         // Theme's Dynamic Type fonts are resolved when a body runs: rebuild on a size change.
         .id(typeSize)
+        .onOpenURL { app.openWidgetURL($0) }
+        .sheet(isPresented: Binding(
+            get: { app.manageExtrasRequested && app.auth.ownerID != nil && app.tracker.challenge != nil },
+            set: { if !$0 { app.manageExtrasRequested = false } }
+        )) { PhoneManageExtrasView(tracker: app.tracker) }
         // Presentation clocks (jug, celebration) run only while the app is on screen.
         .environment(\.trackerPopupVisible, phase == .active)
         .environment(\.calendar, app.tracker.dates.calendar)

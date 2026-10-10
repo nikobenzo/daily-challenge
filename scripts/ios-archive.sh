@@ -68,6 +68,21 @@ if [[ "$check" == 1 ]]; then
     -c 'Print :CFBundleVersion' "$app/Info.plist"
   [[ -f "$app/Configuration.json" ]] || { echo 'Configuration.json missing from the archive.' >&2; exit 1; }
   if find "$app" -iname '*sparkle*' | grep -q .; then echo 'Sparkle must not be in the iPhone app.' >&2; exit 1; fi
+  extension="$app/PlugIns/DailyChallengeWidgets.appex"
+  [[ -d "$extension" ]] || { echo 'Widget extension missing.' >&2; exit 1; }
+  python3 - "$app" "$extension" <<'PY'
+import plistlib, sys
+from pathlib import Path
+app, extension = map(Path, sys.argv[1:])
+a = plistlib.loads((app / 'Info.plist').read_bytes())
+e = plistlib.loads((extension / 'Info.plist').read_bytes())
+assert e['CFBundleIdentifier'] == 'app.daily-challenge.ios.widgets'
+assert e['NSExtension']['NSExtensionPointIdentifier'] == 'com.apple.widgetkit-extension'
+for key in ('CFBundleVersion', 'CFBundleShortVersionString'):
+    assert a[key] == e[key], f'Mismatched {key}'
+assert not (extension / 'Configuration.json').exists(), 'Extension must not contain server configuration'
+print('Embedded WidgetKit extension ID, extension point and matching versions verified')
+PY
   echo "Unsigned Release archive OK (not uploadable): $ARCHIVE"
   exit 0
 fi

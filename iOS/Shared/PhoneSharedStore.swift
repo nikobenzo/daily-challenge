@@ -32,6 +32,7 @@ final class PhoneSharedStore: TrackerStoreAccess, @unchecked Sendable {
     private let available: () -> Bool
     private let afterCopy: () throws -> Void
     private var binding: PhoneSharedAccount?
+    var onCommitted: (() -> Void)?
 
     init(root: URL?, legacy: URL? = nil, available: @escaping () -> Bool = { true },
          afterCopy: @escaping () throws -> Void = {}) {
@@ -50,7 +51,8 @@ final class PhoneSharedStore: TrackerStoreAccess, @unchecked Sendable {
     /// Clear visibility *before* attempting to open another account. A failed
     /// relocation/open never leaves a prior account visible to an extension.
     func activate(ownerID: UUID?) throws -> ChallengeStore? {
-        try locked { root in
+        defer { onCommitted?() }
+        return try locked { root in
             binding = nil
             try writeAccount(nil, root: root)
             try relocate(root: root)
@@ -75,6 +77,7 @@ final class PhoneSharedStore: TrackerStoreAccess, @unchecked Sendable {
             try protectFiles(root)
             try writeAccount(updated, root: root)
             self.binding = updated
+            onCommitted?()
             return (store, result)
         }
     }

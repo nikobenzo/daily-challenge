@@ -3,6 +3,7 @@ import ChallengeCore
 import ChallengeSyncKit
 import Observation
 import SwiftUI
+import WidgetKit
 
 enum PhoneTab: Hashable { case today, history, account }
 
@@ -34,6 +35,13 @@ final class PhoneApp {
     let tracker: TrackerModel
     let reminders: WaterReminderController?
     var tab = PhoneTab.today
+    var manageExtrasRequested = false
+
+    func openWidgetURL(_ url: URL) {
+        guard url.scheme == "daily-challenge", ["today", "extras"].contains(url.host) else { return }
+        tab = .today
+        manageExtrasRequested = url.host == "extras"
+    }
     var appearance: AppearancePreference {
         didSet { defaults.set(appearance.rawValue, forKey: Self.appearanceKey) }
     }
@@ -58,7 +66,9 @@ final class PhoneApp {
             "This build has no server configuration. Build it with .env.local at the repository root (docs/ios-testflight.md).")
         let reminders = WaterReminderController(defaults: .standard, center: NativeWaterNotificationCenter(),
                                                 wording: .iPhone, policy: .queued)
-        let app = PhoneApp(auth: auth, tracker: TrackerModel(access: PhoneSharedStore.production()), reminders: reminders,
+        let shared = PhoneSharedStore.production()
+        shared.onCommitted = { WidgetCenter.shared.reloadAllTimelines() }
+        let app = PhoneApp(auth: auth, tracker: TrackerModel(access: shared), reminders: reminders,
                            defaults: .standard, schedulesRefresh: true)
         auth.onSessionChange { [weak app] owner in
             app?.tracker.activate(ownerID: owner)
@@ -74,6 +84,7 @@ final class PhoneApp {
         tracker.reload()
         tracker.refresh()
         tracker.requestSync()
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     /// Leaving the foreground: ask iOS for a later refresh so other devices' entries
@@ -91,6 +102,7 @@ final class PhoneApp {
         tracker.reload()
         tracker.refresh()
         await tracker.sync(force: true)
+        WidgetCenter.shared.reloadAllTimelines()
         tracker.refreshReminders()
         await reminders?.settle()
     }
