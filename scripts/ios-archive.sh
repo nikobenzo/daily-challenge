@@ -81,7 +81,13 @@ assert e['NSExtension']['NSExtensionPointIdentifier'] == 'com.apple.widgetkit-ex
 for key in ('CFBundleVersion', 'CFBundleShortVersionString'):
     assert a[key] == e[key], f'Mismatched {key}'
 assert not (extension / 'Configuration.json').exists(), 'Extension must not contain server configuration'
-print('Embedded WidgetKit extension ID, extension point and matching versions verified')
+# Widget App Intents run in the extension only; the app target ships none.
+import json
+actions = json.loads((extension / 'Metadata.appintents' / 'extract.actionsdata').read_text())['actions']
+assert sorted(actions) == ['PourWaterIntent', 'SetDietIntent', 'ToggleExtraIntent', 'ToggleHabitIntent', 'UndoWaterIntent'], sorted(actions)
+assert not any(action.get('isDiscoverable') for action in actions.values()), 'Widget intents must not be discoverable'
+assert not (app / 'Metadata.appintents').exists(), 'Widget intents must not be compiled into the app'
+print('Embedded WidgetKit extension ID, extension point, matching versions and extension-only widget intents verified')
 PY
   echo "Unsigned Release archive OK (not uploadable): $ARCHIVE"
   exit 0

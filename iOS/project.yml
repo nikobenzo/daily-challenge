@@ -106,6 +106,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.daily-challenge.ios.widgets
         APPLICATION_EXTENSION_API_ONLY: YES
+        # Wraps widget controls in App Intent buttons; the app's in-process renders draw labels only.
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) WIDGET_EXTENSION"
         SKIP_INSTALL: YES
         MARKETING_VERSION: "0.0.0"
         CURRENT_PROJECT_VERSION: "0"

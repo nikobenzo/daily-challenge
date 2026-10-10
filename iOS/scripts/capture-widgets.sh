@@ -10,8 +10,10 @@ OUT="$ROOT/docs/screenshots/ios/widgets"
 MODE="${WIDGET_CAPTURE_MODE:-placement}"
 case "$MODE" in
   placement) SCHEME=WidgetCapture; METHOD=testPlaceWidgets ;;
+  # Phase 4: place three kinds, terminate the app, tap widget controls, relaunch.
+  actions) SCHEME=WidgetCapture; METHOD=testWidgetActionsOffline ;;
   gallery) SCHEME=WidgetGalleryCapture; METHOD=testCaptureGalleryOnly ;;
-  *) echo "Expected WIDGET_CAPTURE_MODE=placement|gallery" >&2; exit 2 ;;
+  *) echo "Expected WIDGET_CAPTURE_MODE=placement|actions|gallery" >&2; exit 2 ;;
 esac
 RESULT="$ROOT/.build/widget-$MODE-$APPEARANCE-$(date +%s).xcresult"
 mkdir -p "$OUT"

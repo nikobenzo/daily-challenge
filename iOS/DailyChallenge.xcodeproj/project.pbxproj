@@ -23,6 +23,7 @@
 		5FC85B1D9751F186B04424BC /* PhoneSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5260AF24808A4F9D4B2BD3F7 /* PhoneSyncTests.swift */; };
 		611BABA801E627BE8987774A /* WidgetRenderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC8DF06C97A21230C9BED01 /* WidgetRenderTests.swift */; };
 		62BD84EAB2B1390748708AEE /* ChallengeSyncKit in Frameworks */ = {isa = PBXBuildFile; productRef = 5313A37E6B8A90076F23F638 /* ChallengeSyncKit */; };
+		66135E50905E864CA0802DA1 /* WidgetActionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F5596FA2E7CBBAAE65BEE3F /* WidgetActionTests.swift */; };
 		712FB1DA40F26A225F6B7C4B /* PhoneApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF0746F58D619CE08A655CE1 /* PhoneApp.swift */; };
 		74E3EE639877BC4081F709F9 /* WidgetPlacementUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3888D73E71C2F5D574A1540 /* WidgetPlacementUITests.swift */; };
 		7803A2B6B83C56CB86DE75FB /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52CECB8A3AA40F95A0D695BE /* Theme.swift */; };
@@ -31,7 +32,9 @@
 		8B92619D945BFFD3FB3958F6 /* PhoneExtrasViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F1304E7C9C7EACDB3CCF4A8 /* PhoneExtrasViews.swift */; };
 		9153F9C8EC63739DA6CAF657 /* TodayScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B1B9630EEC07846CBAA2EDB /* TodayScreen.swift */; };
 		949581B4C183D9FA008FE263 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61FDF9718370A45B2B02D0E5 /* RootView.swift */; };
+		9A1FAD48B6E9F96E60509C79 /* WidgetActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CDF630F289537D9F5F48348 /* WidgetActions.swift */; };
 		9F74BA37A0D068BE917FC841 /* ChallengeCore in Frameworks */ = {isa = PBXBuildFile; productRef = 66B6D9C46C8FE7173171C5E0 /* ChallengeCore */; };
+		ACCE9864D897195309CEF459 /* WidgetActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CDF630F289537D9F5F48348 /* WidgetActions.swift */; };
 		B9846E5B2D15F13CEA0B16A8 /* WidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0466DACCDCF6749B1610F568 /* WidgetViews.swift */; };
 		BBDD3F15B6B638223CC8418E /* HistoryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2ADC44F1D8FEAD95697FB1BC /* HistoryScreen.swift */; };
 		C2CE1B250D17539BEAE2B49A /* WidgetTimelineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA6BA706226779D4FF164F3 /* WidgetTimelineTests.swift */; };
@@ -42,6 +45,7 @@
 		E66B17464A8A8B65F448925D /* DailyChallengeWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A55448D6B0B46E6D034037D4 /* DailyChallengeWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		E90BD427FD54FE10121E6985 /* PhoneSharedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2787F38AE405DAEF50D673 /* PhoneSharedStore.swift */; };
 		F05590E2A29427F91B8C092A /* ChallengeSyncKit in Frameworks */ = {isa = PBXBuildFile; productRef = 23BF7AD5B507B0E9202581AE /* ChallengeSyncKit */; };
+		F3B9E02E8EC0063B671F2450 /* WidgetIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6348898CD05F1EAC8EE43407 /* WidgetIntents.swift */; };
 		F438959BC676798B693C8A62 /* ChallengeWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 373579F4BEE8A1A6AC237E83 /* ChallengeWidgets.swift */; };
 		FC2D42FF69FB4BB7F55EAA85 /* AuthScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E72EADE2BE24A1AF75D3B58 /* AuthScreen.swift */; };
 		FC908B85CA927FF4406101F2 /* TrackerEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9DF86F06D26F5D13406D62C /* TrackerEnvironment.swift */; };
@@ -108,9 +112,12 @@
 		5F1304E7C9C7EACDB3CCF4A8 /* PhoneExtrasViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneExtrasViews.swift; sourceTree = "<group>"; };
 		61FDF9718370A45B2B02D0E5 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		62D3FBAE0645D9A0B21E47D9 /* SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedComponents.swift; sourceTree = "<group>"; };
+		6348898CD05F1EAC8EE43407 /* WidgetIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetIntents.swift; sourceTree = "<group>"; };
 		7294939D231DA52CC101476D /* WidgetTimeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetTimeline.swift; sourceTree = "<group>"; };
 		76AB5F804FE5C4EFBE70F2B3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		7CDF630F289537D9F5F48348 /* WidgetActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetActions.swift; sourceTree = "<group>"; };
 		80F85D956A148C59E6486533 /* DailyChallengeWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DailyChallengeWidgets.entitlements; sourceTree = "<group>"; };
+		8F5596FA2E7CBBAAE65BEE3F /* WidgetActionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetActionTests.swift; sourceTree = "<group>"; };
 		95B529FC1A009392189CF8CA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A2294BEE4061774BA0FB13C5 /* DailyChallengeTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = DailyChallengeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A55448D6B0B46E6D034037D4 /* DailyChallengeWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = DailyChallengeWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -182,6 +189,7 @@
 			isa = PBXGroup;
 			children = (
 				1F2787F38AE405DAEF50D673 /* PhoneSharedStore.swift */,
+				7CDF630F289537D9F5F48348 /* WidgetActions.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -200,6 +208,7 @@
 				373579F4BEE8A1A6AC237E83 /* ChallengeWidgets.swift */,
 				80F85D956A148C59E6486533 /* DailyChallengeWidgets.entitlements */,
 				95B529FC1A009392189CF8CA /* Info.plist */,
+				6348898CD05F1EAC8EE43407 /* WidgetIntents.swift */,
 				7294939D231DA52CC101476D /* WidgetTimeline.swift */,
 				0466DACCDCF6749B1610F568 /* WidgetViews.swift */,
 			);
@@ -229,6 +238,7 @@
 				398EDE8CD614D9196592714B /* PhoneExtrasTests.swift */,
 				3789CD5BBCA369DA87A3BBD3 /* PhoneSharedStoreTests.swift */,
 				5260AF24808A4F9D4B2BD3F7 /* PhoneSyncTests.swift */,
+				8F5596FA2E7CBBAAE65BEE3F /* WidgetActionTests.swift */,
 				AAC8DF06C97A21230C9BED01 /* WidgetRenderTests.swift */,
 				BAA6BA706226779D4FF164F3 /* WidgetTimelineTests.swift */,
 			);
@@ -491,6 +501,7 @@
 				4E5B42B9BDBC0C9FE39D790C /* PhoneExtrasTests.swift in Sources */,
 				D63365EFFE0A3FAE99FE3AC6 /* PhoneSharedStoreTests.swift in Sources */,
 				5FC85B1D9751F186B04424BC /* PhoneSyncTests.swift in Sources */,
+				66135E50905E864CA0802DA1 /* WidgetActionTests.swift in Sources */,
 				611BABA801E627BE8987774A /* WidgetRenderTests.swift in Sources */,
 				C2CE1B250D17539BEAE2B49A /* WidgetTimelineTests.swift in Sources */,
 			);
@@ -503,6 +514,8 @@
 				F438959BC676798B693C8A62 /* ChallengeWidgets.swift in Sources */,
 				E90BD427FD54FE10121E6985 /* PhoneSharedStore.swift in Sources */,
 				7803A2B6B83C56CB86DE75FB /* Theme.swift in Sources */,
+				ACCE9864D897195309CEF459 /* WidgetActions.swift in Sources */,
+				F3B9E02E8EC0063B671F2450 /* WidgetIntents.swift in Sources */,
 				7A6899D3153FC32542CF5770 /* WidgetTimeline.swift in Sources */,
 				E535F74B303E67499A7CF58E /* WidgetViews.swift in Sources */,
 			);
@@ -529,6 +542,7 @@
 				9153F9C8EC63739DA6CAF657 /* TodayScreen.swift in Sources */,
 				FC908B85CA927FF4406101F2 /* TrackerEnvironment.swift in Sources */,
 				5C8D1E04177C60491C720B0F /* WaterJugView.swift in Sources */,
+				9A1FAD48B6E9F96E60509C79 /* WidgetActions.swift in Sources */,
 				2FF488A62E7C1B53DC7C546E /* WidgetTimeline.swift in Sources */,
 				B9846E5B2D15F13CEA0B16A8 /* WidgetViews.swift in Sources */,
 			);
@@ -716,6 +730,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "app.daily-challenge.ios.widgets";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) WIDGET_EXTENSION";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -818,6 +833,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "app.daily-challenge.ios.widgets";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) WIDGET_EXTENSION";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;

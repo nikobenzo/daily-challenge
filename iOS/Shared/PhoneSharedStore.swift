@@ -122,6 +122,21 @@ final class PhoneSharedStore: TrackerStoreAccess, @unchecked Sendable {
         }
     }
 
+    /// Widget actions carry only the opaque generation and challenge identity from a
+    /// rendered entry, never an owner: the owner comes from published metadata read
+    /// under the same lock. Metadata is unchanged because events never change the record.
+    func transaction<Result>(generation: UUID, challengeID: UUID, _ operation: (inout ChallengeStore) throws -> Result) throws -> (ChallengeStore, Result) {
+        try locked { root in
+            guard let account = try readAccount(root), account.generation == generation,
+                  account.challengeID == challengeID else { throw PhoneSharedStoreError.staleAccount }
+            var store = try ChallengeStore(ownerID: account.ownerID, directory: root)
+            guard store.record?.id == challengeID else { throw PhoneSharedStoreError.staleAccount }
+            let result = try operation(&store)
+            try protectFiles(root)
+            return (store, result)
+        }
+    }
+
     private func locked<Result>(_ body: (URL) throws -> Result) throws -> Result {
         guard available() else { throw PhoneSharedStoreError.protectedData }
         guard let root else { throw PhoneSharedStoreError.unavailable }

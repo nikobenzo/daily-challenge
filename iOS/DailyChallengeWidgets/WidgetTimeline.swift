@@ -22,8 +22,11 @@ struct ChallengeWidgetEntry: TimelineEntry, Sendable {
     let dayNumber: Int?
     let streak: Int
     let dateLabel: String
+    /// Opaque identity for intent-backed controls; nil (read-only) in placeholders and previews.
+    var binding: WidgetActionBinding? = nil
 
-    static func derive(_ challenge: Challenge?, at date: Date, state: State = .noChallenge) -> Self {
+    static func derive(_ challenge: Challenge?, at date: Date, state: State = .noChallenge,
+                       binding: WidgetActionBinding? = nil) -> Self {
         guard let challenge else {
             return Self(date: date, state: state, summary: nil, dayNumber: nil, streak: 0, dateLabel: "")
         }
@@ -32,7 +35,8 @@ struct ChallengeWidgetEntry: TimelineEntry, Sendable {
         let number = dates.calendar.dateComponents([.day], from: challenge.startDate, to: day).day! + 1
         return Self(date: date, state: .ready, summary: challenge.summary(on: date, asOf: date),
                     dayNumber: number > 0 ? number : nil, streak: challenge.streaks(asOf: date).current,
-                    dateLabel: dates.label(date, format: "d MMM") + " · " + ChallengeDates.city(challenge.timeZone))
+                    dateLabel: dates.label(date, format: "d MMM") + " · " + ChallengeDates.city(challenge.timeZone),
+                    binding: binding)
     }
 
     /// Gallery/placeholder data is always synthetic, even when signed in.
@@ -55,36 +59,24 @@ enum WidgetDaySchedule {
 }
 
 struct ChallengeWidgetProvider: TimelineProvider {
-    private let read: () throws -> Challenge?
+    private let read: () throws -> (Challenge?, WidgetActionBinding?)
     private let clock: () -> Date
 
     init(store: PhoneSharedStore? = nil, clock: @escaping () -> Date = Date.init) {
         self.clock = clock
         read = {
-            let shared = store ?? Self.extensionStore()
-            guard let (_, store) = try shared.readActive() else { throw SignedOut() }
-            return store.challenge
+            let shared = store ?? .widgetExtension()
+            guard let (account, store) = try shared.readActive() else { throw SignedOut() }
+            return (store.challenge, account.challengeID.map { WidgetActionBinding(generation: account.generation, challengeID: $0) })
         }
     }
     private struct SignedOut: Error {}
 
-    private static func extensionStore() -> PhoneSharedStore {
-        let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: PhoneSharedStore.groupID)
-        #if DEBUG
-        // An explicit persisted fixture switch crosses the process boundary. It is
-        // absent in Release, and fixture history never shares the production root.
-        if let container, FileManager.default.fileExists(atPath: container.appendingPathComponent("widget-fixture-enabled").path) {
-            return PhoneSharedStore(root: container.appendingPathComponent("WidgetFixtures"))
-        }
-        #endif
-        return PhoneSharedStore(root: container?.appendingPathComponent("ChallengeHistory"))
-    }
-
     func entries(now: Date) -> [ChallengeWidgetEntry] {
         do {
-            let challenge = try read()
+            let (challenge, binding) = try read()
             return WidgetDaySchedule.dates(now: now, timeZone: challenge?.timeZone ?? Challenge.legacyTimeZone)
-                .map { ChallengeWidgetEntry.derive(challenge, at: $0) }
+                .map { ChallengeWidgetEntry.derive(challenge, at: $0, binding: binding) }
         } catch {
             return [.derive(nil, at: now, state: error is SignedOut ? .signedOut : .unavailable)]
         }
