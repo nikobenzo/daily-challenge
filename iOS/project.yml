@@ -84,7 +84,11 @@ targets:
     sources:
       - path: DailyChallengeWidgets
       - path: Shared
+      # Tokens and static drawings only: the jug, ring gauge, badges and marks. No motion
+      # clocks (WaterJugView, CompletionEffect) or tracker environment in the extension.
       - path: ../Sources/DailyChallengeProof/Shared/Theme.swift
+      - path: ../Sources/DailyChallengeProof/Shared/SharedComponents.swift
+      - path: ../Sources/DailyChallengeProof/Shared/JugDrawing.swift
     dependencies:
       - package: DailyChallenge
         product: ChallengeCore

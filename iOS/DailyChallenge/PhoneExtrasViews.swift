@@ -92,6 +92,7 @@ struct PhoneManageExtrasView: View {
     @State private var renameTitle = ""
     @State private var archiving: Challenge.Extra?
     @State private var error: String?
+    @FocusState private var focusedField: String?
 
     var body: some View {
         NavigationStack {
@@ -105,7 +106,7 @@ struct PhoneManageExtrasView: View {
                             .fixedSize(horizontal: false, vertical: true)
                         if tracker.canAddExtra {
                             TextField("New extra", text: $newTitle, prompt: Text("New extra").foregroundStyle(Theme.textTertiary))
-                                .textFieldStyle(.roundedBorder).font(Theme.Fonts.field)
+                                .phoneField(focus: $focusedField, id: "new", height: controlHeight)
                                 .accessibilityIdentifier("extras-new-title")
                             titleHelp(newTitle)
                             Button("Add extra", action: add)
@@ -156,7 +157,7 @@ struct PhoneManageExtrasView: View {
         VStack(alignment: .leading, spacing: 8) {
             if renaming?.id == extra.id {
                 TextField("Name", text: $renameTitle, prompt: Text("Name").foregroundStyle(Theme.textTertiary))
-                    .textFieldStyle(.roundedBorder).font(Theme.Fonts.field)
+                    .phoneField(focus: $focusedField, id: "rename", height: controlHeight)
                     .accessibilityIdentifier("extras-rename-title")
                 titleHelp(renameTitle)
                 actionLayout {
@@ -203,5 +204,25 @@ struct PhoneManageExtrasView: View {
     private func add() {
         error = tracker.addExtra(newTitle)
         if error == nil { newTitle = "" }
+    }
+}
+
+extension View {
+    /// The design's text field (as on sign-in): a field-fill capsule with a hairline border
+    /// and the focus ring and halo, in place of the system rounded border, which draws
+    /// an opaque black box in Dark.
+    func phoneField(focus: FocusState<String?>.Binding, id: String, height: CGFloat) -> some View {
+        let focused = focus.wrappedValue == id
+        return textFieldStyle(.plain)
+            .font(Theme.Fonts.field)
+            .foregroundStyle(Theme.textPrimary)
+            .focused(focus, equals: id)
+            .padding(.horizontal, 16)
+            .frame(minHeight: max(height, Theme.Size.field))
+            .background(Capsule(style: .circular).fill(Theme.fieldFill))
+            .overlay(Capsule(style: .circular).strokeBorder(focused ? Theme.focus : Theme.controlFill, lineWidth: focused ? 1.5 : 1))
+            .background { if focused { Capsule(style: .circular).stroke(Theme.focusHalo, lineWidth: 6) } }
+            .contentShape(Capsule(style: .circular))
+            .onTapGesture { focus.wrappedValue = id }
     }
 }

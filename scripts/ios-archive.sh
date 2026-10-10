@@ -70,10 +70,10 @@ if [[ "$check" == 1 ]]; then
   if find "$app" -iname '*sparkle*' | grep -q .; then echo 'Sparkle must not be in the iPhone app.' >&2; exit 1; fi
   extension="$app/PlugIns/DailyChallengeWidgets.appex"
   [[ -d "$extension" ]] || { echo 'Widget extension missing.' >&2; exit 1; }
-  python3 - "$app" "$extension" <<'PY'
+  python3 - "$app" "$extension" "$ROOT/.env.local" <<'PY'
 import plistlib, sys
 from pathlib import Path
-app, extension = map(Path, sys.argv[1:])
+app, extension, env = map(Path, sys.argv[1:])
 a = plistlib.loads((app / 'Info.plist').read_bytes())
 e = plistlib.loads((extension / 'Info.plist').read_bytes())
 assert e['CFBundleIdentifier'] == 'app.daily-challenge.ios.widgets'
@@ -87,6 +87,25 @@ actions = json.loads((extension / 'Metadata.appintents' / 'extract.actionsdata')
 assert sorted(actions) == ['PourWaterIntent', 'SetDietIntent', 'ToggleExtraIntent', 'ToggleHabitIntent', 'UndoWaterIntent'], sorted(actions)
 assert not any(action.get('isDiscoverable') for action in actions.values()), 'Widget intents must not be discoverable'
 assert not (app / 'Metadata.appintents').exists(), 'Widget intents must not be compiled into the app'
+# The extension never networks: no configuration, credentials or keys among its resources or in
+# its binary. The configured values are compared without being printed.
+secrets = [line.split('=', 1)[1].strip().strip('"').encode() for line in env.read_text().splitlines()
+           if '=' in line and not line.lstrip().startswith('#') and line.split('=', 1)[1].strip()]
+# Key shapes, not bare prefixes: the linked supabase-swift SDK names the `sb_secret_` prefix itself.
+import re
+shapes = [re.compile(rb'sb_secret_[A-Za-z0-9_-]{16,}'), re.compile(rb'eyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}'),
+          re.compile(rb'service_role'), re.compile(rb'BEGIN [A-Z ]*PRIVATE KEY')]
+markers = [b'SUPABASE_URL', b'SUPABASE_PUBLISHABLE_KEY'] + secrets
+for item in extension.rglob('*'):
+    name = item.name.lower()
+    assert not (name.startswith('.env') or name.endswith(('.p8', '.p12', '.mobileprovision')) or name == 'configuration.json'), \
+        f'Unexpected configuration or credential file in the extension: {item.relative_to(extension)}'
+    if item.is_file() and not item.is_symlink():
+        data = item.read_bytes()
+        found = [index for index, marker in enumerate(markers) if marker and marker in data]
+        found += [f'shape {index}' for index, shape in enumerate(shapes) if shape.search(data)]
+        assert not found, f'{item.relative_to(extension)} contains configuration or credential text (marker {found})'
+print(f'Extension resources scanned: no configuration, credentials or {len(secrets)} configured values')
 print('Embedded WidgetKit extension ID, extension point, matching versions and extension-only widget intents verified')
 PY
   echo "Unsigned Release archive OK (not uploadable): $ARCHIVE"

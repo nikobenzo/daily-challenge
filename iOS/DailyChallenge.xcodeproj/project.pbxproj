@@ -22,6 +22,7 @@
 		5C8D1E04177C60491C720B0F /* WaterJugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D9C5E2DCB79B7F2DE87BE6B /* WaterJugView.swift */; };
 		5FC85B1D9751F186B04424BC /* PhoneSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5260AF24808A4F9D4B2BD3F7 /* PhoneSyncTests.swift */; };
 		611BABA801E627BE8987774A /* WidgetRenderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC8DF06C97A21230C9BED01 /* WidgetRenderTests.swift */; };
+		62987B738EA8E3C318F150CB /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62D3FBAE0645D9A0B21E47D9 /* SharedComponents.swift */; };
 		62BD84EAB2B1390748708AEE /* ChallengeSyncKit in Frameworks */ = {isa = PBXBuildFile; productRef = 5313A37E6B8A90076F23F638 /* ChallengeSyncKit */; };
 		66135E50905E864CA0802DA1 /* WidgetActionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F5596FA2E7CBBAAE65BEE3F /* WidgetActionTests.swift */; };
 		712FB1DA40F26A225F6B7C4B /* PhoneApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF0746F58D619CE08A655CE1 /* PhoneApp.swift */; };
@@ -38,6 +39,8 @@
 		B9846E5B2D15F13CEA0B16A8 /* WidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0466DACCDCF6749B1610F568 /* WidgetViews.swift */; };
 		BBDD3F15B6B638223CC8418E /* HistoryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2ADC44F1D8FEAD95697FB1BC /* HistoryScreen.swift */; };
 		C2CE1B250D17539BEAE2B49A /* WidgetTimelineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA6BA706226779D4FF164F3 /* WidgetTimelineTests.swift */; };
+		C7B157EA60573C9319ED0E14 /* JugDrawing.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0A95B1601E3F2C45AC45420 /* JugDrawing.swift */; };
+		D0745E75260518924130896F /* JugDrawing.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0A95B1601E3F2C45AC45420 /* JugDrawing.swift */; };
 		D37F5D217DA619BF906540AD /* ChallengeCore in Frameworks */ = {isa = PBXBuildFile; productRef = 957BE63CB6A9EB0CF0698729 /* ChallengeCore */; };
 		D63365EFFE0A3FAE99FE3AC6 /* PhoneSharedStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3789CD5BBCA369DA87A3BBD3 /* PhoneSharedStoreTests.swift */; };
 		E535F74B303E67499A7CF58E /* WidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0466DACCDCF6749B1610F568 /* WidgetViews.swift */; };
@@ -130,6 +133,7 @@
 		D21C3753FE4E3D2CC52A5F5D /* PhoneComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneComponents.swift; sourceTree = "<group>"; };
 		D3888D73E71C2F5D574A1540 /* WidgetPlacementUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetPlacementUITests.swift; sourceTree = "<group>"; };
 		D769357A25FF9D76119BD2B2 /* AccountScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountScreen.swift; sourceTree = "<group>"; };
+		E0A95B1601E3F2C45AC45420 /* JugDrawing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JugDrawing.swift; sourceTree = "<group>"; };
 		E9DF86F06D26F5D13406D62C /* TrackerEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackerEnvironment.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -258,6 +262,7 @@
 			isa = PBXGroup;
 			children = (
 				07750909352F2CCF3386CA44 /* CompletionEffect.swift */,
+				E0A95B1601E3F2C45AC45420 /* JugDrawing.swift */,
 				62D3FBAE0645D9A0B21E47D9 /* SharedComponents.swift */,
 				52CECB8A3AA40F95A0D695BE /* Theme.swift */,
 				E9DF86F06D26F5D13406D62C /* TrackerEnvironment.swift */,
@@ -512,7 +517,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				F438959BC676798B693C8A62 /* ChallengeWidgets.swift in Sources */,
+				C7B157EA60573C9319ED0E14 /* JugDrawing.swift in Sources */,
 				E90BD427FD54FE10121E6985 /* PhoneSharedStore.swift in Sources */,
+				62987B738EA8E3C318F150CB /* SharedComponents.swift in Sources */,
 				7803A2B6B83C56CB86DE75FB /* Theme.swift in Sources */,
 				ACCE9864D897195309CEF459 /* WidgetActions.swift in Sources */,
 				F3B9E02E8EC0063B671F2450 /* WidgetIntents.swift in Sources */,
@@ -530,6 +537,7 @@
 				3A39D28CBF7C193D408456E2 /* CompletionEffect.swift in Sources */,
 				276AEE6B3AD81C56666A02A9 /* DailyChallengeApp.swift in Sources */,
 				BBDD3F15B6B638223CC8418E /* HistoryScreen.swift in Sources */,
+				D0745E75260518924130896F /* JugDrawing.swift in Sources */,
 				712FB1DA40F26A225F6B7C4B /* PhoneApp.swift in Sources */,
 				7ADFCC2415399E635B2E3895 /* PhoneComponents.swift in Sources */,
 				8B92619D945BFFD3FB3958F6 /* PhoneExtrasViews.swift in Sources */,

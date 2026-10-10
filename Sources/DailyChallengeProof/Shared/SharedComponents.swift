@@ -236,6 +236,9 @@ struct RingGauge: View {
     let label: String
     let state: State
     var showsPercent = false
+    /// Widgets pass a text-style font: `Theme.Fonts` scales with the process's text size,
+    /// which a widget's Dynamic Type limit cannot cap.
+    var labelFont: Font = Theme.Fonts.ringLabel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @SwiftUI.State private var pop = false
 
@@ -266,7 +269,7 @@ struct RingGauge: View {
             .frame(width: Theme.Size.ring, height: Theme.Size.ring)
             .scaleEffect(pop ? 1.06 : 1)
             .animation(reduceMotion ? nil : Theme.Motion.ring, value: state)
-            Eyebrow(text: label, color: labelColor, font: Theme.Fonts.ringLabel, tracking: Theme.Tracking.ringLabel)
+            Eyebrow(text: label, color: labelColor, font: labelFont, tracking: Theme.Tracking.ringLabel)
                 .lineLimit(1).fixedSize()
         }
         .onChange(of: state) { old, new in
