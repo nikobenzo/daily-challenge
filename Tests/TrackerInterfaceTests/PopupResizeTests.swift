@@ -145,11 +145,12 @@ struct PopupResizeTests {
     /// The developer probe never runs without its variable, nor in the production bundle.
     @Test func popupProbeIsInertInNormalUse() {
         let probe = ["DAILY_CHALLENGE_POPUP_PROBE": "/tmp/probe", "DAILY_CHALLENGE_POPUP_PROBE_SCREEN": "history",
-                     "DAILY_CHALLENGE_POPUP_PROBE_APPEARANCE": "dark", "DAILY_CHALLENGE_POPUP_PROBE_STEPS": "account,Today"]
+                     "DAILY_CHALLENGE_POPUP_PROBE_APPEARANCE": "dark", "DAILY_CHALLENGE_POPUP_PROBE_STEPS": "account,Today,extras,nonsense"]
         #expect(PopupProbe(environment: [:], bundleID: "app.daily-challenge.popup-probe") == nil)
         #expect(PopupProbe(environment: probe, bundleID: PopupProbe.productionBundleID) == nil)
         let isolated = PopupProbe(environment: probe, bundleID: "app.daily-challenge.popup-probe")
-        #expect(isolated?.screen == .history && isolated?.appearance == .dark && isolated?.steps == [.account, .today])
+        #expect(isolated?.screen == .history && isolated?.appearance == .dark
+                && isolated?.steps == [.section(.account), .section(.today), .extras])
     }
 
     /// The sheet is 420 pt wide at the panel's top edge, the footer 12 pt under it, and

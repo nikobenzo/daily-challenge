@@ -8,7 +8,8 @@
 # account, the Keychain or ~/Library/Application Support/DailyChallenge*.
 # When this terminal may record the screen, each PNG is the WindowServer's image of the
 # popup window alone (it draws Liquid Glass), and each section switch is also recorded as
-# a video of the header switcher; with ffmpeg, its changing frames become a frame sheet.
+# a video of the header switcher (and Today's Extras row while its add field drops down);
+# with ffmpeg, the changing frames become a frame sheet.
 #   --docs   also copy the PNGs, their geometry reports, the resize traces, the switch
 #            videos and frame sheets into docs/screenshots/real-popup/
 set -euo pipefail
@@ -65,13 +66,20 @@ run() { # screen appearance [steps]
 for appearance in light dark; do
   for screen in setup today today-extras history account sign-in; do run "$screen" "$appearance"; done
   run today "$appearance" history,account,today
+  # Today with no extras: the slim Extras row, then its add field dropped down.
+  run today "$appearance" extras
 done
 sw_vers > "$OUT/macos.txt"
 if command -v ffmpeg >/dev/null; then
   for video in "$OUT"/*.mov; do
     [[ -e "$video" ]] || continue
     # Every frame that differs from the one before, top to bottom: before, the move, after.
-    ffmpeg -loglevel error -y -i "$video" -vf 'mpdecimate,tile=1x24:padding=2:color=0xFF00FF' \
+    # The Extras drop-down band is the sheet's full width, so its frames tile in a grid.
+    case "$video" in
+      *-extras-expanded.mov) tile=3x8 ;;
+      *) tile=1x24 ;;
+    esac
+    ffmpeg -loglevel error -y -i "$video" -vf "mpdecimate,tile=$tile:padding=2:color=0xFF00FF" \
       -frames:v 1 "${video%.mov}-frames.png"
   done
 fi
@@ -82,7 +90,8 @@ if (( DOCS )); then
     for screen in setup today today-extras history account sign-in; do
       cp "$OUT/$screen-$appearance.png" "$OUT/$screen-$appearance.json" "$DEST/"
     done
-    for step in "$OUT"/today-"$appearance"-*-to-*.json; do
+    for step in "$OUT"/today-"$appearance"-*-to-*.json "$OUT"/today-"$appearance"-extras-expanded.json; do
+      [[ -e "$step" ]] || continue
       cp "${step%.json}".* "$DEST/" 2>/dev/null || true
       cp "${step%.json}"-frames.png "$DEST/" 2>/dev/null || true
     done

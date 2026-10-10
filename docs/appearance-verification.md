@@ -31,7 +31,7 @@ the copy once per screen and appearance through a developer-only launch path (`P
 | `DAILY_CHALLENGE_POPUP_PROBE` | Directory for fixture data and output. Required: unset, the app behaves normally; the production bundle (`app.daily-challenge.proof`) ignores it. |
 | `DAILY_CHALLENGE_POPUP_PROBE_SCREEN` | `sign-in`, `setup`, `today` (default), `today-extras` (Today with three extras, one ticked), `history` or `account` |
 | `DAILY_CHALLENGE_POPUP_PROBE_APPEARANCE` | `light` (default) or `dark` |
-| `DAILY_CHALLENGE_POPUP_PROBE_STEPS` | Sections to switch to after the first capture, such as `history,account,today` |
+| `DAILY_CHALLENGE_POPUP_PROBE_STEPS` | Steps after the first capture: sections to switch to, such as `history,account,today`, or `extras` to click Today's empty Extras row so its add field drops down (`today-<appearance>-extras-expanded.*`) |
 
 In probe mode the app runs on the committed renders' offline fixtures (8 October 2026 at noon, Day 1,
 900 ml) inside that directory: no Supabase client, Keychain, Sparkle, reminders or production data
@@ -47,8 +47,9 @@ When the terminal that runs the script may record the screen (Privacy & Security
 Recording), a capture is `screencapture -l`: the WindowServer's composite of the popup window alone,
 without the desktop, which draws the switcher's Liquid Glass (`"capture": "window-server"`). Each
 step then also records a two-second `.mov` of only the header switcher (4 pt around its track, on
-the glass) while the selection moves, and with ffmpeg installed the script stacks its changing
-frames, top to bottom, into `<…>-frames.png`. Without that permission the probe falls back to the
+the glass) while the selection moves, or of the sheet's band below the rings while the Extras row's
+add field drops down, and with ffmpeg installed the script stacks its changing frames, top to
+bottom (a 3 × 8 grid for the Extras band), into `<…>-frames.png`. Without that permission the probe falls back to the
 window's own drawing (`cacheDisplay`, `"capture": "cacheDisplay"`), which cannot draw Liquid Glass
 and drops everything the glass samples, so the header is blank there; it also draws the
 behind-window blur as its flat fallback and Core Animation shadows upside down. Window position,
@@ -110,7 +111,7 @@ Mutation check: removing only `TrackerPopup`'s `.trackerSurface()` caused `swift
 
 ### Render artifacts (not compositor screenshots)
 
-[Fixture directory](screenshots/appearance-fixtures/) contains Light/Dark captures for setup, Today at 900 ml, overflowing jug, History locked/editing, Account, sign-in and custom-pour enabled/disabled. These are never-shown native windows, so native controls appear inactive (notably prominent buttons). They prove adaptive backing/layout, not active-popup compositing or interaction. History remains scrollable; its first viewport is captured.
+[Fixture directory](screenshots/appearance-fixtures/) contains Light/Dark captures for setup, Today at 900 ml (its empty Extras row collapsed, and dropped down in `today-add-extras-*`), overflowing jug, History locked/editing, Account, sign-in and custom-pour enabled/disabled. These are never-shown native windows, so native controls appear inactive (notably prominent buttons). They prove adaptive backing/layout, not active-popup compositing or interaction. History remains scrollable; its first viewport is captured.
 
 These captures predate the oversized-host regression. For current renders without live data or Keychain, use the [edge-fill render command](popup-edges.md#supporting-in-process-renders-not-screen-captures); it exercises the current sizing policy rather than reproducing these historical dimensions.
 
