@@ -280,9 +280,13 @@ private let afternoon = instant("2026-10-09T14:00:00Z")
 
 @Test @MainActor func widgetAndAppEditsInterleaveThroughFreshTransactions() throws {
     let h = Harness(); defer { h.cleanup() }
+    // Each edit gets its own instant: same-instant events from different devices sort by
+    // their random device IDs, which would make the expected order a coin toss.
     h.tracker.toggle(.workout)
+    h.clock.value += 1
     _ = try h.recorder().perform(h.request(.toggleHabit(.workout))) // reads the app's tick, unticks
     #expect(h.tracker.summary?.completedHabits.contains(.workout) == true) // app view is stale
+    h.clock.value += 1
     h.tracker.toggle(.workout) // and its toggle reads the widget's untick
     #expect(h.tracker.summary?.completedHabits.contains(.workout) == true)
     let request = try h.request(.pour), recorder = h.recorder(), app = h.app, owner = h.owner

@@ -41,8 +41,10 @@ fixtures.
 ## Extras and widgets
 
 The [phased iPhone widgets plan](../plans/ios-widgets.md) defines extras UI, coordinated App
-Group storage, three widgets and owner signing/TestFlight acceptance. Phase 1 phone extras,
-Phase 2 coordinated storage, Phase 3 widgets and Phase 4 widget App Intents are built; Phase 5 remains planned. Each phase has its own review gate.
+Group storage, three widgets and owner signing/TestFlight acceptance. All five worker phases are
+built: phone extras, coordinated storage, widgets, widget App Intents and Phase 5 polish,
+accessibility and the Lock Screen water ring. Owner signing and real-phone acceptance (the
+[release checklist](#widget-release-owner-steps-and-real-phone-acceptance) below) close the release.
 
 Phase 1 fixture acceptance (10 October 2026) uses Xcode 27.0 (27A266a), iPhone 17 / iOS 27.0.
 Commands A–D in the plan passed: XcodeGen regeneration, `swift test` (183 shared tests),
@@ -108,8 +110,9 @@ Completing, undoing, late entries and conflicts follow the same rules as the Mac
   with confirmation, up to 10 active, one-line titles of 1–40 characters. History uses that
   day’s extras (including ones archived later) and requires Edit this day for ticks. Extras
   never affect complete days or streaks. Activity explicitly labels names, archives and ticks.
-- **Not in v1:** backups,
-  change password, account deletion, widgets.
+- **Widgets:** Water (small, medium and the read-only Lock Screen ring), Daily requirements
+  (medium) and Extras (medium, large); see the widget sections below.
+- **Not in v1:** backups, change password, account deletion.
 
 ## One-time owner steps
 
@@ -130,7 +133,8 @@ step; the remaining items below describe the existing distribution workflow.
    before signed-device acceptance. See [Apple’s configuration guide](https://developer.apple.com/documentation/xcode/configuring-app-groups)
    and [manual registration fallback](https://developer.apple.com/help/account/identifiers/register-an-app-group).
    Automatic signing can manage provisioning; an unsigned archive or an upload alone does
-   not prove the group is registered and authorized. Phase 3 will add the extension association.
+   not prove the group is registered and authorized. The widget extension's App ID needs the
+   same group (see [Read-only widgets](#read-only-widgets-phase-3) and the release checklist).
 3. **App Store Connect record.** appstoreconnect.apple.com › Apps › + › New App: platform iOS,
    name "Daily Challenge" (App Store names are unique across Apple; if it is taken, choose
    another, such as "Daily Challenge 75": testers see it in TestFlight), primary language
@@ -244,7 +248,9 @@ changes request fresh timelines. Remote activity requires app execution.
 Debug-only `-widget-fixture <variant>` launches use synthetic data in a separate `WidgetFixtures`
 group folder and explicitly publish a fixture switch for the independently running extension.
 Variants: `empty`, `partial`, `full`, `overflow`, `pending`, `complete`, `missed`, `extras-empty`,
-`extras-ten`, `long-names`, and `reopen` (relaunch on the existing fixture history without reseeding). Use these only on a disposable simulator. Release contains neither
+`extras-ten`, `long-names` (ten 40-character titles), the account states `signed-out`, `setup`
+and `unavailable` (unreadable account metadata), and `reopen` (relaunch on the existing fixture
+history without reseeding). Use these only on a disposable simulator. Release contains neither
 fixture selection nor seeding. See [Phase 3 evidence](ios-widgets-phase3-evidence.md) for the
 reproducible SpringBoard capture procedure and capture provenance.
 
@@ -269,3 +275,81 @@ confirm another client receives them; confirm no-pour minus does nothing; mark t
 the app and confirm the widget leaves it; sign out and confirm old widget taps change nothing.
 `WIDGET_CAPTURE_MODE=actions` in `iOS/scripts/capture-widgets.sh` reproduces the offline
 simulator test; see [Phase 4 evidence](ios-widgets-phase4-evidence.md).
+
+## Widget polish, accessibility and the Lock Screen ring (Phase 5)
+
+The widgets draw the app's design system: the Today jug (`JugDrawing`, the same drawing as
+`WaterJugView`, still), the ring gauges with the drop/dumbbell/walker/leaf/book icons, and the
+extras checkbox rows, in the `Theme` tokens on the opaque `solidGlass` fill. Every state has a
+glyph as well as a colour (check, dash, dashed ring with ×). Tinted and Clear Home Screens use
+WidgetKit's accented rendering: the jug, done rings and ticks are accentable and the pour pill
+becomes a translucent fill under full-opacity text. App appearance settings do not apply to
+Home Screen widgets; they follow the system appearance and Home Screen style.
+
+- **VoiceOver:** water reads the actual ml and the goal ("Water, 2,250 of 4,000 millilitres",
+  uncapped above 4 L); + reads "Add 450 ml", − reads "Undo latest pour" (or "no pour today"
+  when disabled); each ring reads its requirement and state; extras read their full title and
+  state even when the row is truncated.
+- **Large text:** text styles follow the widget's Dynamic Type size. Water stops growing at the
+  largest standard size; the date label and badges yield space first; extras show five rows
+  (large) or one (medium) at accessibility sizes and keep **Open all N extras**.
+- **Lock Screen (D-W2):** the Water widget also offers `accessoryCircular`: a read-only ring with
+  litres to one decimal (rounded down, so 3,990 ml never reads 4.0) and a drop. It has no
+  controls and is privacy-sensitive, so iOS redacts it while the phone is locked. Extras and
+  requirements are Home Screen only.
+- **Manage extras** fields now use the design's field fill (the system rounded border drew a
+  black box in Dark).
+
+The simulator cannot lock behind a passcode, so the redacted Lock Screen rendering is an
+in-process render and real locked-phone privacy is owner acceptance. See
+[Phase 5 evidence](ios-widgets-phase5-evidence.md) for commands and capture provenance.
+
+## Widget release: owner steps and real-phone acceptance
+
+The worker never signs, uploads or touches the real account. Use a **disposable account** for
+these checks, not the captain's.
+
+**Before the upload**
+
+1. App Group: `group.app.daily-challenge.ios` is registered on team `L644Y3WX5T` and enabled on
+   **both** App IDs, `app.daily-challenge.ios` and `app.daily-challenge.ios.widgets` (Xcode
+   automatic signing, or the portal fallback linked in owner step 2).
+2. Archive, then review the signed entitlements of the app and the embedded
+   `DailyChallengeWidgets.appex` (`codesign -d --entitlements - <bundle>`): both carry the same
+   group; neither carries a Keychain access group.
+3. `bash scripts/ios-archive.sh --check` passes: embedded extension, bundle ID, WidgetKit
+   extension point, matching app/extension versions, the five non-discoverable intents in the
+   extension only, no server configuration or credentials in the extension, no Sparkle.
+4. Raise `CFBundleVersion` in `VERSION` (TestFlight 0.3.0 (3) is already out). The app and the
+   extension both take their versions from `VERSION`, so they always match.
+5. Upload with `bash scripts/ios-archive.sh` and write the TestFlight **What to Test**: widgets
+   (three Home Screen widgets, Lock Screen water ring), offline logging from widgets, and the
+   list below.
+
+**After installing over 0.3.0 (3)**
+
+1. The previous phone challenge, history and any queued offline entries survive. The first
+   launch copies them into the App Group; the old private copy stays as recovery. A
+   **History unavailable** screen means two differing copies exist: keep both and report it,
+   do not set up again.
+2. Add all three widgets (Water small and medium, Daily requirements, Extras medium and large)
+   and the Lock Screen water ring.
+3. With the app closed and offline: + twice and − once, tick a requirement and an extra. Relaunch
+   and confirm Today and History; reconnect and confirm another client (the Mac) receives them.
+4. Undo the latest pour from the widget; with no pour today, − is dimmed and does nothing.
+5. Tick and untick habits and extras. Diet: the widget toggles pending ↔ clean; mark the day
+   missed in the app and confirm the widget's diet ring opens the app instead of changing it.
+6. Archive an extra in the app; the widget drops it after the refresh.
+7. Leave the widgets past midnight in the challenge timezone (or set the challenge zone away from
+   the phone's): the new day starts at zero with pending rings and the date label changes.
+   WidgetKit can delay a refresh; it is not promised at the exact minute.
+8. Sign out, or switch account: widgets show "Open Daily Challenge to sign in" after their
+   reload, and a tap on an old widget image changes nothing.
+9. VoiceOver reads the spoken values above; Larger Text, Bold Text, Increase Contrast and
+   Reduce Transparency stay legible; check Tinted and Clear Home Screens.
+10. Lock the phone with a passcode: the Lock Screen ring is redacted until unlocked.
+11. Reminders: reach 4,000 ml from the widget with reminders on. Already-queued reminders can
+    still arrive until the app next runs (a known limitation); opening the app cancels the rest.
+
+Simulator success is not real-phone acceptance: unsigned archives cannot prove App Group
+authorization, locked-phone redaction or WidgetKit refresh cadence.

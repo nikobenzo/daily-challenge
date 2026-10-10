@@ -4,6 +4,8 @@ A personal native macOS menu-bar challenge tracker, with an iPhone companion app
 
 **iPhone app:** `iOS/DailyChallenge.xcodeproj` (generated from `iOS/project.yml`, committed) builds a SwiftUI iPhone app sharing `ChallengeCore` and `ChallengeSyncKit` with the Mac: the same account, sync, conflict rules and reminders planner, with Today, History, Account, setup and the sign-in flow. It reaches family through TestFlight internal testing. Build, test, screenshot and TestFlight owner steps: [iPhone app](docs/ios-testflight.md); screenshots in `docs/screenshots/ios/`.
 
+**iPhone extras and widgets.** Extras are optional daily to-dos that never count toward the five or the streak: on Today, tap **Extras · Add your own to-dos** (or Account → Extras) to open Manage extras, add up to 10 one-line titles, rename or archive them, and tick them on Today. To add a widget, touch and hold the Home Screen, tap **Edit → Add Widget**, search **Daily Challenge** and pick **Water** (small or medium: + 450 ml and − to undo today's latest pour), **Daily requirements** (workout, walk, diet and Bible rings; the diet toggles pending ↔ clean) or **Extras** (medium or large, tap a row to tick it). For the Lock Screen, customise it and add the read-only Water ring, which iOS hides while the phone is locked. Widget taps work with the app closed and offline; they are saved on the phone and upload the next time the app runs.
+
 ## Current state: functional tracker with production sync
 
 The menu-bar popup now has start-date and timezone setup, a drawn 4 L jug with +450 ml/undo/custom pours, all four habit marks, current/best streaks, valid milestones, and a calendar with explicit historical corrections and an activity audit. It uses the tested **[local foundation](docs/local-foundation.md)**.
@@ -114,7 +116,7 @@ Local proof data lives under `~/Library/Application Support/DailyChallengeProof/
 - `Sources/ProbeCore/`: durable account-scoped test journal; no SDK or UI dependency.
 - `Sources/ChallengeSyncKit/`: platform-neutral library shared by the Mac and iPhone apps: Supabase transport, the sync coordinator and its status (`TrackerModel`), email/password/code authentication (`AuthModel`), water-reminder scheduling, challenge-zone dates and the finite motion clocks. Depends only on `ChallengeCore` and `supabase-swift`; no AppKit, UIKit, Sparkle or popup code.
 - `Sources/DailyChallengeProof/`: the Mac menu-bar app: popup, views, Sparkle updates, login item, the Mac's reminder lifecycle and the separate proof-sync diagnostics, consuming the kit. Its `Shared/` folder (design tokens, ring gauge, jug, completion effect, buttons and badges) also compiles into the iPhone app, so it must stay free of AppKit and UIKit.
-- `iOS/`: the iPhone app (`project.yml`, the generated Xcode project, `DailyChallenge/` sources, unit and UI tests, and the configuration build phase); `scripts/ios-archive.sh` archives and uploads it for TestFlight.
+- `iOS/`: the iPhone app (`project.yml`, the generated Xcode project, `DailyChallenge/` sources, the `DailyChallengeWidgets/` WidgetKit extension and its App Intents, `Shared/` storage and widget actions, unit and UI tests, and the configuration build phase); `scripts/ios-archive.sh` archives and uploads it for TestFlight.
 - `supabase/migrations/`: versioned database changes.
 - `Tests/ChallengeCoreTests/`, `Tests/ChallengeSyncKitTests/`, `Tests/TrackerInterfaceTests/`, `Tests/ProbeCoreTests/`, `Tests/ProofAuthTests/`, and `supabase/tests/`: automated local checks.
 
