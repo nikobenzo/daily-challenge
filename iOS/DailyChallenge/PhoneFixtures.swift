@@ -9,7 +9,7 @@ import Foundation
 @MainActor enum PhoneFixtures {
     enum Screen: String {
         case signIn, createAccount, forgotPassword, confirmCode, resetPassword
-        case checking, setup, today, todayComplete, history, account
+        case checking, setup, today, todayComplete, history, account, sharedToday, storageRecovery
         case todayExtras, extrasCap, historyExtras, historyExtrasEditing, accountExtras
     }
 
@@ -59,6 +59,23 @@ import Foundation
         let owner = UUID(uuidString: "6F1C2A43-0B55-4B5E-9F3D-2C1A7E9B4D10")!
         let directory = directory ?? FileManager.default.temporaryDirectory
             .appendingPathComponent("daily-challenge-fixture-\(UUID().uuidString)", isDirectory: true)
+        if screen == .sharedToday || screen == .storageRecovery {
+            let oldRoot = directory.appendingPathComponent("old-phone")
+            let groupRoot = directory.appendingPathComponent("fixture-group")
+            let before = make(.today, defaults: defaults, directory: oldRoot)
+            if screen == .storageRecovery {
+                // Two valid, conflicting histories: the recovery UI must never
+                // hide this behind empty setup or silently choose a winner.
+                var conflicting = try! ChallengeStore(ownerID: owner, directory: groupRoot)
+                try! conflicting.start(on: day(-11), timeZone: zone)
+                try! conflicting.record(.pour(900), on: now, at: now)
+            }
+            let tracker = TrackerModel(directory: groupRoot, clock: { now },
+                                       access: PhoneSharedStore(root: groupRoot, legacy: oldRoot))
+            tracker.activate(ownerID: owner)
+            return PhoneApp(auth: before.auth, tracker: tracker, reminders: before.reminders,
+                            defaults: defaults, schedulesRefresh: false)
+        }
         let auth: AuthModel
         switch screen {
         case .signIn: auth = AuthModel(fixtureOwnerID: nil, now: { now })

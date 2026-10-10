@@ -58,8 +58,12 @@ final class PhoneApp {
             "This build has no server configuration. Build it with .env.local at the repository root (docs/ios-testflight.md).")
         let reminders = WaterReminderController(defaults: .standard, center: NativeWaterNotificationCenter(),
                                                 wording: .iPhone, policy: .queued)
-        let app = PhoneApp(auth: auth, tracker: TrackerModel(), reminders: reminders,
+        let app = PhoneApp(auth: auth, tracker: TrackerModel(access: PhoneSharedStore.production()), reminders: reminders,
                            defaults: .standard, schedulesRefresh: true)
+        auth.onSessionChange { [weak app] owner in
+            app?.tracker.activate(ownerID: owner)
+            app?.tab = .today
+        }
         auth.attachTracker(app.tracker)
         auth.start()
         return app
@@ -67,6 +71,7 @@ final class PhoneApp {
 
     /// Foreground: catch up on the day, reminders and the server, as the Mac does when its popup opens.
     func becameActive() {
+        tracker.reload()
         tracker.refresh()
         tracker.requestSync()
     }
@@ -83,6 +88,7 @@ final class PhoneApp {
     /// One background refresh: sync once, re-plan reminders, ask for the next refresh.
     func backgroundRefresh() async {
         enteredBackground()
+        tracker.reload()
         tracker.refresh()
         await tracker.sync(force: true)
         tracker.refreshReminders()
