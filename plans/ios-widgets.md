@@ -104,6 +104,8 @@ Edit `iOS/project.yml` to embed an `app-extension` target, restrict it to extens
 
 ## Phase 4 — App Intents and durable sync hand-off (12–18 hours)
 
+**Build evidence (10 October 2026):** Phase 4 built in commit `9de46fae14ed3d99e9149bbb33cd01695dda6c87`; A, B, C, E and F passed (185 shared tests, 37 phone unit and 13 UI tests), including an offline placed-Home-Screen tap test with the app terminated in Light/Dark; [commands, coverage and capture provenance](../docs/ios-widgets-phase4-evidence.md); real signed-device and authenticated-sync acceptance remain owner steps.
+
 **Goal:** log today's events safely from the widgets while the app is suspended or terminated.
 
 **In:** plus/minus, habit/extra toggles, selected diet rule, transactional validation, timeline reload and foreground/app-refresh sync hand-off. **Out:** direct extension upload, shared auth tokens, custom water input, historical corrections, management intents and background guarantees.

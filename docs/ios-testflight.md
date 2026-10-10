@@ -42,7 +42,7 @@ fixtures.
 
 The [phased iPhone widgets plan](../plans/ios-widgets.md) defines extras UI, coordinated App
 Group storage, three widgets and owner signing/TestFlight acceptance. Phase 1 phone extras,
-Phase 2 coordinated storage and Phase 3 read-only widgets are built; Phases 4–5 remain planned. Each phase has its own review gate.
+Phase 2 coordinated storage, Phase 3 widgets and Phase 4 widget App Intents are built; Phase 5 remains planned. Each phase has its own review gate.
 
 Phase 1 fixture acceptance (10 October 2026) uses Xcode 27.0 (27A266a), iPhone 17 / iOS 27.0.
 Commands A–D in the plan passed: XcodeGen regeneration, `swift test` (183 shared tests),
@@ -244,6 +244,28 @@ changes request fresh timelines. Remote activity requires app execution.
 Debug-only `-widget-fixture <variant>` launches use synthetic data in a separate `WidgetFixtures`
 group folder and explicitly publish a fixture switch for the independently running extension.
 Variants: `empty`, `partial`, `full`, `overflow`, `pending`, `complete`, `missed`, `extras-empty`,
-`extras-ten`, `long-names`. Use these only on a disposable simulator. Release contains neither
+`extras-ten`, `long-names`, and `reopen` (relaunch on the existing fixture history without reseeding). Use these only on a disposable simulator. Release contains neither
 fixture selection nor seeding. See [Phase 3 evidence](ios-widgets-phase3-evidence.md) for the
 reproducible SpringBoard capture procedure and capture provenance.
+
+## Interactive widgets (Phase 4)
+
+Widget taps run five App Intents in the extension (`PourWaterIntent`, `UndoWaterIntent`,
+`ToggleHabitIntent`, `SetDietIntent`, `ToggleExtraIntent`); the app process is not needed and
+the extension still has no network, credentials or server configuration. `--check` now also
+verifies that exactly these intents ship, non-discoverable, in the extension and none in the app.
+**No new owner signing or portal steps** beyond Phase 3.
+
+A tap is saved on the phone, not uploaded: it joins the normal pending queue and the app uploads
+it on the next foreground or iOS-selected refresh. Minus undoes today's latest pour (disabled,
+and a no-op, without one); the diet goes pending ↔ clean and a missed day opens the app. Taps
+after sign-out, account switch or an app relaunch that has not yet refreshed the widget are
+refused calmly. **Limitation:** a widget reaching 4,000 ml cannot cancel water reminders already
+queued; they stay until the app next runs.
+
+Real-phone checks with a disposable account: with the app closed and offline, tap + twice and −
+once, tick a requirement and an extra, then relaunch and confirm Today/History; reconnect and
+confirm another client receives them; confirm no-pour minus does nothing; mark the diet missed in
+the app and confirm the widget leaves it; sign out and confirm old widget taps change nothing.
+`WIDGET_CAPTURE_MODE=actions` in `iOS/scripts/capture-widgets.sh` reproduces the offline
+simulator test; see [Phase 4 evidence](ios-widgets-phase4-evidence.md).
