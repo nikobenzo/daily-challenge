@@ -72,6 +72,13 @@ private func instant(_ text: String) -> Date { ISO8601DateFormatter().date(from:
         try current.record(.defineExtra(id: UUID(), title: "Private title"), on: now, at: now)
     }
     #expect(provider.entries(now: now)[0].summary?.extrasTotal == 1)
+    let snapshot = root.appendingPathComponent("challenge-\(owner.uuidString.lowercased()).json")
+    let bytes = try Data(contentsOf: snapshot)
+    try Data("corrupt snapshot".utf8).write(to: snapshot)
+    #expect(provider.entries(now: now)[0].state == .unavailable)
+    #expect(provider.entries(now: now)[0].summary == nil)
+    #expect(try Data(contentsOf: snapshot) == Data("corrupt snapshot".utf8))
+    try bytes.write(to: snapshot)
     _ = try store.activate(ownerID: UUID())
     #expect(provider.entries(now: now)[0].summary == nil)
     _ = try store.activate(ownerID: nil)
