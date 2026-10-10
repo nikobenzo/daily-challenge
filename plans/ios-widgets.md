@@ -40,6 +40,8 @@ No Mac UI, build, paths, Keychain identifiers or store format changes. Shared li
 
 ## Phase 1 — Extras on iPhone (6–9 hours)
 
+**Build evidence (10 October 2026):** Phase 1 built in commit `d3b6c4ac8f3680ffe2fb03f6eba9e6e0b3688727`; A–D passed (183 shared tests, 9 phone unit tests, 12 UI tests); Light/Dark iPhone 17 / iOS 27.0 simulator captures, including accessibility text size, are committed under `docs/screenshots/ios/`; owner real-sync acceptance still requires confirmation of the existing extras action-kind migration.
+
 **Goal:** make extras usable and correctable on the phone without storage or transport changes.
 
 **In:** Today checklist/count and slim empty entry point; one native Manage extras sheet from Today and Account; add, rename, archive with confirmation, inline cap explanation and validation; History checklist requiring Edit this day; meaningful activity labels for all three extra actions. **Out:** widgets, App Group, rearranging extras, new model semantics or a phone-specific celebration subsystem.
