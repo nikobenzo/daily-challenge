@@ -69,6 +69,12 @@ final class WidgetPlacementUITests: XCTestCase {
         XCTAssertTrue(search.waitForExistence(timeout: 5))
         search.tap(); search.typeText("Daily Challenge")
         let result = board.cells["Daily Challenge"]
+        // A freshly installed extension can take a few seconds to reach the gallery.
+        for _ in 0..<3 where !result.waitForExistence(timeout: 5) {
+            board.buttons["Clear text"].tap()
+            sleep(5)
+            search.typeText("Daily Challenge")
+        }
         XCTAssertTrue(result.waitForExistence(timeout: 5))
         result.tap()
         for (index, name) in ["water-small", "water-medium", "requirements-medium", "extras-medium", "extras-large"].enumerated() {
@@ -103,35 +109,7 @@ final class WidgetPlacementUITests: XCTestCase {
         for (page, name, title, family) in [(3, "extras-medium", "Extras", "Medium"),
                                             (2, "requirements-medium", "Daily requirements", "Medium"),
                                             (1, "water-medium", "Water", "Medium")] {
-            let result = board.cells["Daily Challenge"], search = board.searchFields.firstMatch
-            // One bounded retry: just after boot the first Add Widget tap can be dropped.
-            for _ in 0..<2 where !search.exists && !result.exists {
-                let edit = board.buttons["Edit"]
-                XCTAssertTrue(edit.waitForExistence(timeout: 5), board.debugDescription)
-                edit.tap()
-                let add = board.buttons["Add Widget"]
-                XCTAssertTrue(add.waitForExistence(timeout: 5), board.debugDescription)
-                add.tap()
-                _ = search.waitForExistence(timeout: 5)
-            }
-            if !result.waitForExistence(timeout: 2) {
-                XCTAssertTrue(search.waitForExistence(timeout: 5), board.debugDescription)
-                search.tap(); search.typeText("Daily Challenge")
-            }
-            XCTAssertTrue(result.waitForExistence(timeout: 5), board.debugDescription)
-            result.tap()
-            for _ in 0..<page {
-                board.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.6))
-                    .press(forDuration: 0.1, thenDragTo: board.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.6)))
-            }
-            let preview = board.buttons["Daily Challenge, " + title]
-            XCTAssertTrue(preview.waitForExistence(timeout: 5), board.debugDescription)
-            XCTAssertTrue((preview.value as? String)?.contains(family) == true, board.debugDescription)
-            capture(board, "gallery-" + name)
-            let addWidget = board.buttons.matching(NSPredicate(format: "label ENDSWITH %@", "Add Widget")).firstMatch
-            XCTAssertTrue(addWidget.waitForExistence(timeout: 5), board.debugDescription)
-            addWidget.tap()
-            sleep(2)
+            addWidget(board, page: page, name: name, title: title, family: family)
         }
         let done = board.buttons["Done"]
         if done.waitForExistence(timeout: 5) { done.tap() }

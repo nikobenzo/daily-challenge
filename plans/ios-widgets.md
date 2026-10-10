@@ -126,6 +126,8 @@ The extension records to the normal pending queue only. Next app foreground or a
 
 ## Phase 5 — Polish, accessibility and owner TestFlight acceptance (7–11 hours)
 
+**Build evidence (10 October 2026):** Phase 5 built in commit `b6a0c9cbdd6d43b9d99ba6f471cd849014ae18a3`; A–F passed (185 shared tests, 41 phone unit and 13 UI tests), with placed Home Screen and Lock Screen simulator captures in Light/Dark, large text, Increase Contrast and tinted/clear, plus the app-parity comparison; [commands, parity, accessibility and capture provenance](../docs/ios-widgets-phase5-evidence.md); owner signing, TestFlight upload and the real-phone checklist remain owner acceptance.
+
 **Goal:** make the three widgets legible and trustworthy on a real phone and prepare an owner-run release.
 
 **In:** visual polish, VoiceOver, text/contrast/transparency checks, system-tinted widget rendering, the read-only accessory-circular water variant decided in D-W2, documentation and acceptance evidence. **Out:** new widget categories, Lock Screen extras, public App Store launch, uploads by the worker or Mac changes.
