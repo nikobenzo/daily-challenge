@@ -1,4 +1,4 @@
 # App bundle version, read by scripts/build-proof.sh into Info.plist. KEY=value lines; '#' starts a comment.
 # CFBundleShortVersionString is the user-facing version; raise CFBundleVersion on every build you ship.
-CFBundleShortVersionString=0.2.0
-CFBundleVersion=2
+CFBundleShortVersionString=0.3.0
+CFBundleVersion=3

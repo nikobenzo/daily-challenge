@@ -80,7 +80,9 @@ by the worker; no App ID, App Store Connect record, key or upload exists yet.
    Full Access.
 4. **Upload credential**, one of:
    - **API key (recommended).** Users and Access › Integrations › App Store Connect API › Team
-     Keys › +: name "Daily Challenge uploads", access **App Manager**. Download
+     Keys › +: name "Daily Challenge uploads", access **Admin** (Apple issues the cloud-managed
+     distribution certificate only to Admin keys; an App Manager key fails the export with
+     "Cloud signing permission error"). Download
      `AuthKey_<KEYID>.p8` (it can be downloaded only once) to
      `~/.appstoreconnect/private_keys/` and `chmod 600` it. Never put it in this repository or
      in `.env.local`. Note the Key ID and the Issuer ID shown above the list.
