@@ -148,12 +148,20 @@ private let jersey = TimeZone(identifier: "Europe/Jersey")!
 }
 
 @Test @MainActor func iPhoneHistoryReadsActionKindsItDoesNotShow() throws {
-    // Extras are a Mac feature for now; their events still sync to the phone and must
-    // read as a generic change instead of breaking History.
-    let activity = Challenge.Activity(id: UUID(), day: now, recordedAt: now,
-                                      action: .setExtra(id: UUID(), completed: true), undonePourID: nil, deviceID: "Mac")
-    #expect(ActivityWords.short(activity) == "Changed")
-    #expect(ActivityWords.icon(activity).0 == "square.and.pencil")
+    let id = UUID()
+    let actions: [(Challenge.Action, String, String)] = [
+        (.defineExtra(id: id, title: "Stretch"), "Extra named “Stretch”", "checklist"),
+        (.archiveExtra(id: id), "Archived extra", "archivebox"),
+        (.setExtra(id: id, completed: true), "Extra done", "checkmark.circle"),
+        (.setExtra(id: id, completed: false), "Extra not done", "checkmark.circle")
+    ]
+    for (action, wording, symbol) in actions {
+        let activity = Challenge.Activity(id: UUID(), day: now, recordedAt: now,
+                                          action: action, undonePourID: nil, deviceID: "Mac")
+        #expect(ActivityWords.short(activity) == wording)
+        #expect(ActivityWords.long(activity) == wording)
+        #expect(ActivityWords.icon(activity).0 == symbol)
+    }
 }
 
 @Test @MainActor func phoneRemindersQueueAheadAndUseTheIPhonesWording() async {

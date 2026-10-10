@@ -18,6 +18,7 @@ struct HistoryScreen: View {
                     .padding(.vertical, 14)
                 HairlineDivider()
                 dayCard
+                    .id("fixture-history-day")
                     .padding(.horizontal, Theme.Size.sectionHorizontal)
                     .padding(.vertical, Theme.Size.sectionVertical)
             }
@@ -130,6 +131,16 @@ struct HistoryScreen: View {
             }
             PhoneWaterControls(tracker: tracker)
             PhoneHabitControls(tracker: tracker)
+            if (tracker.summary?.extrasTotal ?? 0) > 0 {
+                HairlineDivider()
+                PhoneExtrasHeading(tracker: tracker).id("fixture-extras").frame(maxWidth: .infinity, alignment: .leading)
+                PhoneExtrasChecklist(tracker: tracker)
+                if !tracker.canEdit {
+                    Text("Select Edit this day to correct these ticks.")
+                        .font(Theme.Fonts.caption).foregroundStyle(Theme.textTertiary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
         }
     }
 
@@ -263,6 +274,11 @@ enum ActivityWords {
         if case .setHabit(let habit, let completed) = activity.action {
             return (symbol(habit), completed ? Theme.done : Theme.textTertiary)
         }
+        if case .defineExtra = activity.action { return ("checklist", Theme.textSecondary) }
+        if case .archiveExtra = activity.action { return ("archivebox", Theme.textSecondary) }
+        if case .setExtra(_, let completed) = activity.action {
+            return ("checkmark.circle", completed ? Theme.done : Theme.textTertiary)
+        }
         return ("square.and.pencil", Theme.textSecondary)
     }
 
@@ -273,6 +289,9 @@ enum ActivityWords {
         if case .setHabit(let habit, let completed) = activity.action {
             return "\(habitName(habit)) \(completed ? "complete" : "not complete")"
         }
+        if case .defineExtra(_, let title) = activity.action { return "Extra named “\(title)”" }
+        if case .archiveExtra = activity.action { return "Archived extra" }
+        if case .setExtra(_, let completed) = activity.action { return "Extra \(completed ? "done" : "not done")" }
         return "Changed"
     }
 
@@ -283,6 +302,9 @@ enum ActivityWords {
         if case .setHabit(let habit, let completed) = activity.action {
             return "\(habitName(habit)) set to \(completed ? "complete" : "not complete")"
         }
+        if case .defineExtra(_, let title) = activity.action { return "Extra named “\(title)”" }
+        if case .archiveExtra = activity.action { return "Archived extra" }
+        if case .setExtra(_, let completed) = activity.action { return "Extra \(completed ? "done" : "not done")" }
         return "Changed"
     }
 }

@@ -6,6 +6,7 @@ import SwiftUI
 /// reminders and appearance, and sign out. Reminders and appearance stay on this iPhone.
 struct AccountScreen: View {
     @Bindable var app: PhoneApp
+    @State private var managingExtras = false
     @State private var confirmingSignOut = false
     @State private var signOutError: String?
 
@@ -29,6 +30,18 @@ struct AccountScreen: View {
                     if let reminders = app.reminders { PhoneReminderSettings(model: reminders) }
                     HairlineDivider().padding(.vertical, 6)
                     appearance
+                    HairlineDivider().padding(.vertical, 6)
+                    Button { managingExtras = true } label: {
+                        SettingRow(symbol: "checklist", title: "Extras") {
+                            Text("\(tracker.activeExtras.count)/10").font(Theme.Fonts.field)
+                            Image(systemName: "chevron.right")
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain).disabled(tracker.challenge == nil)
+                    .accessibilityLabel("Manage extras, \(tracker.activeExtras.count) of 10")
+                    .accessibilityIdentifier("account-extras")
+                    .id("fixture-account-extras")
                 }
                 .padding(.horizontal, Theme.Size.sectionHorizontal)
                 .padding(.vertical, Theme.Space.s)
@@ -47,6 +60,7 @@ struct AccountScreen: View {
                 .padding(.vertical, Theme.Space.s)
             }
         }
+        .sheet(isPresented: $managingExtras) { PhoneManageExtrasView(tracker: tracker) }
     }
 
     private var version: String {

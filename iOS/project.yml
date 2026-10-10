@@ -24,7 +24,7 @@ targets:
     type: application
     platform: iOS
     sources:
-      - path: DailyChallenge
+      - path: DailyChallenge # Includes phone-only extras views and Debug fixtures.
       # Design-system tokens and components shared with the Mac app (no AppKit or UIKit there,
       # apart from Theme's colour and font helpers).
       - path: ../Sources/DailyChallengeProof/Shared
@@ -100,6 +100,10 @@ schemes:
       targets:
         DailyChallenge: all
     test:
+      # Keep the hosted unit-test app on temporary fixture auth/storage too.
+      commandLineArguments:
+        "-fixture": true
+        "today": true
       targets: [DailyChallengeTests, DailyChallengeUITests]
       gatherCoverageData: false
     archive:

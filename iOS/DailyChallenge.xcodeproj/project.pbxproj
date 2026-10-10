@@ -14,11 +14,13 @@
 		4391B351A9204284A3D51487 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52CECB8A3AA40F95A0D695BE /* Theme.swift */; };
 		4AF0B52C6CCCF495D8FAA03A /* ChallengeSyncKit in Frameworks */ = {isa = PBXBuildFile; productRef = 67F64E27E1EC7C0FFADBAB70 /* ChallengeSyncKit */; };
 		4C7AC9C474D096C27ABB6602 /* AccountScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = D769357A25FF9D76119BD2B2 /* AccountScreen.swift */; };
+		4E5B42B9BDBC0C9FE39D790C /* PhoneExtrasTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 398EDE8CD614D9196592714B /* PhoneExtrasTests.swift */; };
 		58F3A2FBEC7A81137375B980 /* SetupScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 557F2F1170B82026D783FA04 /* SetupScreen.swift */; };
 		5C8D1E04177C60491C720B0F /* WaterJugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D9C5E2DCB79B7F2DE87BE6B /* WaterJugView.swift */; };
 		5FC85B1D9751F186B04424BC /* PhoneSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5260AF24808A4F9D4B2BD3F7 /* PhoneSyncTests.swift */; };
 		712FB1DA40F26A225F6B7C4B /* PhoneApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF0746F58D619CE08A655CE1 /* PhoneApp.swift */; };
 		7ADFCC2415399E635B2E3895 /* PhoneComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = D21C3753FE4E3D2CC52A5F5D /* PhoneComponents.swift */; };
+		8B92619D945BFFD3FB3958F6 /* PhoneExtrasViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F1304E7C9C7EACDB3CCF4A8 /* PhoneExtrasViews.swift */; };
 		9153F9C8EC63739DA6CAF657 /* TodayScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B1B9630EEC07846CBAA2EDB /* TodayScreen.swift */; };
 		949581B4C183D9FA008FE263 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61FDF9718370A45B2B02D0E5 /* RootView.swift */; };
 		9F74BA37A0D068BE917FC841 /* ChallengeCore in Frameworks */ = {isa = PBXBuildFile; productRef = 66B6D9C46C8FE7173171C5E0 /* ChallengeCore */; };
@@ -55,12 +57,14 @@
 		0BB8EA1BE55351A5ADA6FF79 /* TodayScreenUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayScreenUITests.swift; sourceTree = "<group>"; };
 		0E72EADE2BE24A1AF75D3B58 /* AuthScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthScreen.swift; sourceTree = "<group>"; };
 		2ADC44F1D8FEAD95697FB1BC /* HistoryScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryScreen.swift; sourceTree = "<group>"; };
+		398EDE8CD614D9196592714B /* PhoneExtrasTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneExtrasTests.swift; sourceTree = "<group>"; };
 		3D9C5E2DCB79B7F2DE87BE6B /* WaterJugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaterJugView.swift; sourceTree = "<group>"; };
 		5260AF24808A4F9D4B2BD3F7 /* PhoneSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneSyncTests.swift; sourceTree = "<group>"; };
 		52CECB8A3AA40F95A0D695BE /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		5487236696F1E67C768645B7 /* DailyChallengeUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = DailyChallengeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		557F2F1170B82026D783FA04 /* SetupScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupScreen.swift; sourceTree = "<group>"; };
 		5B1B9630EEC07846CBAA2EDB /* TodayScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayScreen.swift; sourceTree = "<group>"; };
+		5F1304E7C9C7EACDB3CCF4A8 /* PhoneExtrasViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneExtrasViews.swift; sourceTree = "<group>"; };
 		61FDF9718370A45B2B02D0E5 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		62D3FBAE0645D9A0B21E47D9 /* SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedComponents.swift; sourceTree = "<group>"; };
 		76AB5F804FE5C4EFBE70F2B3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -107,6 +111,7 @@
 				76AB5F804FE5C4EFBE70F2B3 /* Info.plist */,
 				AF0746F58D619CE08A655CE1 /* PhoneApp.swift */,
 				D21C3753FE4E3D2CC52A5F5D /* PhoneComponents.swift */,
+				5F1304E7C9C7EACDB3CCF4A8 /* PhoneExtrasViews.swift */,
 				068B1E20A6AEA7251526B69D /* PhoneFixtures.swift */,
 				61FDF9718370A45B2B02D0E5 /* RootView.swift */,
 				557F2F1170B82026D783FA04 /* SetupScreen.swift */,
@@ -143,6 +148,7 @@
 		57C957689489F38943847DC0 /* DailyChallengeTests */ = {
 			isa = PBXGroup;
 			children = (
+				398EDE8CD614D9196592714B /* PhoneExtrasTests.swift */,
 				5260AF24808A4F9D4B2BD3F7 /* PhoneSyncTests.swift */,
 			);
 			path = DailyChallengeTests;
@@ -349,6 +355,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4E5B42B9BDBC0C9FE39D790C /* PhoneExtrasTests.swift in Sources */,
 				5FC85B1D9751F186B04424BC /* PhoneSyncTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -364,6 +371,7 @@
 				BBDD3F15B6B638223CC8418E /* HistoryScreen.swift in Sources */,
 				712FB1DA40F26A225F6B7C4B /* PhoneApp.swift in Sources */,
 				7ADFCC2415399E635B2E3895 /* PhoneComponents.swift in Sources */,
+				8B92619D945BFFD3FB3958F6 /* PhoneExtrasViews.swift in Sources */,
 				FDBEE0036468B8738CAC5F66 /* PhoneFixtures.swift in Sources */,
 				949581B4C183D9FA008FE263 /* RootView.swift in Sources */,
 				58F3A2FBEC7A81137375B980 /* SetupScreen.swift in Sources */,

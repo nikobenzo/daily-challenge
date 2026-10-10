@@ -38,11 +38,35 @@ Debug builds accept `-fixture <screen>` (and `-appearance light|dark`) as launch
 open on offline fixture data for UI tests and screenshots; Release builds do not contain the
 fixtures.
 
-## Planned extras and widgets
+## Extras and planned widgets
 
 The [phased iPhone widgets plan](../plans/ios-widgets.md) defines extras UI, coordinated App
-Group storage, three widgets and owner signing/TestFlight acceptance. These are planned,
-not current capabilities; each phase has its own review gate.
+Group storage, three widgets and owner signing/TestFlight acceptance. Phase 1 phone extras
+are built; Phases 2–5 remain planned. Each phase has its own review gate.
+
+Phase 1 fixture acceptance (10 October 2026) uses Xcode 27.0 (27A266a), iPhone 17 / iOS 27.0.
+Commands A–D in the plan passed: XcodeGen regeneration, `swift test` (183 shared tests),
+`xcodebuild test` (9 phone unit tests and 12 UI tests), and the screenshot helper. Tests cover
+empty entry points, add/rename/archive and cancellation, the 10-active cap, title validation,
+historical locking and relocking, archived extras on older days, and unchanged completion/streaks.
+The hosted test app also launches on temporary fixture auth/storage.
+
+All evidence below is from the running simulator app on synthetic fixtures, captured in Light
+and Dark under [screenshots/ios/](screenshots/ios/); these are not in-process renders or real-phone
+sync acceptance. Add `-light.png` / `-dark.png` to each prefix:
+
+| Surface | Screenshot prefixes |
+| --- | --- |
+| Empty / populated Today | `today`, `todayExtras`, `today-extras-detail`, `extrasCap` |
+| Manage extras: empty / populated / cap | `manage-extras-empty`, `manage-extras`, `manage-extras-cap` |
+| Account entry point: empty / populated | `account`, `accountExtras` |
+| History: locked / unlocked | `historyExtras`, `historyExtrasEditing` |
+| Accessibility Large text | `today-extras-large-text`, `manage-extras-large-text`, `manage-extras-actions-large-text`, `history-extras-large-text`, `account-extras-large-text` |
+
+The accessibility captures and interactive UI test verify wrapping checklist titles, growing
+management controls and scrolling to lower rows; text is not clipped inside the extras controls.
+Debug fixture launches reset restored scroll positions and can select a capture anchor, so the
+helper is reproducible. Owner real-device/sync acceptance remains the checklist below.
 
 ## What the iPhone app does in v1
 
@@ -63,7 +87,12 @@ Completing, undoing, late entries and conflicts follow the same rules as the Mac
   total: an edit, a foreground sync or a background refresh. A goal met on the Mac therefore
   stops the iPhone's reminders only after the iPhone has synced; a reminder can still arrive in
   between.
-- **Not in v1:** checklist extras (they sync and appear in History as "Changed"), backups,
+- **Extras:** optional daily to-dos on Today, including an empty Add your own to-dos entry.
+  Today and Account open the same Manage extras sheet: add, rename and permanently archive
+  with confirmation, up to 10 active, one-line titles of 1–40 characters. History uses that
+  day’s extras (including ones archived later) and requires Edit this day for ticks. Extras
+  never affect complete days or streaks. Activity explicitly labels names, archives and ticks.
+- **Not in v1:** backups,
   change password, account deletion, widgets.
 
 ## One-time owner steps
@@ -157,3 +186,12 @@ transports. On a real iPhone, after installing from TestFlight:
 6. VoiceOver reads the rings ("Water, 2,250 of 4,000 millilitres") and the jug; Larger Text,
    Reduce Motion and Reduce Transparency behave as in Settings › Accessibility.
 7. Sign out on this iPhone; the Mac stays signed in.
+
+8. Before real extras sync acceptance, confirm the existing [extras action-kind migration](production-sync.md#extras-update-owner-only-once)
+   is deployed; no new migration accompanies the phone UI. From Today’s empty Extras row and
+   Account → Extras, open Manage extras; add, rename, cancel an archive, then confirm an archive.
+   At 10 active extras the inline cap explains how to add another. Blank, multiline and >40-character
+   titles cannot save. Ticks and management leave complete days and streaks unchanged.
+9. History shows extras archived after the selected day. Its ticks remain disabled until
+   Edit this day; choosing a different day exits correction mode. Check explicit extras activity
+   wording, Light/Dark, VoiceOver and accessibility text sizes on the real phone.
