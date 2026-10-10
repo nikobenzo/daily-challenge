@@ -58,6 +58,8 @@ No Mac UI, build, paths, Keychain identifiers or store format changes. Shared li
 
 ## Phase 2 — Coordinated App Group storage (12–18 hours)
 
+**Build evidence (10 October 2026):** Phase 2 built in commit `34714276c239c8a2e2e5877c82ae33c6465dfd41`; A, B, C and E passed (185 shared tests, 20 phone unit tests and 13 UI tests), with reviewed Light/Dark iPhone 17 / iOS 27.0 Today and storage-recovery simulator captures; [coverage and commands](../docs/ios-widgets-phase2-evidence.md); owner App Group registration/signing and real-device pre-first-unlock protection remain acceptance steps.
+
 **Goal:** app and future extension safely share the durable history/queue, while Mac defaults stay unchanged.
 
 **In:** `group.app.daily-challenge.ios` container resolution, app entitlement, opt-in repository transactions, account visibility metadata, conservative first-launch relocation and recovery tests. **Out:** extension UI, network credentials in the group, changing JSON wire/schema or Mac storage behaviour.
