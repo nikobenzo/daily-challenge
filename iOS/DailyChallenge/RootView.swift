@@ -28,8 +28,7 @@ struct RootView: View {
         .environment(\.trackerPopupVisible, phase == .active)
         .environment(\.calendar, app.tracker.dates.calendar)
         .environment(\.timeZone, app.tracker.dates.timeZone)
-        .onChange(of: app.auth.ownerID) { _, owner in
-            app.tracker.activate(ownerID: owner)
+        .onChange(of: app.auth.ownerID) { _, _ in
             app.tab = .today
         }
         .onChange(of: app.tab) { _, tab in
@@ -121,7 +120,9 @@ struct HistoryTab: View {
     let app: PhoneApp
 
     var body: some View {
-        if app.tracker.challenge == nil {
+        if app.tracker.store == nil {
+            TodayTab(app: app)
+        } else if app.tracker.challenge == nil {
             PhoneScreen {
                 PhoneHeader(title: "History")
                 NoticeCard(symbol: "calendar", title: "No history yet",

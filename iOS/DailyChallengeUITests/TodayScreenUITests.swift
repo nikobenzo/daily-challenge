@@ -11,6 +11,21 @@ final class TodayScreenUITests: XCTestCase {
         return app
     }
 
+    @MainActor func testSharedStorageTodayAndRecoveryPresentation() {
+        let app = launch("sharedToday")
+        let water = app.descendants(matching: .any)["ring-water"]
+        XCTAssertTrue(water.waitForExistence(timeout: 5))
+        XCTAssertEqual(water.value as? String, "2,250 of 4,000 millilitres")
+        app.buttons["water-add"].tap()
+        XCTAssertEqual(water.value as? String, "2,700 of 4,000 millilitres")
+        app.terminate()
+        let recovery = launch("storageRecovery")
+        XCTAssertTrue(recovery.staticTexts["History unavailable"].waitForExistence(timeout: 5))
+        XCTAssertTrue(recovery.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Storage recovery is needed")).firstMatch.exists)
+        XCTAssertFalse(recovery.buttons["Start challenge"].exists)
+        XCTAssertTrue(recovery.buttons["Try again"].exists)
+    }
+
     @MainActor func testTodayShowsTheFiveRingsJugAndStreak() {
         let app = launch("today")
         for ring in ["ring-water", "ring-workout", "ring-walk", "ring-diet", "ring-bibleReading"] {

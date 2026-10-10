@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		020C3A54C6C677677A59CFE3 /* PhoneSharedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2787F38AE405DAEF50D673 /* PhoneSharedStore.swift */; };
 		17A3D909DAEA3EC7A4B2455C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B3318ACB2990FBC3B3771486 /* Assets.xcassets */; };
 		1DC1BD8C7677C816AD978C8F /* TodayScreenUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB8EA1BE55351A5ADA6FF79 /* TodayScreenUITests.swift */; };
 		276AEE6B3AD81C56666A02A9 /* DailyChallengeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0211C155DA07084E38D22D16 /* DailyChallengeApp.swift */; };
@@ -26,6 +27,7 @@
 		9F74BA37A0D068BE917FC841 /* ChallengeCore in Frameworks */ = {isa = PBXBuildFile; productRef = 66B6D9C46C8FE7173171C5E0 /* ChallengeCore */; };
 		BBDD3F15B6B638223CC8418E /* HistoryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2ADC44F1D8FEAD95697FB1BC /* HistoryScreen.swift */; };
 		D37F5D217DA619BF906540AD /* ChallengeCore in Frameworks */ = {isa = PBXBuildFile; productRef = 957BE63CB6A9EB0CF0698729 /* ChallengeCore */; };
+		D63365EFFE0A3FAE99FE3AC6 /* PhoneSharedStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3789CD5BBCA369DA87A3BBD3 /* PhoneSharedStoreTests.swift */; };
 		E56B490F52CB35FB52E36021 /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62D3FBAE0645D9A0B21E47D9 /* SharedComponents.swift */; };
 		F05590E2A29427F91B8C092A /* ChallengeSyncKit in Frameworks */ = {isa = PBXBuildFile; productRef = 23BF7AD5B507B0E9202581AE /* ChallengeSyncKit */; };
 		FC2D42FF69FB4BB7F55EAA85 /* AuthScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E72EADE2BE24A1AF75D3B58 /* AuthScreen.swift */; };
@@ -56,9 +58,12 @@
 		07750909352F2CCF3386CA44 /* CompletionEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionEffect.swift; sourceTree = "<group>"; };
 		0BB8EA1BE55351A5ADA6FF79 /* TodayScreenUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayScreenUITests.swift; sourceTree = "<group>"; };
 		0E72EADE2BE24A1AF75D3B58 /* AuthScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthScreen.swift; sourceTree = "<group>"; };
+		1F2787F38AE405DAEF50D673 /* PhoneSharedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneSharedStore.swift; sourceTree = "<group>"; };
 		2ADC44F1D8FEAD95697FB1BC /* HistoryScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryScreen.swift; sourceTree = "<group>"; };
+		3789CD5BBCA369DA87A3BBD3 /* PhoneSharedStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneSharedStoreTests.swift; sourceTree = "<group>"; };
 		398EDE8CD614D9196592714B /* PhoneExtrasTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneExtrasTests.swift; sourceTree = "<group>"; };
 		3D9C5E2DCB79B7F2DE87BE6B /* WaterJugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaterJugView.swift; sourceTree = "<group>"; };
+		49EE810FC2FA59822E8DF127 /* DailyChallenge.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DailyChallenge.entitlements; sourceTree = "<group>"; };
 		5260AF24808A4F9D4B2BD3F7 /* PhoneSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneSyncTests.swift; sourceTree = "<group>"; };
 		52CECB8A3AA40F95A0D695BE /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		5487236696F1E67C768645B7 /* DailyChallengeUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = DailyChallengeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -106,6 +111,7 @@
 				D769357A25FF9D76119BD2B2 /* AccountScreen.swift */,
 				B3318ACB2990FBC3B3771486 /* Assets.xcassets */,
 				0E72EADE2BE24A1AF75D3B58 /* AuthScreen.swift */,
+				49EE810FC2FA59822E8DF127 /* DailyChallenge.entitlements */,
 				0211C155DA07084E38D22D16 /* DailyChallengeApp.swift */,
 				2ADC44F1D8FEAD95697FB1BC /* HistoryScreen.swift */,
 				76AB5F804FE5C4EFBE70F2B3 /* Info.plist */,
@@ -118,6 +124,14 @@
 				5B1B9630EEC07846CBAA2EDB /* TodayScreen.swift */,
 			);
 			path = DailyChallenge;
+			sourceTree = "<group>";
+		};
+		2A08581EEF65AE28B0E2DC2C /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				1F2787F38AE405DAEF50D673 /* PhoneSharedStore.swift */,
+			);
+			path = Shared;
 			sourceTree = "<group>";
 		};
 		3BFA68F3E607EACAC8B4A2BE /* Packages */ = {
@@ -149,6 +163,7 @@
 			isa = PBXGroup;
 			children = (
 				398EDE8CD614D9196592714B /* PhoneExtrasTests.swift */,
+				3789CD5BBCA369DA87A3BBD3 /* PhoneSharedStoreTests.swift */,
 				5260AF24808A4F9D4B2BD3F7 /* PhoneSyncTests.swift */,
 			);
 			path = DailyChallengeTests;
@@ -182,6 +197,7 @@
 				57C957689489F38943847DC0 /* DailyChallengeTests */,
 				57EEA0773068986691E97A4E /* DailyChallengeUITests */,
 				3BFA68F3E607EACAC8B4A2BE /* Packages */,
+				2A08581EEF65AE28B0E2DC2C /* Shared */,
 				E5E1787A9A6AC83ABF2649EB /* Products */,
 			);
 			sourceTree = "<group>";
@@ -356,6 +372,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4E5B42B9BDBC0C9FE39D790C /* PhoneExtrasTests.swift in Sources */,
+				D63365EFFE0A3FAE99FE3AC6 /* PhoneSharedStoreTests.swift in Sources */,
 				5FC85B1D9751F186B04424BC /* PhoneSyncTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -373,6 +390,7 @@
 				7ADFCC2415399E635B2E3895 /* PhoneComponents.swift in Sources */,
 				8B92619D945BFFD3FB3958F6 /* PhoneExtrasViews.swift in Sources */,
 				FDBEE0036468B8738CAC5F66 /* PhoneFixtures.swift in Sources */,
+				020C3A54C6C677677A59CFE3 /* PhoneSharedStore.swift in Sources */,
 				949581B4C183D9FA008FE263 /* RootView.swift in Sources */,
 				58F3A2FBEC7A81137375B980 /* SetupScreen.swift in Sources */,
 				E56B490F52CB35FB52E36021 /* SharedComponents.swift in Sources */,
@@ -606,6 +624,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = DailyChallenge/DailyChallenge.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 0;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -626,6 +645,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = DailyChallenge/DailyChallenge.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 0;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;

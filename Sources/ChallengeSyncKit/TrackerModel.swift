@@ -45,7 +45,9 @@ public enum SyncState: Equatable, Sendable {
     private static func changes(_ count: Int) -> String { count == 1 ? "1 change" : "\(count) changes" }
 }
 
-/// One serialized writer for the active app account. Real challenge data never
+/// One serialized coordinator for the active app account. Opt-in store access
+/// supplies cross-process transactions; default callers keep their single writer.
+/// Real challenge data never
 /// enters the probe queue. Clock injection lets the UI's date/edit paths be tested.
 /// Shared by the Mac and iPhone apps; each drives refreshes and sync requests from
 /// its own lifecycle (popup visibility and wake on the Mac, scene phase on iOS).
@@ -72,11 +74,16 @@ public final class TrackerModel {
 
     private func observeCompletion() {
         guard let challenge, let record = store?.record else { return }
-        let ledger = CelebrationLedger(file: directory.appendingPathComponent("celebrations-\(challenge.ownerID.uuidString).json"))
-        if let kind = ledger.observe(challenge, challengeID: record.id, now: clock(), localCompletionDay: localCompletionDay,
-                                     localExtrasDay: localExtrasDay) {
-            celebration = CelebrationEvent(kind: kind, started: clock())
+        let kind: CompletionCelebration?
+        if let access {
+            kind = try? access.observeCompletion(ownerID: challenge.ownerID, now: clock(),
+                                                 localCompletionDay: localCompletionDay, localExtrasDay: localExtrasDay)
+        } else {
+            let ledger = CelebrationLedger(file: directory.appendingPathComponent("celebrations-\(challenge.ownerID.uuidString).json"))
+            kind = ledger.observe(challenge, challengeID: record.id, now: clock(), localCompletionDay: localCompletionDay,
+                                  localExtrasDay: localExtrasDay)
         }
+        if let kind { celebration = CelebrationEvent(kind: kind, started: clock()) }
     }
 
     public func refreshReminders() {
@@ -93,6 +100,7 @@ public final class TrackerModel {
     public private(set) var selectedDay: Date
     public private(set) var isEditingHistory = false
     public private(set) var errorMessage: String?
+    @ObservationIgnored private let access: (any TrackerStoreAccess)?
     @ObservationIgnored private let directory: URL
     @ObservationIgnored private let clock: () -> Date
     @ObservationIgnored private var followsToday = true
@@ -109,6 +117,7 @@ public final class TrackerModel {
     public private(set) var retryAfter: Date?
     @ObservationIgnored private var failures = 0
     @ObservationIgnored private var generation = UUID()
+    @ObservationIgnored private var hasActivated = false
 
     public var canStartChallenge: Bool { !syncActive || (setupChecked && !isSyncing && syncError == nil) }
     /// The one sync state. The footer and the Account tab are two wordings of it.
@@ -160,10 +169,14 @@ public final class TrackerModel {
         isSyncing = true
         defer { if generation == token { isSyncing = false } }
         do {
+            // Refresh pending/settings before the first network await. The lock is
+            // released by transact; each later phase reloads again.
+            if access != nil { try transact { _ in } }
             var skipped = 0
             var remote = try await transport.fetchChallenge(ownerID: ownerID)
             guard generation == token else { return }
-            if remote == nil, let record = store?.record {
+            let localRecord = try transact { $0.record }
+            if remote == nil, let record = localRecord {
                 try await transport.insertChallenge(record)
                 guard generation == token else { return }
                 remote = try await transport.fetchChallenge(ownerID: ownerID)
@@ -172,15 +185,16 @@ public final class TrackerModel {
             }
             if let remote {
                 guard remote.ownerID == ownerID else { throw ChallengeSyncError.wrongOwner }
-                if let local = store?.record, local != remote { throw ChallengeSyncError.conflictingChallenge }
-                let pending = store?.pending ?? []
+                let pending = try transact { current in
+                    if let local = current.record, local != remote { throw ChallengeSyncError.conflictingChallenge }
+                    return current.pending
+                }
                 try await transport.upload(pending, ownerID: ownerID)
                 guard generation == token else { return }
                 let fetched = try await transport.fetchEvents(ownerID: ownerID, challengeID: remote.id)
-                guard generation == token, var current = store else { return }
+                guard generation == token else { return }
                 // Only events that decoded are merged, so only they acknowledge pending uploads.
-                try current.merge(record: remote, events: fetched.events)
-                store = current
+                try transact { try $0.merge(record: remote, events: fetched.events) }
                 skipped = fetched.skipped
             }
             setupChecked = true
@@ -198,7 +212,9 @@ public final class TrackerModel {
         }
     }
 
-    public init(directory: URL = TrackerModel.defaultDirectory, clock: @escaping () -> Date = Date.init) {
+    public init(directory: URL = TrackerModel.defaultDirectory, clock: @escaping () -> Date = Date.init,
+                access: (any TrackerStoreAccess)? = nil) {
+        self.access = access
         self.directory = directory
         self.clock = clock
         let now = clock()
@@ -225,7 +241,8 @@ public final class TrackerModel {
     public var canUndo: Bool { canEdit && !(summary?.activePours.isEmpty ?? true) }
 
     public func activate(ownerID: UUID?) {
-        guard self.ownerID != ownerID else { refresh(); return }
+        guard !hasActivated || self.ownerID != ownerID else { refresh(); return }
+        hasActivated = true
         generation = UUID()
         isSyncing = false
         setupChecked = false
@@ -239,13 +256,21 @@ public final class TrackerModel {
         store = nil
         errorMessage = nil
         showToday()
-        if ownerID != nil { reload(); requestSync() }
+        if let access {
+            do { store = try access.activate(ownerID: ownerID) }
+            catch {
+                hasActivated = false
+                errorMessage = "Local history could not be opened. It has not been reset. \(error.localizedDescription)"
+            }
+            if store != nil { requestSync() }
+        } else if ownerID != nil { reload(); requestSync() }
     }
 
     public func reload() {
+        if access != nil && !hasActivated { activate(ownerID: ownerID); return }
         guard let ownerID else { return }
         do {
-            store = try ChallengeStore(ownerID: ownerID, directory: directory)
+            store = try access?.transaction(ownerID: ownerID, { _ in }).0 ?? ChallengeStore(ownerID: ownerID, directory: directory)
             errorMessage = nil
         } catch {
             store = nil
@@ -289,10 +314,9 @@ public final class TrackerModel {
             errorMessage = "Choose today or an earlier start date."
             return
         }
-        guard var candidate = store else { return }
+        guard store != nil else { return }
         do {
-            try candidate.start(on: date, timeZone: timeZone)
-            store = candidate
+            try transact { try $0.start(on: date, timeZone: timeZone) }
             errorMessage = nil
             showToday()
             setupChecked = false
@@ -301,19 +325,15 @@ public final class TrackerModel {
     }
 
     public func exportData() throws -> Data {
-        guard let store else { throw ChallengeStoreError.notStarted }
-        return try store.exportData()
+        return try transact { try $0.exportData() }
     }
 
     public func previewImport(_ data: Data) throws -> ChallengeBackup.Plan {
-        guard let store else { throw ChallengeStoreError.notStarted }
-        return try store.previewImport(data)
+        return try transact { try $0.previewImport(data) }
     }
 
     public func importData(_ data: Data) throws -> URL {
-        guard var candidate = store else { throw ChallengeStoreError.notStarted }
-        let backup = try candidate.importData(data)
-        store = candidate
+        let backup = try transact { try $0.importData(data) }
         refresh()
         requestSync()
         return backup
@@ -333,23 +353,51 @@ public final class TrackerModel {
 
     public func toggle(_ habit: Challenge.Habit) {
         refresh()
-        record(.setHabit(habit, completed: !(summary?.completedHabits.contains(habit) ?? false)))
+        record { summary in .setHabit(habit, completed: !(summary?.completedHabits.contains(habit) ?? false)) }
     }
 
     public func setDiet(_ state: Challenge.DietState) { record(.setDiet(state)) }
 
-    private func record(_ action: Challenge.Action) {
+    /// All opted-in actions are derived from the just-loaded summary, never a
+    /// rendered snapshot. This also preserves concrete latest-pour undo semantics.
+    private func record(_ action: Challenge.Action) { record { _ in action } }
+
+    @discardableResult
+    private func transact<Result>(_ operation: (inout ChallengeStore) throws -> Result) throws -> Result {
+        guard let ownerID, var candidate = store else { throw ChallengeStoreError.notStarted }
+        let result: Result
+        if let access {
+            let committed = try access.transaction(ownerID: ownerID, operation)
+            candidate = committed.0
+            result = committed.1
+        } else {
+            result = try operation(&candidate)
+        }
+        store = candidate
+        return result
+    }
+
+    private func record(_ derive: (Challenge.DailySummary?) -> Challenge.Action) {
         refresh()
-        guard canEdit, var candidate = store else {
+        guard canEdit, store != nil else {
             errorMessage = "Select Edit this day before making a historical correction."
             return
         }
+        defer { localCompletionDay = nil; localExtrasDay = nil }
         do {
-            let wasComplete = summary?.isComplete == true
-            try candidate.record(action, on: selectedDay, at: now)
-            localCompletionDay = !wasComplete && selectedDay == today ? today : nil
-            defer { localCompletionDay = nil }
-            store = candidate
+            _ = try transact { candidate in
+                let fresh = candidate.challenge?.summary(on: selectedDay, asOf: now)
+                guard let fresh, fresh.status != .future, fresh.status != .outsideChallenge else {
+                    throw ChallengeStoreError.notStarted
+                }
+                let action = derive(fresh)
+                if case let .setExtra(_, completed) = action {
+                    localExtrasDay = completed && selectedDay == today ? today : nil
+                }
+                try candidate.record(action, on: selectedDay, at: now)
+                localCompletionDay = !fresh.isComplete && selectedDay == today ? today : nil
+                return fresh.isComplete
+            }
             errorMessage = nil
             requestSync()
         } catch { errorMessage = "Could not save. Your previous history is intact. \(error.localizedDescription)" }
@@ -369,18 +417,14 @@ extension TrackerModel {
 
     public func toggleExtra(_ id: UUID) {
         refresh()
-        let done = summary?.completedExtras.contains(id) ?? false
-        // Only a tick made here, today, may celebrate; opening or syncing never does.
-        localExtrasDay = !done && selectedDay == today ? today : nil
-        defer { localExtrasDay = nil }
-        record(.setExtra(id: id, completed: !done))
+        // Completion provenance is derived from the fresh summary inside record.
+        record { .setExtra(id: id, completed: !($0?.completedExtras.contains(id) ?? false)) }
     }
 
     /// Each returns nil once saved, otherwise the reason nothing was saved.
     public func addExtra(_ title: String) -> String? { defineExtra(id: UUID(), title: title) }
 
     public func renameExtra(_ id: UUID, to title: String) -> String? {
-        guard Challenge.extraTitle(title) != activeExtras.first(where: { $0.id == id })?.title else { return nil }
         return defineExtra(id: id, title: title)
     }
 
@@ -393,12 +437,15 @@ extension TrackerModel {
 
     private func recordExtraSetting(_ action: Challenge.Action) -> String? {
         refresh()
-        guard var candidate = store, candidate.challenge != nil else {
+        guard store?.challenge != nil else {
             return ChallengeStoreError.notStarted.localizedDescription
         }
         do {
-            try candidate.record(action, on: now, at: now)
-            store = candidate
+            try transact { candidate in
+                if case let .defineExtra(id, title) = action,
+                   candidate.challenge?.allExtras.first(where: { $0.id == id && !$0.isArchived })?.title == title { return }
+                try candidate.record(action, on: now, at: now)
+            }
             requestSync()
             return nil
         } catch let error as ChallengeError {

@@ -3,6 +3,8 @@
 # docs/screenshots/ios/. The app runs on Debug fixtures (-fixture): no account,
 # Keychain, network or notification permission is used.
 #   DEVICE   simulator name (default "iPhone 17")
+#   CAPTURE_WAIT   settling seconds after each launch (default 3)
+#   CAPTURE_PHASE2_ONLY=1   capture shared Today + recovery only
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
@@ -39,13 +41,25 @@ capture() { # name fixture appearance [extra launch arguments…]
   xcrun simctl ui "$udid" appearance "$appearance"
   xcrun simctl launch --terminate-running-process "$udid" "$BUNDLE_ID" \
     -fixture "$fixture" -appearance "$appearance" "$@" >/dev/null
-  sleep 3
+  sleep "${CAPTURE_WAIT:-3}"
   xcrun simctl io "$udid" screenshot --type=png "$OUT/$name-$appearance.png" >/dev/null 2>&1
   echo "captured $name-$appearance"
 }
 
+# Phase 2 review evidence can be refreshed without recapturing prior phases.
+if [[ "${CAPTURE_PHASE2_ONLY:-0}" == 1 ]]; then
+  for appearance in light dark; do
+    capture sharedToday sharedToday "$appearance"
+    capture storageRecovery storageRecovery "$appearance"
+  done
+  xcrun simctl status_bar "$udid" clear
+  xcrun simctl terminate "$udid" "$BUNDLE_ID" 2>/dev/null || true
+  echo "Phase 2 screenshots: $OUT"
+  exit 0
+fi
+
 for appearance in light dark; do
-  for screen in signIn createAccount confirmCode forgotPassword resetPassword checking setup today todayComplete history account; do
+  for screen in sharedToday storageRecovery signIn createAccount confirmCode forgotPassword resetPassword checking setup today todayComplete history account; do
     capture "$screen" "$screen" "$appearance"
   done
   for screen in todayExtras extrasCap accountExtras; do

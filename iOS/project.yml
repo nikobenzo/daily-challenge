@@ -25,6 +25,7 @@ targets:
     platform: iOS
     sources:
       - path: DailyChallenge # Includes phone-only extras views and Debug fixtures.
+      - path: Shared
       # Design-system tokens and components shared with the Mac app (no AppKit or UIKit there,
       # apart from Theme's colour and font helpers).
       - path: ../Sources/DailyChallengeProof/Shared
@@ -51,6 +52,10 @@ targets:
           UIApplicationSupportsMultipleScenes: false
         UIBackgroundModes: [fetch]
         BGTaskSchedulerPermittedIdentifiers: [app.daily-challenge.ios.refresh]
+    entitlements:
+      path: DailyChallenge/DailyChallenge.entitlements
+      properties:
+        com.apple.security.application-groups: [group.app.daily-challenge.ios]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.daily-challenge.ios

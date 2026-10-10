@@ -6,8 +6,8 @@ events. Family members get it through **TestFlight internal testing**, not the A
 
 - Bundle identifier `app.daily-challenge.ios`, team `L644Y3WX5T`, automatic signing.
 - Deployment target iOS 26. Sparkle is not linked (the Mac target alone depends on it).
-- Its own Keychain items (`app.daily-challenge.ios.auth`), storage under the app's own
-  container, and device-local reminder and appearance settings. The same account works on the
+- Its own Keychain items (`app.daily-challenge.ios.auth`, no shared access group), coordinated history in App Group
+  `group.app.daily-challenge.ios`, and device-local reminder and appearance settings. The same account works on the
   Mac; an iPhone signing in to an account whose Mac already has a challenge adopts it after a
   successful server check, exactly as a second Mac does.
 
@@ -42,7 +42,7 @@ fixtures.
 
 The [phased iPhone widgets plan](../plans/ios-widgets.md) defines extras UI, coordinated App
 Group storage, three widgets and owner signing/TestFlight acceptance. Phase 1 phone extras
-are built; Phases 2–5 remain planned. Each phase has its own review gate.
+and Phase 2 coordinated storage are built; Phases 3–5 remain planned. Each phase has its own review gate.
 
 Phase 1 fixture acceptance (10 October 2026) uses Xcode 27.0 (27A266a), iPhone 17 / iOS 27.0.
 Commands A–D in the plan passed: XcodeGen regeneration, `swift test` (183 shared tests),
@@ -67,6 +67,22 @@ The accessibility captures and interactive UI test verify wrapping checklist tit
 management controls and scrolling to lower rows; text is not clipped inside the extras controls.
 Debug fixture launches reset restored scroll positions and can select a capture anchor, so the
 helper is reproducible. Owner real-device/sync acceptance remains the checklist below.
+
+
+Phase 2 uses fresh-load synchronous transactions under a stable advisory lock; no lock spans
+network awaits. Active metadata contains only owner UUID, generation and challenge ID.
+Session changes invalidate visibility immediately, while dormant history stays available for
+later sign-in. There are no credentials in the group. Foreground and background refresh reload
+committed disk state. Shared files use protection after first unlock; simulator tests inject
+unavailability, while actual pre-first-unlock protection remains signed-device acceptance.
+
+First launch stages and validates a copy of private phone history, pending queues, device IDs,
+recovery backups and celebration ledgers. Originals remain untouched; appearance/reminders
+stay device-local. Interrupted copies retry; differing destination history shows **History
+unavailable** with a storage-recovery explanation, never empty setup. Keep both copies for
+recovery; do not delete or manually overwrite them. `-fixture sharedToday` and
+`-fixture storageRecovery` exercise these paths with temporary synthetic roots only. See
+[Phase 2 verification evidence](ios-widgets-phase2-evidence.md).
 
 ## What the iPhone app does in v1
 
@@ -97,8 +113,10 @@ Completing, undoing, late entries and conflicts follow the same rules as the Mac
 
 ## One-time owner steps
 
-These need the Apple Developer Program membership (team `L644Y3WX5T`). Nothing here was done
-by the worker; no App ID, App Store Connect record, key or upload exists yet.
+These need the Apple Developer Program membership (team `L644Y3WX5T`). TestFlight 0.3.0 (3)
+already exists; preserve installed history. This phase's worker did not inspect or change team
+registration, provisioning, credentials or uploads. The App Group association is a new owner
+step; the remaining items below describe the existing distribution workflow.
 
 1. **Xcode account.** Xcode › Settings › Accounts › + › Apple Account: sign in with an account
    that is Admin or Account Holder in the team. (Needed for the app-specific-password route;
@@ -107,7 +125,12 @@ by the worker; no App ID, App Store Connect record, key or upload exists yet.
    `-allowProvisioningUpdates` registers `app.daily-challenge.ios`), or create it yourself:
    developer.apple.com › Certificates, Identifiers & Profiles › Identifiers › + › App IDs ›
    App, explicit Bundle ID `app.daily-challenge.ios`, description "Daily Challenge iPhone". No
-   capabilities are needed (background refresh and local notifications need none).
+   background-refresh or local-notification capabilities are needed. Enable **App Groups**,
+   register `group.app.daily-challenge.ios` on team `L644Y3WX5T`, and attach it to this App ID
+   before signed-device acceptance. See [Apple’s configuration guide](https://developer.apple.com/documentation/xcode/configuring-app-groups)
+   and [manual registration fallback](https://developer.apple.com/help/account/identifiers/register-an-app-group).
+   Automatic signing can manage provisioning; an unsigned archive or an upload alone does
+   not prove the group is registered and authorized. Phase 3 will add the extension association.
 3. **App Store Connect record.** appstoreconnect.apple.com › Apps › + › New App: platform iOS,
    name "Daily Challenge" (App Store names are unique across Apple; if it is taken, choose
    another, such as "Daily Challenge 75": testers see it in TestFlight), primary language

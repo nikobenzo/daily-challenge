@@ -200,3 +200,49 @@ import Testing
     #expect(fixture.server.events[fixture.owner]?.count == 2)
     #expect(model.store?.pendingCount == 0)
 }
+
+/// Fresh-load fixture for the opt-in model seam; phone tests separately exercise
+/// the real cross-process repository, metadata and relocation implementation.
+private final class FreshFixtureAccess: TrackerStoreAccess {
+    let directory: URL
+    var owner: UUID?
+    init(directory: URL) { self.directory = directory }
+    func activate(ownerID: UUID?) throws -> ChallengeStore? {
+        owner = ownerID
+        return try ownerID.map { try ChallengeStore(ownerID: $0, directory: directory) }
+    }
+    func transaction<Result>(ownerID: UUID, _ operation: (inout ChallengeStore) throws -> Result) throws -> (ChallengeStore, Result) {
+        guard owner == ownerID else { throw ChallengeSyncError.wrongOwner }
+        var store = try ChallengeStore(ownerID: ownerID, directory: directory)
+        let result = try operation(&store)
+        return (store, result)
+    }
+}
+
+@Test @MainActor func optedInCoordinatorDerivesTogglesAndSyncMergesFromDisk() async throws {
+    let f = SyncFixture(); defer { f.cleanup() }
+    let access = FreshFixtureAccess(directory: f.directory)
+    let model = TrackerModel(directory: f.directory, clock: { f.server.now }, access: access)
+    model.activate(ownerID: f.owner)
+    model.startChallenge(on: f.server.now, timeZone: TimeZone(identifier: "Europe/Jersey")!)
+    model.addWater()
+    _ = try access.transaction(ownerID: f.owner) { fresh in
+        try fresh.record(.setHabit(.walk, completed: true), on: f.server.now, at: f.server.now)
+        try fresh.record(.pour(250), on: f.server.now, at: f.server.now)
+    }
+    model.toggle(.walk)
+    #expect(model.summary?.completedHabits.contains(.walk) == false)
+    #expect(model.summary?.waterMillilitres == 700)
+    model.configureSync(f.server)
+    f.server.eventsHook = {
+        _ = try! access.transaction(ownerID: f.owner) { try $0.record(.pour(125), on: f.server.now, at: f.server.now) }
+    }
+    await model.sync(force: true)
+    #expect(model.summary?.waterMillilitres == 825)
+    #expect(model.store?.pending.count == 1)
+    model.undoWater()
+    #expect(model.summary?.waterMillilitres == 700)
+    #expect(model.store?.pending.count == 2)
+    model.reload()
+    #expect(model.summary?.waterMillilitres == 700)
+}
