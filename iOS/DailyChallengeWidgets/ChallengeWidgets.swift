@@ -17,8 +17,9 @@ struct WaterWidget: Widget {
             WidgetSurface(entry: entry, destination: "today") { WaterWidgetView(entry: entry) }
         }
         .configurationDisplayName("Water")
-        .description("Log 450 ml pours toward 4,000 ml / 4 L, or undo today's latest pour.")
-        .supportedFamilies([.systemSmall, .systemMedium])
+        .description("Log 450 ml pours toward 4,000 ml / 4 L, or undo today's latest pour. On the Lock Screen, today's total only.")
+        // D-W2: the Lock Screen gets the read-only water ring only, hidden while locked.
+        .supportedFamilies([.systemSmall, .systemMedium, .accessoryCircular])
     }
 }
 struct RequirementsWidget: Widget {

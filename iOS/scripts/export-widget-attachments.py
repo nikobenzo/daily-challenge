@@ -13,7 +13,7 @@ for test in json.loads((source / "manifest.json").read_text()):
         if not name.endswith(".png"):
             continue
         prefix = name.split("_0_")[0]
-        if not prefix.startswith(("rendered-", "gallery-", "daily-challenge-gallery", "widget-gallery", "widget-search", "home-placed-", "app-")):
+        if not prefix.startswith(("rendered-", "gallery-", "daily-challenge-gallery", "widget-gallery", "widget-search", "home-placed-", "home-customize", "lock-", "app-")):
             continue
         if appearance and not prefix.startswith("rendered-"):
             prefix += "-" + appearance

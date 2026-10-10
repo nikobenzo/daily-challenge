@@ -157,6 +157,15 @@ import WidgetKit
         }
         let now = Date()
         let tracker = TrackerModel(directory: root, clock: { now }, access: shared)
+        // Widget account states (phase 5): signed out publishes no account; setup publishes
+        // the account without a challenge; unavailable leaves unreadable account metadata.
+        if variant == "signed-out" || variant == "setup" {
+            tracker.activate(ownerID: variant == "setup" ? owner : nil)
+            try! Data("synthetic Debug fixtures only".utf8).write(to: container.appendingPathComponent("widget-fixture-enabled"), options: .atomic)
+            WidgetCenter.shared.reloadAllTimelines()
+            return PhoneApp(auth: AuthModel(fixtureOwnerID: variant == "setup" ? owner : nil, now: { now }), tracker: tracker,
+                            reminders: nil, defaults: UserDefaults(suiteName: "widget-fixture-\(UUID())")!, schedulesRefresh: false)
+        }
         tracker.activate(ownerID: owner)
         tracker.startChallenge(on: now, timeZone: zone)
         let amount: Int = switch variant {
@@ -172,15 +181,26 @@ import WidgetKit
         }
         if variant == "complete" { tracker.toggle(.walk); tracker.toggle(.bibleReading) }
         if variant != "extras-empty" && variant != "empty" {
-            let titles = ["Stretch", "Read a chapter", "Prepare tomorrow’s healthy lunch", "Practise gratitude", "Call family", "Tidy desk", "Journal", "Go outside", "Sleep on time", "A readable extra title of forty letters!"]
             let count = ["extras-ten", "long-names", "overflow"].contains(variant) ? 10 : 3
-            for title in titles.prefix(count) { _ = tracker.addExtra(title) }
+            for title in widgetExtraTitles(longNames: variant == "long-names").prefix(count) { _ = tracker.addExtra(title) }
             if let first = tracker.activeExtras.first { tracker.toggleExtra(first.id) }
+        }
+        if variant == "unavailable" {
+            try! Data("not account metadata".utf8).write(to: root.appendingPathComponent("active-account.json"), options: .atomic)
         }
         try! Data("synthetic Debug fixtures only".utf8).write(to: container.appendingPathComponent("widget-fixture-enabled"), options: .atomic)
         WidgetCenter.shared.reloadAllTimelines()
         return PhoneApp(auth: auth(now), tracker: tracker,
                         reminders: nil, defaults: UserDefaults(suiteName: "widget-fixture-\(UUID())")!, schedulesRefresh: false)
+    }
+
+    /// Synthetic extras for widget fixtures; `longNames` gives ten maximum-length (40) titles.
+    nonisolated static func widgetExtraTitles(longNames: Bool) -> [String] {
+        guard longNames else {
+            return ["Stretch", "Read a chapter", "Prepare tomorrow’s healthy lunch", "Practise gratitude", "Call family",
+                    "Tidy desk", "Journal", "Go outside", "Sleep on time", "A readable extra title of forty letters!"]
+        }
+        return (1...10).map { "\($0). Prepare tomorrow’s healthy lunch box".padding(toLength: 40, withPad: "!", startingAt: 0) }
     }
 
     private static func day(_ offset: Int) -> Date {

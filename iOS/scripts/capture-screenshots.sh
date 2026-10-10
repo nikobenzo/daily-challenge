@@ -5,6 +5,7 @@
 #   DEVICE   simulator name (default "iPhone 17")
 #   CAPTURE_WAIT   settling seconds after each launch (default 3)
 #   CAPTURE_PHASE2_ONLY=1   capture shared Today + recovery only
+#   CAPTURE_PHASE5_ONLY=1   capture the Manage extras screens only (design field fill)
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
@@ -55,6 +56,19 @@ if [[ "${CAPTURE_PHASE2_ONLY:-0}" == 1 ]]; then
   xcrun simctl status_bar "$udid" clear
   xcrun simctl terminate "$udid" "$BUNDLE_ID" 2>/dev/null || true
   echo "Phase 2 screenshots: $OUT"
+  exit 0
+fi
+
+# Phase 5 recaptures only the Manage extras screens whose fields changed.
+if [[ "${CAPTURE_PHASE5_ONLY:-0}" == 1 ]]; then
+  for appearance in light dark; do
+    capture manage-extras todayExtras "$appearance" -manage-extras
+    capture manage-extras-empty today "$appearance" -manage-extras
+    capture manage-extras-large-text todayExtras "$appearance" -manage-extras -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityL
+  done
+  xcrun simctl status_bar "$udid" clear
+  xcrun simctl terminate "$udid" "$BUNDLE_ID" 2>/dev/null || true
+  echo "Phase 5 screenshots: $OUT"
   exit 0
 fi
 
