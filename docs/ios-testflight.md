@@ -38,6 +38,12 @@ Debug builds accept `-fixture <screen>` (and `-appearance light|dark`) as launch
 open on offline fixture data for UI tests and screenshots; Release builds do not contain the
 fixtures.
 
+## Planned extras and widgets
+
+The [phased iPhone widgets plan](../plans/ios-widgets.md) defines extras UI, coordinated App
+Group storage, three widgets and owner signing/TestFlight acceptance. These are planned,
+not current capabilities; each phase has its own review gate.
+
 ## What the iPhone app does in v1
 
 Sign in, create an account and reset a password with the emailed code; setup (start date and
