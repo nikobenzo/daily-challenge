@@ -51,7 +51,9 @@ defaults delete "$FIXTURE_ID" >/dev/null 2>&1 || true
 executable="$fixture/UpdateFixture"
 /usr/bin/swiftc -parse-as-library -O -target "$(uname -m)-apple-macos14.0" -F "$BIN" -framework Sparkle \
   -Xlinker -rpath -Xlinker @executable_path/../Frameworks \
-  Sources/DailyChallengeProof/SoftwareUpdates.swift scripts/update-fixture.swift -o "$executable"
+  Sources/DailyChallengeProof/{SoftwareUpdates,Components,PopupVisibility}.swift \
+  Sources/DailyChallengeProof/Shared/{Theme,SharedComponents,TrackerEnvironment}.swift \
+  scripts/update-fixture.swift -o "$executable"
 
 # make_bundle <path> <short version> <build>
 make_bundle() {
