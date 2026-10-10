@@ -96,7 +96,11 @@ echo "Archiving Daily Challenge for iPhone $version"
 rm -rf "$ARCHIVE" "$EXPORT"
 xcodebuild archive -project "$PROJECT" -scheme DailyChallenge -configuration Release \
   -destination 'generic/platform=iOS' -archivePath "$ARCHIVE" \
-  -allowProvisioningUpdates "${auth[@]}" DEVELOPMENT_TEAM="$TEAM_ID" CODE_SIGN_STYLE=Automatic
+  CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+# The archive is left unsigned on purpose: signing it at archive time would need a development
+# profile, and a development profile needs at least one registered device, which an upload-only
+# team has no reason to have. The export step below signs the app for App Store Connect with the
+# distribution profile that -allowProvisioningUpdates obtains.
 
 options="$OUT/ExportOptions.plist"
 cat > "$options" <<PLIST

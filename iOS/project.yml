@@ -44,6 +44,9 @@ targets:
         UILaunchScreen:
           UIColorName: LaunchBackground
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        # App Store Connect rejects an upload whose iPad orientations are not all four (iPad
+        # multitasking rule), even for an iPhone-only target; the iPhone itself stays portrait.
+        UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
         UIBackgroundModes: [fetch]
