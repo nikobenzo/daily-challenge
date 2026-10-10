@@ -84,3 +84,101 @@ final class TodayScreenUITests: XCTestCase {
         XCTAssertTrue(app.buttons["water-add"].exists)
     }
 }
+
+/// Extras use the same fixture-only launch path as the rest of the phone suite.
+final class PhoneExtrasUITests: XCTestCase {
+    override func setUp() { continueAfterFailure = false }
+
+    @MainActor private func launch(_ fixture: String, large: Bool = false) -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments = ["-fixture", fixture]
+        if large { app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityL"] }
+        app.launch()
+        return app
+    }
+
+    @MainActor private func reveal(_ element: XCUIElement, in app: XCUIApplication) {
+        for _ in 0..<5 where !element.isHittable { app.swipeUp() }
+        XCTAssertTrue(element.isHittable, element.debugDescription)
+    }
+
+    @MainActor func testEmptyTodayAndAccountOpenTheSameManagementSheet() {
+        let app = launch("today")
+        let empty = app.buttons["extras-empty"]
+        XCTAssertTrue(empty.waitForExistence(timeout: 5))
+        reveal(empty, in: app); empty.tap()
+        XCTAssertTrue(app.textFields["extras-new-title"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.staticTexts["extras-active-count"].label, "0/10 extras")
+        app.buttons["Done"].tap()
+        app.tabBars.buttons["Account"].tap()
+        let account = app.buttons["account-extras"]
+        reveal(account, in: app); account.tap()
+        XCTAssertTrue(app.textFields["extras-new-title"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor func testAddRenameAndArchiveRequireConfirmation() {
+        let app = launch("today")
+        let empty = app.buttons["extras-empty"]
+        XCTAssertTrue(empty.waitForExistence(timeout: 5)); reveal(empty, in: app); empty.tap()
+        let field = app.textFields["extras-new-title"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        field.tap(); field.typeText("Stretch")
+        app.buttons["extras-add"].tap()
+        app.buttons["Rename Stretch"].tap()
+        let rename = app.textFields["extras-rename-title"]
+        rename.tap(); rename.typeText(" gently")
+        app.buttons["Save name"].tap()
+        app.buttons["Archive Stretch gently"].tap()
+        XCTAssertTrue(app.staticTexts["It disappears from today on and can't be restored. Earlier days keep their ticks."].waitForExistence(timeout: 5))
+        app.alerts["Archive extra?"].buttons["Cancel"].tap()
+        XCTAssertTrue(app.buttons["Archive Stretch gently"].exists)
+        app.buttons["Archive Stretch gently"].tap()
+        app.alerts["Archive extra?"].buttons["Archive Stretch gently"].tap()
+        XCTAssertEqual(app.staticTexts["extras-active-count"].label, "0/10 extras")
+    }
+
+    @MainActor func testCapAndInvalidTitlesAreExplained() {
+        let app = launch("extrasCap")
+        let manage = app.buttons["extras-manage"]
+        XCTAssertTrue(manage.waitForExistence(timeout: 5)); reveal(manage, in: app); manage.tap()
+        XCTAssertTrue(app.staticTexts["extras-cap"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.staticTexts["extras-active-count"].label, "10/10 extras")
+        XCTAssertFalse(app.textFields["extras-new-title"].exists)
+        app.buttons["Done"].tap()
+        app.terminate()
+        let emptyApp = launch("today")
+        let empty = emptyApp.buttons["extras-empty"]
+        XCTAssertTrue(empty.waitForExistence(timeout: 5)); reveal(empty, in: emptyApp); empty.tap()
+        XCTAssertFalse(emptyApp.buttons["extras-add"].isEnabled)
+        let field = emptyApp.textFields["extras-new-title"]
+        field.tap(); field.typeText(String(repeating: "a", count: 41))
+        XCTAssertFalse(emptyApp.buttons["extras-add"].isEnabled)
+        XCTAssertTrue(emptyApp.staticTexts["Use a name of 1–40 characters on one line."].exists)
+    }
+
+    @MainActor func testHistoricalExtrasAreLockedUntilEditAndRelockOnSelection() {
+        let app = launch("historyExtras")
+        let stretch = app.buttons.matching(NSPredicate(format: "label == %@", "Stretch")).firstMatch
+        XCTAssertTrue(stretch.waitForExistence(timeout: 5)); reveal(stretch, in: app)
+        XCTAssertFalse(stretch.isEnabled)
+        app.buttons["history-edit"].tap()
+        XCTAssertTrue(stretch.isEnabled)
+        stretch.tap(); XCTAssertEqual(stretch.value as? String, "Done")
+        app.swipeDown()
+        let otherDay = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "6 October 2026")).firstMatch
+        reveal(otherDay, in: app); otherDay.tap()
+        XCTAssertFalse(stretch.isEnabled)
+        XCTAssertTrue(app.buttons["history-edit"].exists)
+    }
+
+    @MainActor func testManagementRemainsUsableAtAccessibilitySize() {
+        let app = launch("todayExtras", large: true)
+        let manage = app.buttons["extras-manage"]
+        XCTAssertTrue(manage.waitForExistence(timeout: 5)); reveal(manage, in: app); manage.tap()
+        let rename = app.buttons["Rename Stretch"]
+        reveal(rename, in: app); rename.tap()
+        let cancel = app.buttons["Cancel"]
+        reveal(cancel, in: app); cancel.tap()
+        XCTAssertTrue(app.buttons["Done"].isHittable)
+    }
+}

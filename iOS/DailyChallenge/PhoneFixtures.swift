@@ -10,6 +10,19 @@ import Foundation
     enum Screen: String {
         case signIn, createAccount, forgotPassword, confirmCode, resetPassword
         case checking, setup, today, todayComplete, history, account
+        case todayExtras, extrasCap, historyExtras, historyExtrasEditing, accountExtras
+    }
+
+    static var isFixtureLaunch: Bool { ProcessInfo.processInfo.arguments.contains("-fixture") }
+
+    static var scrollAnchor: String? {
+        guard ProcessInfo.processInfo.arguments.contains("-fixture") else { return nil }
+        return value(after: "-fixture-scroll-to", in: ProcessInfo.processInfo.arguments)
+    }
+
+    static var showingManagement: Bool {
+        ProcessInfo.processInfo.arguments.contains("-fixture")
+            && ProcessInfo.processInfo.arguments.contains("-manage-extras")
     }
 
     /// 9 October 2026, 15:00 in Jersey: a fixed clock keeps renders identical.
@@ -17,8 +30,18 @@ import Foundation
     static let zone = TimeZone(identifier: "Europe/Jersey")!
 
     static func app(arguments: [String] = ProcessInfo.processInfo.arguments) -> PhoneApp? {
-        guard let index = arguments.firstIndex(of: "-fixture"), index + 1 < arguments.count,
-              let screen = Screen(rawValue: arguments[index + 1]) else { return nil }
+        let screen: Screen
+        if let index = arguments.firstIndex(of: "-fixture"), index + 1 < arguments.count,
+           let requested = Screen(rawValue: arguments[index + 1]) {
+            screen = requested
+        } else if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+                    || ProcessInfo.processInfo.environment["XCTestBundlePath"] != nil {
+            // The hosted unit-test app must also avoid production auth/storage, even
+            // before any individual test constructs its own temporary fixture.
+            screen = .today
+        } else {
+            return nil
+        }
         let suite = "fixture-\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suite)!
         if let appearance = value(after: "-appearance", in: arguments) {
@@ -32,9 +55,9 @@ import Foundation
         return arguments[index + 1]
     }
 
-    static func make(_ screen: Screen, defaults: UserDefaults) -> PhoneApp {
+    static func make(_ screen: Screen, defaults: UserDefaults, directory: URL? = nil) -> PhoneApp {
         let owner = UUID(uuidString: "6F1C2A43-0B55-4B5E-9F3D-2C1A7E9B4D10")!
-        let directory = FileManager.default.temporaryDirectory
+        let directory = directory ?? FileManager.default.temporaryDirectory
             .appendingPathComponent("daily-challenge-fixture-\(UUID().uuidString)", isDirectory: true)
         let auth: AuthModel
         switch screen {
@@ -60,10 +83,30 @@ import Foundation
         switch screen {
         case .checking:
             tracker.configureSync(UnreachableTransport())
-        case .today, .todayComplete, .history, .account:
+        case .today, .todayComplete, .history, .account, .todayExtras, .extrasCap, .historyExtras, .historyExtrasEditing, .accountExtras:
             seed(tracker, complete: screen == .todayComplete)
+            if [.todayExtras, .extrasCap, .historyExtras, .historyExtrasEditing, .accountExtras].contains(screen) {
+                for title in ["Stretch", "Read a chapter", "Prepare tomorrow’s healthy lunch"] {
+                    _ = tracker.addExtra(title)
+                }
+                if screen == .extrasCap {
+                    for title in ["Practise gratitude", "Call family", "Tidy desk", "Journal", "Go outside", "Sleep on time", "A readable extra title of forty letters!"] {
+                        _ = tracker.addExtra(title)
+                    }
+                }
+                tracker.toggleExtra(tracker.activeExtras[0].id)
+                if screen == .historyExtras || screen == .historyExtrasEditing {
+                    let archived = tracker.activeExtras[1].id
+                    tracker.selectHistoryDay(day(-2)); tracker.enableCorrections()
+                    tracker.toggleExtra(archived)
+                    _ = tracker.archiveExtra(archived)
+                    tracker.selectHistoryDay(day(-2))
+                    app.tab = .history
+                    if screen == .historyExtrasEditing { tracker.enableCorrections() }
+                }
+            }
             if screen == .history { app.tab = .history; tracker.selectHistoryDay(day(-2)) }
-            if screen == .account {
+            if screen == .account || screen == .accountExtras {
                 app.tab = .account
                 reminders.update(.init(enabled: true))
             }

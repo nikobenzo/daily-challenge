@@ -14,7 +14,7 @@ BUNDLE_ID=app.daily-challenge.ios
 udid="$(xcrun simctl list devices available -j | python3 -c '
 import json, sys
 name = sys.argv[1]
-devices = [d for runtime, ds in json.load(sys.stdin)["devices"].items() if "iOS" in runtime for d in ds]
+devices = [d for runtime, ds in json.load(sys.stdin)["devices"].items() if "iOS-27-" in runtime for d in ds]
 match = [d for d in devices if d["name"] == name]
 print(next((d["udid"] for d in match if d["state"] == "Booted"), match[0]["udid"] if match else ""))
 ' "$DEVICE")"
@@ -48,6 +48,20 @@ for appearance in light dark; do
   for screen in signIn createAccount confirmCode forgotPassword resetPassword checking setup today todayComplete history account; do
     capture "$screen" "$screen" "$appearance"
   done
+  for screen in todayExtras extrasCap accountExtras; do
+    capture "$screen" "$screen" "$appearance"
+  done
+  capture today-extras-detail todayExtras "$appearance" -fixture-scroll-to fixture-extras
+  capture historyExtras historyExtras "$appearance" -fixture-scroll-to fixture-history-day
+  capture historyExtrasEditing historyExtrasEditing "$appearance" -fixture-scroll-to fixture-history-day
+  capture manage-extras todayExtras "$appearance" -manage-extras
+  capture manage-extras-empty today "$appearance" -manage-extras
+  capture manage-extras-cap extrasCap "$appearance" -manage-extras
+  capture manage-extras-large-text todayExtras "$appearance" -manage-extras -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityL
+  capture manage-extras-actions-large-text todayExtras "$appearance" -manage-extras -fixture-scroll-to fixture-extra-actions -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityL
+  capture history-extras-large-text historyExtras "$appearance" -fixture-scroll-to fixture-extras -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityL
+  capture today-extras-large-text todayExtras "$appearance" -fixture-scroll-to fixture-extras -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityL
+  capture account-extras-large-text accountExtras "$appearance" -fixture-scroll-to fixture-account-extras -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityL
   capture today-large-text today "$appearance" -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityL
 done
 xcrun simctl status_bar "$udid" clear

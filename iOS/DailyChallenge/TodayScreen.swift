@@ -34,6 +34,8 @@ struct TodayScreen: View {
                     .padding(.horizontal, Theme.Size.sectionHorizontal)
                     .padding(.vertical, Theme.Size.sectionVertical + 2)
                 HairlineDivider()
+                PhoneExtrasSection(tracker: tracker).id("fixture-extras")
+                HairlineDivider()
                 PhoneStreakRow(streaks: tracker.streaks)
                     .padding(.horizontal, Theme.Size.sectionHorizontal)
                     .padding(.vertical, Theme.Size.sectionVertical)

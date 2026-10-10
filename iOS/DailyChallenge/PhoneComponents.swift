@@ -60,10 +60,28 @@ struct PhoneScreen<Content: View>: View {
     @ViewBuilder var content: () -> Content
 
     var body: some View {
+        #if DEBUG
+        ScrollViewReader { proxy in
+            screen.task {
+                if PhoneFixtures.isFixtureLaunch {
+                    // iOS restores scene scroll positions between fixture launches.
+                    // Reset explicitly so captures start at the requested surface.
+                    try? await Task.sleep(for: .milliseconds(300))
+                    proxy.scrollTo(PhoneFixtures.scrollAnchor ?? "fixture-screen-top", anchor: .top)
+                }
+            }
+        }
+        #else
+        screen
+        #endif
+    }
+
+    private var screen: some View {
         ScrollView {
             VStack(spacing: Theme.Space.m, content: content)
                 .padding(.horizontal, Theme.Space.m)
                 .padding(.bottom, Theme.Space.xl)
+                .id("fixture-screen-top")
         }
         .scrollIndicators(.automatic)
         .background(PhoneBackdrop())
