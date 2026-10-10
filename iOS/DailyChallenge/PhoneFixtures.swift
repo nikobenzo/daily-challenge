@@ -2,6 +2,7 @@
 import ChallengeCore
 import ChallengeSyncKit
 import Foundation
+import WidgetKit
 
 /// Debug builds only: `-fixture <screen>` launches on offline fixture data in a temporary
 /// folder, for UI tests and screenshots. No configuration, Keychain, network or
@@ -30,6 +31,9 @@ import Foundation
     static let zone = TimeZone(identifier: "Europe/Jersey")!
 
     static func app(arguments: [String] = ProcessInfo.processInfo.arguments) -> PhoneApp? {
+        if let variant = value(after: "-widget-fixture", in: arguments) {
+            return widgetApp(variant: variant)
+        }
         let screen: Screen
         if let index = arguments.firstIndex(of: "-fixture"), index + 1 < arguments.count,
            let requested = Screen(rawValue: arguments[index + 1]) {
@@ -131,6 +135,42 @@ import Foundation
             break
         }
         return app
+    }
+
+    /// Explicit Debug launch publishes synthetic data in a separate group root.
+    private static func widgetApp(variant: String) -> PhoneApp {
+        let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: PhoneSharedStore.groupID)!
+        let root = container.appendingPathComponent("WidgetFixtures")
+        if FileManager.default.fileExists(atPath: root.path) { try! FileManager.default.removeItem(at: root) }
+        let shared = PhoneSharedStore(root: root)
+        shared.onCommitted = { WidgetCenter.shared.reloadAllTimelines() }
+        let now = Date()
+        let owner = UUID(uuidString: "11111111-1111-1111-1111-111111111111")!
+        let tracker = TrackerModel(directory: root, clock: { now }, access: shared)
+        tracker.activate(ownerID: owner)
+        tracker.startChallenge(on: now, timeZone: zone)
+        let amount: Int = switch variant {
+        case "empty", "pending", "extras-empty": 0
+        case "full", "complete": 4_000
+        case "overflow": 4_500
+        default: 2_250
+        }
+        if amount > 0 { tracker.addWater(amount) }
+        if variant != "pending" && variant != "empty" {
+            tracker.toggle(.workout)
+            tracker.setDiet(variant == "missed" ? .missed : .clean)
+        }
+        if variant == "complete" { tracker.toggle(.walk); tracker.toggle(.bibleReading) }
+        if variant != "extras-empty" && variant != "empty" {
+            let titles = ["Stretch", "Read a chapter", "Prepare tomorrow’s healthy lunch", "Practise gratitude", "Call family", "Tidy desk", "Journal", "Go outside", "Sleep on time", "A readable extra title of forty letters!"]
+            let count = ["extras-ten", "long-names", "overflow"].contains(variant) ? 10 : 3
+            for title in titles.prefix(count) { _ = tracker.addExtra(title) }
+            if let first = tracker.activeExtras.first { tracker.toggleExtra(first.id) }
+        }
+        try! Data("synthetic Debug fixtures only".utf8).write(to: container.appendingPathComponent("widget-fixture-enabled"), options: .atomic)
+        WidgetCenter.shared.reloadAllTimelines()
+        return PhoneApp(auth: AuthModel(fixtureOwnerID: owner, now: { now }), tracker: tracker,
+                        reminders: nil, defaults: UserDefaults(suiteName: "widget-fixture-\(UUID())")!, schedulesRefresh: false)
     }
 
     private static func day(_ offset: Int) -> Date {

@@ -9,7 +9,7 @@ ROOT="$(cd "$SRCROOT/.." && pwd)"
 RESOURCES="$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH"
 PLIST="$TARGET_BUILD_DIR/$INFOPLIST_PATH"
 
-python3 - "$ROOT" "$RESOURCES" "$PLIST" "$CONFIGURATION" <<'PY'
+python3 - "$ROOT" "$RESOURCES" "$PLIST" "$CONFIGURATION" "${1:-}" <<'PY'
 import json, plistlib, sys
 from pathlib import Path
 root, resources, plist, configuration = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3]), sys.argv[4]
@@ -33,7 +33,9 @@ def fail_or_warn(message):
 
 target = resources / 'Configuration.json'
 env = root / '.env.local'
-if env.exists():
+if sys.argv[5] == '--version-only':
+    target.unlink(missing_ok=True)
+elif env.exists():
     settings = values(env)
     url = settings.get('SUPABASE_URL', '')
     key = settings.get('SUPABASE_PUBLISHABLE_KEY', '')
