@@ -2,55 +2,134 @@ import ChallengeCore
 import ChallengeSyncKit
 import SwiftUI
 
-/// Today's collapsible Extras list under the rings. Hidden entirely when the selected
-/// day shows no extras; extras never count toward the five (`isComplete`).
+/// Today's Extras section under the rings. With extras it is the collapsible checklist
+/// (header badge, chevron and the Manage extras pencil). With none it is one slim row,
+/// "Extras · Add your own to-dos", that drops the add field down inline, so the first
+/// extra can be added from the main screen rather than Account › Extras. The moment one
+/// exists the editor cross-fades into the checklist while the glass height animates
+/// (`AnimatedPopupStack`). Extras never count toward the five (`isComplete`).
 struct ExtrasSection: View {
     @Bindable var model: TrackerModel
-    @State var expanded = true
+    @State var expanded: Bool
+    @State private var newTitle = ""
+    @State private var error: String?
     @State private var managing = false
+    @FocusState private var focus: Bool?
     @Environment(\.trackerReduceMotionOverride) private var reduceMotionOverride
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
 
+    /// The checklist starts open; the empty row starts collapsed.
+    init(model: TrackerModel, expanded: Bool? = nil) {
+        self.model = model
+        _expanded = State(initialValue: expanded ?? (model.summary?.extrasTotal ?? 0 > 0))
+    }
+
     private var reduceMotion: Bool { reduceMotionOverride ?? systemReduceMotion }
+    private var hasExtras: Bool { model.summary?.extrasTotal ?? 0 > 0 }
 
     var body: some View {
         let done = model.summary?.extrasDone ?? 0
         let total = model.summary?.extrasTotal ?? 0
+        let hasExtras = hasExtras
         VStack(spacing: 0) {
             HStack(spacing: 10) {
-                Button {
-                    withAnimation(reduceMotion ? nil : Theme.Motion.crossFade) { expanded.toggle() }
-                } label: {
+                Button(action: toggle) {
                     HStack(spacing: 10) {
                         Image(systemName: "checklist").font(.system(size: 15, weight: .medium))
                             .foregroundStyle(Theme.textSecondary)
                         Eyebrow(text: "Extras", font: .system(size: 12, weight: .bold))
-                        Badge(symbol: done == total ? "checkmark" : nil, text: "\(done)/\(total)",
-                              fill: done == total ? Theme.doneTint : Theme.controlFill,
-                              foreground: done == total ? Theme.doneText : Theme.textPrimary, height: 22)
+                        if hasExtras {
+                            Badge(symbol: done == total ? "checkmark" : nil, text: "\(done)/\(total)",
+                                  fill: done == total ? Theme.doneTint : Theme.controlFill,
+                                  foreground: done == total ? Theme.doneText : Theme.textPrimary, height: 22)
+                                .transition(.opacity)
+                        } else {
+                            Text("Add your own to-dos").font(Theme.Fonts.caption).foregroundStyle(Theme.textTertiary)
+                                .lineLimit(1)
+                                .transition(.opacity)
+                        }
                         Spacer()
-                        Image(systemName: expanded ? "chevron.up" : "chevron.down")
+                        Image(systemName: "chevron.down")
                             .font(.system(size: 13, weight: .bold)).foregroundStyle(Theme.textSecondary)
+                            .rotationEffect(.degrees(expanded ? 180 : 0))
                     }
                     .frame(height: 40)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Extras, \(done) of \(total) done")
+                .accessibilityLabel(hasExtras ? "Extras, \(done) of \(total) done" : "Add extras, your own daily to-dos")
                 .accessibilityValue(expanded ? "Expanded" : "Collapsed")
-                .help("Your own daily extras. They never count toward the five or your streak.")
-                Button { managing = true } label: { Image(systemName: "square.and.pencil") }
-                    .buttonStyle(RoundIconStyle(size: 30))
-                    .help("Manage extras")
-                    .accessibilityLabel("Manage extras")
-                    .popover(isPresented: $managing, arrowEdge: .bottom) { ManageExtrasView(model: model) }
+                .accessibilityHint(hasExtras ? "Press to \(expanded ? "collapse" : "expand") the checklist"
+                                   : "Press to \(expanded ? "hide" : "show") the add field")
+                .help(hasExtras ? "Your own daily extras. They never count toward the five or your streak."
+                      : "Add extras: your own daily to-dos. They never count toward the five or your streak.")
+                if hasExtras {
+                    Button { managing = true } label: { Image(systemName: "square.and.pencil") }
+                        .buttonStyle(RoundIconStyle(size: 30))
+                        .help("Manage extras")
+                        .accessibilityLabel("Manage extras")
+                        .popover(isPresented: $managing, arrowEdge: .bottom) { ManageExtrasView(model: model) }
+                        .transition(.opacity)
+                }
             }
-            if expanded {
-                ExtrasChecklist(model: model)
-                    .padding(.bottom, 6)
-                    .transition(.opacity)
+            // The clip keeps the editor's drop-down under the header; 4 pt of room for the field's focus halo.
+            VStack(spacing: 0) {
+                if expanded {
+                    ZStack(alignment: .top) {
+                        if hasExtras {
+                            ExtrasChecklist(model: model)
+                                .padding(.bottom, 6)
+                                .transition(.opacity)
+                        } else {
+                            editor.transition(.opacity)
+                        }
+                    }
+                    .transition(reduceMotion || hasExtras ? .opacity : .move(edge: .top).combined(with: .opacity))
+                }
             }
+            .clipShape(Rectangle().inset(by: -4))
         }
+        .animation(reduceMotion ? Theme.Motion.reducedResize : Theme.Motion.sectionResize, value: hasExtras)
+        .onChange(of: hasExtras) { _, has in
+            // Archiving the last extra returns the slim row, collapsed.
+            if !has { withAnimation(reduceMotion ? Theme.Motion.reducedResize : Theme.Motion.sectionResize) { expanded = false } }
+        }
+        // Only the developer popup probe and the interface fixtures post this; it toggles exactly as a click does.
+        .onReceive(NotificationCenter.default.publisher(for: PopupProbe.toggleExtrasRow)) { _ in toggle() }
+    }
+
+    /// Caption, the "New extra" field and its plus button, as in Manage extras.
+    private var editor: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Daily to-dos of your own. They never count toward the five or your streak.")
+                .font(Theme.Fonts.caption).foregroundStyle(Theme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            ExtrasAddRow(title: $newTitle, focus: $focus, equals: true, add: add)
+            if let error { FieldError(text: error) }
+        }
+        .padding(.top, 2)
+        .padding(.bottom, 12)
+        .onAppear { focus = true }
+    }
+
+    private func toggle() {
+        let opening = !expanded
+        if hasExtras {
+            withAnimation(reduceMotion ? nil : Theme.Motion.crossFade) { expanded.toggle() }
+            return
+        }
+        withAnimation(reduceMotion ? Theme.Motion.reducedResize : Theme.Motion.sectionResize) { expanded.toggle() }
+        if opening {
+            AccessibilityNotification.Announcement("Add extras expanded. Type a name and press Return to add one.").post()
+        } else {
+            error = nil
+        }
+    }
+
+    private func add() {
+        guard Challenge.extraTitle(newTitle) != nil else { return }
+        error = model.addExtra(newTitle)
+        if error == nil { newTitle = "" }
     }
 }
 
@@ -167,6 +246,24 @@ struct ExtrasSettingRow: View {
     }
 }
 
+/// The "New extra" field and its plus button: Manage extras and Today's empty row share it.
+struct ExtrasAddRow<Focus: Hashable>: View {
+    @Binding var title: String
+    let focus: FocusState<Focus?>.Binding
+    let equals: Focus
+    let add: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            GlassField(symbol: "plus", placeholder: "New extra", text: $title, focus: focus, equals: equals, onSubmit: add)
+            Button(action: add) { Image(systemName: "plus") }
+                .buttonStyle(RoundIconStyle(size: 36, fill: Theme.primaryTop, foreground: .white))
+                .disabled(Challenge.extraTitle(title) == nil)
+                .help("Add extra").accessibilityLabel("Add extra")
+        }
+    }
+}
+
 /// Add, rename and archive, at most 10 active. No reordering, reminders, notes or icons.
 struct ManageExtrasView: View {
     @Bindable var model: TrackerModel
@@ -199,14 +296,7 @@ struct ManageExtrasView: View {
                 }
             }
             if model.canAddExtra {
-                HStack(spacing: 8) {
-                    GlassField(symbol: "plus", placeholder: "New extra", text: $newTitle,
-                               focus: $focus, equals: .new, onSubmit: add)
-                    Button(action: add) { Image(systemName: "plus") }
-                        .buttonStyle(RoundIconStyle(size: 36, fill: Theme.primaryTop, foreground: .white))
-                        .disabled(Challenge.extraTitle(newTitle) == nil)
-                        .help("Add extra").accessibilityLabel("Add extra")
-                }
+                ExtrasAddRow(title: $newTitle, focus: $focus, equals: .new, add: add)
             } else {
                 // Replaces the 46 pt add field; a whole-point height keeps the popover's edges crisp.
                 Label("Up to \(Challenge.maximumActiveExtras) extras. Archive one to add another.", systemImage: "info.circle")

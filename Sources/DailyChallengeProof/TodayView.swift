@@ -2,7 +2,7 @@ import ChallengeCore
 import ChallengeSyncKit
 import SwiftUI
 
-/// Today: five ring gauges, the water hero and the streak row, separated by hairlines.
+/// Today: five ring gauges, the Extras section, the water hero and the streak row, separated by hairlines.
 struct TodayTrackerView: View {
     @Bindable var model: TrackerModel
     @Environment(\.trackerReduceMotionOverride) private var reduceMotionOverride
@@ -17,12 +17,11 @@ struct TodayTrackerView: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, Theme.Size.sectionVertical + 2)
             HairlineDivider()
-            if model.summary?.extrasTotal ?? 0 > 0 {
-                ExtrasSection(model: model)
-                    .padding(.horizontal, Theme.Size.sectionHorizontal)
-                    .padding(.vertical, 4)
-                HairlineDivider()
-            }
+            // The checklist, or with no extras the slim "Add your own to-dos" row.
+            ExtrasSection(model: model)
+                .padding(.horizontal, Theme.Size.sectionHorizontal)
+                .padding(.vertical, 4)
+            HairlineDivider()
             if complete {
                 CompletionBand(day: model.dayNumber)
                     .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))

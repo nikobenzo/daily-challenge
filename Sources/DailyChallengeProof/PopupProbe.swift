@@ -13,28 +13,43 @@ import SwiftUI
 /// directory, then quits. The image is the WindowServer's composite of the popup window
 /// alone (`screencapture -l`, which draws Liquid Glass) when the launching terminal may
 /// record the screen, else the window's own rendering (cacheDisplay, no permission).
-/// Optional section steps switch sections like the header control and record the window
+/// Optional steps switch sections like the header control, or (`extras`, on Today with no
+/// extras) click the slim Extras row so its add field drops down, and record the window
 /// and glass frames on every display frame while the height animates, and, with screen
-/// recording, a video of the header switcher while its selection moves.
+/// recording, a video of the header switcher while its selection moves or of the Extras
+/// row while it expands.
 ///
 ///     DAILY_CHALLENGE_POPUP_PROBE=<directory>                                  required
 ///     DAILY_CHALLENGE_POPUP_PROBE_SCREEN=sign-in|setup|today|today-extras|history|account   (today)
 ///     DAILY_CHALLENGE_POPUP_PROBE_APPEARANCE=light|dark                        (light)
-///     DAILY_CHALLENGE_POPUP_PROBE_STEPS=history,account,today                  (none)
+///     DAILY_CHALLENGE_POPUP_PROBE_STEPS=history,account,today|extras           (none)
 @MainActor
 struct PopupProbe {
     enum Screen: String { case signIn = "sign-in", setup, today, todayExtras = "today-extras", history, account }
+    enum Step: Equatable {
+        case section(TrackerSection)
+        /// Clicks Today's Extras row (the empty-state one drops its add field down).
+        case extras
+
+        init?(_ name: Substring) {
+            if name.lowercased() == "extras" { self = .extras; return }
+            guard let section = TrackerSection.allCases.first(where: { $0.rawValue.lowercased() == name.lowercased() }) else { return nil }
+            self = .section(section)
+        }
+    }
 
     static let productionBundleID = "app.daily-challenge.proof"
     /// Switches the popup's section (object: TrackerSection) the way the header control does.
     static let selectSection = Notification.Name("DailyChallengePopupProbeSelectSection")
+    /// Clicks Today's Extras row header the way a person does (also used by the interface fixtures).
+    static let toggleExtrasRow = Notification.Name("DailyChallengePopupProbeToggleExtrasRow")
     static let current = PopupProbe(environment: ProcessInfo.processInfo.environment, bundleID: Bundle.main.bundleIdentifier)
     private static let defaultsSuite = "app.daily-challenge.popup-probe.defaults"
 
     let directory: URL
     let screen: Screen
     let appearance: AppearancePreference
-    let steps: [TrackerSection]
+    let steps: [Step]
     var name: String { "\(screen.rawValue)-\(appearance.rawValue)" }
 
     init?(environment: [String: String], bundleID: String?) {
@@ -43,8 +58,7 @@ struct PopupProbe {
         directory = URL(fileURLWithPath: path, isDirectory: true)
         screen = environment["DAILY_CHALLENGE_POPUP_PROBE_SCREEN"].flatMap(Screen.init) ?? .today
         appearance = environment["DAILY_CHALLENGE_POPUP_PROBE_APPEARANCE"].flatMap(AppearancePreference.init) ?? .light
-        steps = (environment["DAILY_CHALLENGE_POPUP_PROBE_STEPS"] ?? "").split(separator: ",")
-            .compactMap { step in TrackerSection.allCases.first { $0.rawValue.lowercased() == step.lowercased() } }
+        steps = (environment["DAILY_CHALLENGE_POPUP_PROBE_STEPS"] ?? "").split(separator: ",").compactMap(Step.init)
     }
 
     var section: TrackerSection {
@@ -96,16 +110,29 @@ struct PopupProbe {
         try? await Task.sleep(for: .seconds(1.2))
         await record(popup, as: name)
         var previous = section
-        for step in steps where step != previous {
-            let label = "\(name)-\(previous.rawValue.lowercased())-to-\(step.rawValue.lowercased())"
-            let video = recordHeader(popup.panel, to: label)
-            // Screen recording takes a moment to start; the switch happens inside the video.
+        for step in steps where step != .section(previous) {
+            let label: String
+            let video: Process?
+            let notification: Notification.Name
+            var object: Any?
+            switch step {
+            case .section(let target):
+                label = "\(name)-\(previous.rawValue.lowercased())-to-\(target.rawValue.lowercased())"
+                video = recordHeader(popup.panel, to: label)
+                notification = Self.selectSection
+                object = target
+                previous = target
+            case .extras:
+                label = "\(name)-extras-expanded"
+                video = recordExtrasRow(popup.panel, to: label)
+                notification = Self.toggleExtrasRow
+            }
+            // Screen recording takes a moment to start; the change happens inside the video.
             if video != nil { try? await Task.sleep(for: .milliseconds(700)) }
-            NotificationCenter.default.post(name: Self.selectSection, object: step)
+            NotificationCenter.default.post(name: notification, object: object)
             let trace = await Self.trace(popup.panel, seconds: 1.2)
             if let video { await Self.wait(for: video) }
             await record(popup, as: label, trace: trace)
-            previous = step
         }
         // Escape closes the popup, as a person would.
         popup.panel.cancelOperation(nil)
@@ -167,18 +194,33 @@ struct PopupProbe {
     /// A two-second video of the header's section switcher (on the glass, 4 pt around its
     /// track) while a section changes. Only that part of the screen is recorded.
     private func recordHeader(_ panel: PopupPanel, to label: String) -> Process? {
-        guard let sheet = panel.glassFrames.first, let primary = NSScreen.screens.first else { return nil }
+        guard let sheet = panel.glassFrames.first else { return nil }
         let cells = CGFloat(TrackerSection.allCases.count), cell = Theme.Size.segmentCell
         let track = CGSize(width: cells * cell.width + (cells - 1) * 2 + Theme.Size.segmentTrack - cell.height,
                            height: Theme.Size.segmentTrack)
         let switcher = CGRect(x: panel.frame.minX + sheet.maxX - Theme.Size.sectionHorizontal - track.width,
                               y: panel.frame.minY + sheet.maxY - (Theme.Size.headerHeight + track.height) / 2,
                               width: track.width, height: track.height).insetBy(dx: -4, dy: -4)
+        return recordScreen(switcher, to: label)
+    }
+
+    /// A two-second video of the band of the sheet below the rings (its full width, 230 pt
+    /// from just above the Extras row) while the row's add field drops down.
+    private func recordExtrasRow(_ panel: PopupPanel, to label: String) -> Process? {
+        guard let sheet = panel.glassFrames.first else { return nil }
+        let ringsBottom = sheet.maxY - Theme.Size.headerHeight - 1 - Theme.Size.ring - 24 - 2 * (Theme.Size.sectionVertical + 2)
+        let band = CGRect(x: panel.frame.minX + sheet.minX, y: panel.frame.minY + ringsBottom - 230,
+                          width: sheet.width, height: 230)
+        return recordScreen(band, to: label)
+    }
+
+    private func recordScreen(_ region: CGRect, to label: String) -> Process? {
+        guard let primary = NSScreen.screens.first else { return nil }
         // screencapture -R takes top-left global coordinates.
-        let top = primary.frame.maxY - switcher.maxY
+        let top = primary.frame.maxY - region.maxY
         let url = directory.appendingPathComponent("\(label).mov")
         try? FileManager.default.removeItem(at: url)
-        return Self.screencapture(["-v", "-V2", "-R\(Int(switcher.minX)),\(Int(top)),\(Int(switcher.width)),\(Int(switcher.height))", url.path])
+        return Self.screencapture(["-v", "-V2", "-R\(Int(region.minX)),\(Int(top)),\(Int(region.width)),\(Int(region.height))", url.path])
     }
 
     // MARK: Report

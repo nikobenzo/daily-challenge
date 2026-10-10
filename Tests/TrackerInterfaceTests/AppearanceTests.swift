@@ -99,9 +99,10 @@ struct AppearanceTests {
         }
     }
 
-    /// Today's Extras section on the production root in Light and Dark: hidden entirely
-    /// with no extras, a section under the rings (collapsible) with them, plus History's
-    /// extras pill and the Manage extras popover, empty, in use and at the cap.
+    /// Today's Extras section on the production root in Light and Dark: with no extras the
+    /// slim "Add your own to-dos" row, collapsed and with its add field dropped down; with
+    /// them the section under the rings (collapsible); plus History's extras pill and the
+    /// Manage extras popover, empty, in use and at the cap.
     @Test func extrasSectionHasAdaptiveGlassInBothAppearances() throws {
         try withPreferences { appearance, _ in
             let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -114,12 +115,48 @@ struct AppearanceTests {
             model.addWater()
             model.addWater()
             let auth = ProofModel(fixtureOwnerID: owner, directory: directory)
-            func todayHeight() -> CGFloat {
-                let host = NSHostingView(rootView: TodayTrackerView(model: model).environment(\.trackerLiquidGlassOverride, false))
+            /// The row is toggled exactly as a click does, through the probe notification.
+            @MainActor func todayHeight(extrasRowToggled: Bool = false) -> CGFloat {
+                let host = NSHostingView(rootView: TodayTrackerView(model: model)
+                    .environment(\.trackerLiquidGlassOverride, false)
+                    .environment(\.trackerReduceMotionOverride, true))
+                let window = NSWindow(contentRect: CGRect(x: 0, y: 0, width: 420, height: 640), styleMask: .borderless, backing: .buffered, defer: false)
+                window.isReleasedWhenClosed = false
+                window.contentView = host
+                defer { window.close() }
+                host.layoutSubtreeIfNeeded()
+                if extrasRowToggled { Self.toggleExtrasRow() }
                 return host.fittingSize.height
             }
+            // Empty state: one slim collapsed row under the rings, a button that drops the add field down.
             let without = todayHeight()
+            let emptyExpanded = todayHeight(extrasRowToggled: true)
+            #expect(emptyExpanded > without + Theme.Size.field, "The add field drops down under the row (\(without), \(emptyExpanded))")
+            let rowCollapsed = NSHostingView(rootView: VStack(spacing: 0) { ExtrasSection(model: model) }
+                .frame(width: 380)).fittingSize.height
+            let rowExpanded = NSHostingView(rootView: VStack(spacing: 0) { ExtrasSection(model: model, expanded: true) }
+                .frame(width: 380)).fittingSize.height
+            #expect(rowCollapsed < 50 && rowExpanded > rowCollapsed + Theme.Size.field,
+                    "The empty row starts collapsed and is slim (\(rowCollapsed), \(rowExpanded))")
+            try renderLiveModes(TrackerPopup(model: model, auth: auth, appearance: appearance), name: "today-add-extras",
+                                appearance: appearance, prepare: Self.toggleExtrasRow)
             try renderLiveModes(ManageExtrasView(model: model), name: "manage-extras-empty", appearance: appearance, surface: .opaque)
+            // Adding the first extra from the dropped-down field turns the row into the checklist.
+            do {
+                let host = NSHostingView(rootView: TodayTrackerView(model: model)
+                    .environment(\.trackerLiquidGlassOverride, false)
+                    .environment(\.trackerReduceMotionOverride, true))
+                host.layoutSubtreeIfNeeded()
+                Self.toggleExtrasRow()
+                let editor = host.fittingSize.height
+                #expect(model.addExtra("Stretch for ten minutes") == nil)
+                RunLoop.main.run(until: Date().addingTimeInterval(0.3))
+                let list = host.fittingSize.height
+                #expect(list < editor && list > without + 30, "The checklist replaces the editor (\(without), \(editor), \(list))")
+                #expect(model.archiveExtra(model.activeExtras[0].id) == nil)
+                RunLoop.main.run(until: Date().addingTimeInterval(0.3))
+                #expect(host.fittingSize.height == without, "Archiving the last extra returns the collapsed row")
+            }
             PopupProbe.seedExtras(model)
             #expect(model.summary?.extrasTotal == 3 && model.summary?.extrasDone == 1)
             #expect(model.summary?.isComplete == false)
@@ -138,10 +175,16 @@ struct AppearanceTests {
             model.showToday()
             while model.canAddExtra { #expect(model.addExtra("Extra \(model.activeExtras.count + 1)") == nil) }
             try renderLiveModes(ManageExtrasView(model: model), name: "manage-extras-full", appearance: appearance, surface: .opaque)
-            // Archiving every extra hides the section again.
+            // Archiving every extra brings the slim row back.
             for extra in model.activeExtras { #expect(model.archiveExtra(extra.id) == nil) }
             #expect(todayHeight() == without)
         }
+    }
+
+    /// Posts the probe's toggle, as a click on Today's Extras row, and lets the change settle.
+    private static func toggleExtrasRow() {
+        NotificationCenter.default.post(name: PopupProbe.toggleExtrasRow, object: nil)
+        RunLoop.main.run(until: Date().addingTimeInterval(0.3))
     }
 
     /// Every signed-out auth screen on the production root, Light and Dark. Offline
@@ -344,10 +387,14 @@ struct AppearanceTests {
         }
     }
 
-    private func renderLiveModes<Content: View>(_ content: Content, name: String, appearance: AppAppearance, surface: Surface = .glass) throws {
+    /// `prepare` runs once the content is hosted, before the renders: an interaction such
+    /// as the probe's Extras-row toggle, which needs the live view to receive it.
+    private func renderLiveModes<Content: View>(_ content: Content, name: String, appearance: AppAppearance,
+                                                surface: Surface = .glass, prepare: (@MainActor () -> Void)? = nil) throws {
         // Changing preference on a retained window tests native live propagation.
         do {
-            let host = NSHostingView(rootView: content.environment(\.trackerLiquidGlassOverride, false))
+            let host = NSHostingView(rootView: content.environment(\.trackerLiquidGlassOverride, false)
+                .environment(\.trackerReduceMotionOverride, prepare == nil ? nil : true))
             // MenuBarExtra's retained native size must not be silently clamped
             // to this test host's inferred maximum content size.
             host.sizingOptions = [.intrinsicContentSize]
@@ -355,6 +402,10 @@ struct AppearanceTests {
             window.isReleasedWhenClosed = false
             window.contentView = host
             defer { window.close() }
+            if let prepare {
+                host.layoutSubtreeIfNeeded()
+                prepare()
+            }
             for preference in [AppearancePreference.light, .dark, .system] {
                 appearance.preference = preference
                 let size = host.fittingSize
