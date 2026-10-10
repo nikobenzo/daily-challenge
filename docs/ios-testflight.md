@@ -38,11 +38,11 @@ Debug builds accept `-fixture <screen>` (and `-appearance light|dark`) as launch
 open on offline fixture data for UI tests and screenshots; Release builds do not contain the
 fixtures.
 
-## Extras and planned widgets
+## Extras and widgets
 
 The [phased iPhone widgets plan](../plans/ios-widgets.md) defines extras UI, coordinated App
-Group storage, three widgets and owner signing/TestFlight acceptance. Phase 1 phone extras
-and Phase 2 coordinated storage are built; Phases 3–5 remain planned. Each phase has its own review gate.
+Group storage, three widgets and owner signing/TestFlight acceptance. Phase 1 phone extras,
+Phase 2 coordinated storage and Phase 3 read-only widgets are built; Phases 4–5 remain planned. Each phase has its own review gate.
 
 Phase 1 fixture acceptance (10 October 2026) uses Xcode 27.0 (27A266a), iPhone 17 / iOS 27.0.
 Commands A–D in the plan passed: XcodeGen regeneration, `swift test` (183 shared tests),
@@ -218,3 +218,32 @@ transports. On a real iPhone, after installing from TestFlight:
 9. History shows extras archived after the selected day. Its ticks remain disabled until
    Edit this day; choosing a different day exits correction mode. Check explicit extras activity
    wording, Light/Dark, VoiceOver and accessibility text sizes on the real phone.
+
+## Read-only widgets (Phase 3)
+
+The embedded `app.daily-challenge.ios.widgets` extension contains exactly three stable kinds:
+`DailyChallenge.Water` (small/medium), `DailyChallenge.Requirements` (medium), and
+`DailyChallenge.Extras` (medium/large). It reads only the coordinated active account's local
+history. It has no auth composition, network requests, credentials or server configuration.
+The extension's version-only build phase reads unchanged `VERSION`; `scripts/ios-archive.sh
+--check` verifies embedding, the WidgetKit extension point, bundle ID and matching versions.
+
+**Owner signing steps:** associate the same registered `group.app.daily-challenge.ios` group
+with the extension App ID as well as the phone App ID. Regenerate both provisioning profiles
+through Xcode automatic signing (or the Apple Developer portal fallback). Before a signed
+installation, inspect both profiles' `com.apple.security.application-groups` entitlement and
+confirm the same group is authorized. The embedded extension needs no separate App Store
+Connect app record. An unsigned archive cannot verify registered capabilities or profiles.
+
+Widget links open Today or Manage extras through the phone's existing auth/setup gating.
+Every timeline includes now and three upcoming challenge-zone midnights, derived at each
+entry's own date. WidgetKit controls delivery and may retain cached content; refresh is not
+promised at an exact midnight. Local commits, adoption/sync, foreground reload and account
+changes request fresh timelines. Remote activity requires app execution.
+
+Debug-only `-widget-fixture <variant>` launches use synthetic data in a separate `WidgetFixtures`
+group folder and explicitly publish a fixture switch for the independently running extension.
+Variants: `empty`, `partial`, `full`, `overflow`, `pending`, `complete`, `missed`, `extras-empty`,
+`extras-ten`, `long-names`. Use these only on a disposable simulator. Release contains neither
+fixture selection nor seeding. See [Phase 3 evidence](ios-widgets-phase3-evidence.md) for the
+reproducible SpringBoard capture procedure and capture provenance.
