@@ -38,7 +38,9 @@ struct WidgetHeading: View {
 
 struct WaterWidgetView: View {
     let entry: ChallengeWidgetEntry
-    @Environment(\.widgetFamily) private var family
+    var familyOverride: WidgetFamily? = nil
+    @Environment(\.widgetFamily) private var widgetFamily
+    private var family: WidgetFamily { familyOverride ?? widgetFamily }
     var body: some View {
         let amount = entry.summary?.waterMillilitres ?? 0
         VStack(alignment: .leading, spacing: 6) {
@@ -67,14 +69,14 @@ struct WidgetJugShape: Shape {
         var p = Path()
         let w = rect.width, h = rect.height
         p.move(to: CGPoint(x: w * 0.35, y: 0))
-        p.addLines([CGPoint(x: w * 0.65, y: 0), CGPoint(x: w * 0.65, y: h * 0.12),
-                    CGPoint(x: w * 0.9, y: h * 0.28), CGPoint(x: w * 0.96, y: h * 0.4),
-                    CGPoint(x: w * 0.96, y: h * 0.9)])
+        for point in [CGPoint(x: w * 0.65, y: 0), CGPoint(x: w * 0.65, y: h * 0.12),
+                      CGPoint(x: w * 0.9, y: h * 0.28), CGPoint(x: w * 0.96, y: h * 0.4),
+                      CGPoint(x: w * 0.96, y: h * 0.9)] { p.addLine(to: point) }
         p.addQuadCurve(to: CGPoint(x: w * 0.85, y: h), control: CGPoint(x: w * 0.96, y: h))
         p.addLine(to: CGPoint(x: w * 0.15, y: h))
         p.addQuadCurve(to: CGPoint(x: w * 0.04, y: h * 0.9), control: CGPoint(x: w * 0.04, y: h))
-        p.addLines([CGPoint(x: w * 0.04, y: h * 0.4), CGPoint(x: w * 0.1, y: h * 0.28),
-                    CGPoint(x: w * 0.35, y: h * 0.12)])
+        for point in [CGPoint(x: w * 0.04, y: h * 0.4), CGPoint(x: w * 0.1, y: h * 0.28),
+                      CGPoint(x: w * 0.35, y: h * 0.12)] { p.addLine(to: point) }
         p.closeSubpath()
         return p
     }
@@ -87,7 +89,6 @@ struct WidgetJugView: View {
                 WidgetJugShape().fill(Theme.ringTrack)
                 Rectangle().fill(LinearGradient(colors: [Theme.jugTop, Theme.jugBottom], startPoint: .top, endPoint: .bottom))
                     .frame(height: proxy.size.height * min(1, max(0, fraction)))
-                    .clipShape(WidgetJugShape())
                 WidgetJugShape().stroke(Theme.water, lineWidth: 2)
                 RoundedRectangle(cornerRadius: 5).fill(Theme.solidGlass)
                     .frame(width: proxy.size.width * 0.14, height: proxy.size.height * 0.18)
@@ -135,7 +136,9 @@ struct RequirementsWidgetView: View {
 }
 struct ExtrasWidgetView: View {
     let entry: ChallengeWidgetEntry
-    @Environment(\.widgetFamily) private var family
+    var familyOverride: WidgetFamily? = nil
+    @Environment(\.widgetFamily) private var widgetFamily
+    private var family: WidgetFamily { familyOverride ?? widgetFamily }
     @Environment(\.dynamicTypeSize) private var typeSize
     var body: some View {
         let summary = entry.summary

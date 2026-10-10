@@ -60,8 +60,8 @@ struct ChallengeWidgetProvider: TimelineProvider {
 
     init(store: PhoneSharedStore? = nil, clock: @escaping () -> Date = Date.init) {
         self.clock = clock
-        let shared = store ?? Self.extensionStore()
         read = {
+            let shared = store ?? Self.extensionStore()
             guard let (_, store) = try shared.readActive() else { throw SignedOut() }
             return store.challenge
         }

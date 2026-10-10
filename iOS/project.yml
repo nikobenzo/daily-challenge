@@ -27,6 +27,7 @@ targets:
       - path: DailyChallenge # Includes phone-only extras views and Debug fixtures.
       - path: Shared
       - path: DailyChallengeWidgets/WidgetTimeline.swift
+      - path: DailyChallengeWidgets/WidgetViews.swift
       # Design-system tokens and components shared with the Mac app (no AppKit or UIKit there,
       # apart from Theme's colour and font helpers).
       - path: ../Sources/DailyChallengeProof/Shared
@@ -155,3 +156,25 @@ schemes:
       gatherCoverageData: false
     archive:
       config: Release
+
+  WidgetCapture:
+    build:
+      targets:
+        DailyChallenge: all
+    test:
+      commandLineArguments:
+        "-fixture": true
+        "today": true
+        "-capture-widgets": true
+      targets: [DailyChallengeUITests]
+
+  WidgetGalleryCapture:
+    build:
+      targets:
+        DailyChallenge: all
+    test:
+      commandLineArguments:
+        "-fixture": true
+        "today": true
+        "-capture-widget-gallery": true
+      targets: [DailyChallengeUITests]
