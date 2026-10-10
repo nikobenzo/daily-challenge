@@ -82,6 +82,8 @@ Publish only an opaque active owner UUID/generation and challenge identity in co
 
 ## Phase 3 — Three read-only WidgetKit widgets (8–12 hours)
 
+**Build evidence (10 October 2026):** Phase 3 built in commit `6e507d01f45bd8c0f7e2c0d1132a0cee47126d5a`; [commands, simulator gallery and rendered snapshot provenance](../docs/ios-widgets-phase3-evidence.md); firstmate authorized gallery/render fallback after two bounded placement attempts, so actual Home Screen placement remains unverified.
+
 **Goal:** review actual widget layouts and challenge-day rollover before introducing mutations.
 
 **In:** embedded extension `app.daily-challenge.ios.widgets`, three stable widget kinds, static local timeline entries, deep links, placeholders and fixture seeding. Water small/medium, challenge medium, extras medium/large. **Out:** interactive controls (do not draw enabled-looking plus/minus yet), Lock Screen family, extension auth/networking and active jug animation.
