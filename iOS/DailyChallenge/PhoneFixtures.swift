@@ -138,14 +138,24 @@ import WidgetKit
     }
 
     /// Explicit Debug launch publishes synthetic data in a separate group root.
+    /// `reopen` relaunches on the existing fixture history (for example after widget
+    /// taps while the app was terminated) instead of reseeding it.
     private static func widgetApp(variant: String) -> PhoneApp {
         let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: PhoneSharedStore.groupID)!
         let root = container.appendingPathComponent("WidgetFixtures")
-        if FileManager.default.fileExists(atPath: root.path) { try! FileManager.default.removeItem(at: root) }
+        let reopen = variant == "reopen"
+        if !reopen, FileManager.default.fileExists(atPath: root.path) { try! FileManager.default.removeItem(at: root) }
         let shared = PhoneSharedStore(root: root)
         shared.onCommitted = { WidgetCenter.shared.reloadAllTimelines() }
-        let now = Date()
         let owner = UUID(uuidString: "11111111-1111-1111-1111-111111111111")!
+        let auth = { (now: Date) in AuthModel(fixtureOwnerID: owner, now: { now }) }
+        if reopen {
+            let tracker = TrackerModel(directory: root, access: shared)
+            tracker.activate(ownerID: owner)
+            return PhoneApp(auth: auth(Date()), tracker: tracker, reminders: nil,
+                            defaults: UserDefaults(suiteName: "widget-fixture-\(UUID())")!, schedulesRefresh: false)
+        }
+        let now = Date()
         let tracker = TrackerModel(directory: root, clock: { now }, access: shared)
         tracker.activate(ownerID: owner)
         tracker.startChallenge(on: now, timeZone: zone)
@@ -169,7 +179,7 @@ import WidgetKit
         }
         try! Data("synthetic Debug fixtures only".utf8).write(to: container.appendingPathComponent("widget-fixture-enabled"), options: .atomic)
         WidgetCenter.shared.reloadAllTimelines()
-        return PhoneApp(auth: AuthModel(fixtureOwnerID: owner, now: { now }), tracker: tracker,
+        return PhoneApp(auth: auth(now), tracker: tracker,
                         reminders: nil, defaults: UserDefaults(suiteName: "widget-fixture-\(UUID())")!, schedulesRefresh: false)
     }
 

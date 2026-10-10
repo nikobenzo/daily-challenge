@@ -24,6 +24,22 @@ struct WidgetSurface<Content: View>: View {
     }
 }
 
+/// Extension builds wrap a control in its App Intent button. The app target compiles
+/// these views for in-process renders and draws the same label without an intent.
+/// Without a binding (placeholders, previews) the label stays read-only.
+struct WidgetControl<Label: View>: View {
+    let request: WidgetActionRequest?
+    var enabled = true
+    @ViewBuilder let label: () -> Label
+    var body: some View {
+        #if WIDGET_EXTENSION
+        if let request, enabled { WidgetIntentButton(request: request, label: label()) } else { label() }
+        #else
+        label()
+        #endif
+    }
+}
+
 struct WidgetHeading: View {
     let title: String
     let entry: ChallengeWidgetEntry
@@ -43,23 +59,53 @@ struct WaterWidgetView: View {
     private var family: WidgetFamily { familyOverride ?? widgetFamily }
     var body: some View {
         let amount = entry.summary?.waterMillilitres ?? 0
+        let small = family == .systemSmall
         VStack(alignment: .leading, spacing: 6) {
             WidgetHeading(title: "Water", entry: entry)
-            HStack(spacing: 14) {
+            HStack(spacing: small ? 10 : 14) {
                 WidgetJugView(fraction: Double(amount) / 4_000)
-                    .frame(width: family == .systemSmall ? 46 : 70)
+                    .frame(width: small ? 34 : 64)
                     .accessibilityHidden(true)
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(amount.formatted() + " ml").font(.system(size: family == .systemSmall ? 19 : 28, weight: .semibold, design: .rounded)).minimumScaleFactor(0.7).lineLimit(1)
-                    Text("4,000 ml / 4 L").font(.caption).foregroundStyle(Theme.textSecondary)
-                    if family == .systemMedium {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(amount.formatted() + " ml").font(.system(size: small ? 19 : 28, weight: .semibold, design: .rounded)).minimumScaleFactor(0.7).lineLimit(1)
+                    Text("4,000 ml / 4 L").font(.caption).foregroundStyle(Theme.textSecondary).lineLimit(1)
+                    if !small {
                         Text(amount >= 4_000 ? "Goal met" : "Today's water").font(.caption).foregroundStyle(Theme.water)
-                        Text("Open to log a pour").font(.caption2).foregroundStyle(Theme.textSecondary)
                     }
                 }
+                .accessibilityElement(children: .combine)
+                if !small {
+                    Spacer(minLength: 0)
+                    VStack(spacing: 8) { plus; minus }.frame(width: 104)
+                }
             }.frame(maxHeight: .infinity)
+            if small { HStack(spacing: 8) { minus.frame(width: 44); plus } }
         }
-        .accessibilityElement(children: .combine)
+    }
+
+    /// Minus targets today's latest active pour; with none it is disabled (and a
+    /// stale invocation is a no-op in the recorder).
+    private var canUndo: Bool { !(entry.summary?.activePours.isEmpty ?? true) }
+    private var plus: some View {
+        WidgetControl(request: entry.binding.map { WidgetActionRequest(.pour, binding: $0) }) {
+            Label("450 ml", systemImage: "plus")
+                .font(.system(size: 13, weight: .bold)).lineLimit(1).minimumScaleFactor(0.8)
+                .foregroundStyle(Theme.textInverse)
+                .frame(maxWidth: .infinity, minHeight: 32)
+                .background(Capsule().fill(Theme.water))
+                .accessibilityLabel("Add 450 ml")
+        }
+    }
+    private var minus: some View {
+        WidgetControl(request: entry.binding.map { WidgetActionRequest(.undoPour, binding: $0) }, enabled: canUndo) {
+            Image(systemName: "minus")
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(Theme.water)
+                .frame(maxWidth: .infinity, minHeight: 32)
+                .background(Capsule().fill(Theme.accentTint))
+                .opacity(canUndo ? 1 : 0.4)
+                .accessibilityLabel("Undo latest pour")
+        }
     }
 }
 
@@ -117,20 +163,39 @@ struct RequirementsWidgetView: View {
             let summary = entry.summary
             HStack(alignment: .top, spacing: 16) {
                 VStack(alignment: .leading, spacing: 9) {
-                    row("Workout · 45 min", done: summary?.completedHabits.contains(.workout) == true)
-                    row("Walk · 45 min", done: summary?.completedHabits.contains(.walk) == true)
+                    habit(.workout, "Workout · 45 min")
+                    habit(.walk, "Walk · 45 min")
                 }
                 VStack(alignment: .leading, spacing: 9) {
-                    row(summary?.diet == .missed ? "Diet · missed" : "Clean diet", done: summary?.diet == .clean, missed: summary?.diet == .missed)
-                    row("Bible · 10 pages", done: summary?.completedHabits.contains(.bibleReading) == true)
+                    diet
+                    habit(.bibleReading, "Bible · 10 pages")
                 }
             }.frame(maxHeight: .infinity)
             Text(entry.dayNumber.map { "Day \($0) · \(entry.streak) day streak" } ?? "Challenge starts soon")
                 .font(.caption2).foregroundStyle(Theme.textSecondary)
         }
     }
+    private func habit(_ habit: Challenge.Habit, _ title: String) -> some View {
+        WidgetControl(request: entry.binding.map { WidgetActionRequest(.toggleHabit(habit), binding: $0) }) {
+            row(title, done: entry.summary?.completedHabits.contains(habit) == true)
+        }
+    }
+    /// D-W1: pending ↔ clean from the widget. A missed day is never changed here;
+    /// its row links into the app, which keeps the full cycle.
+    @ViewBuilder private var diet: some View {
+        if entry.summary?.diet == .missed {
+            Link(destination: URL(string: "daily-challenge://today")!) {
+                row("Diet · missed", done: false, missed: true).foregroundStyle(Theme.textPrimary)
+            }.tint(Theme.textPrimary)
+        } else {
+            WidgetControl(request: entry.binding.map { WidgetActionRequest(.toggleDiet, binding: $0) }) {
+                row("Clean diet", done: entry.summary?.diet == .clean)
+            }
+        }
+    }
     private func row(_ title: String, done: Bool, missed: Bool = false) -> some View {
         HStack(spacing: 7) { WidgetStatusRing(done: done, missed: missed); Text(title).font(.system(size: 12)).lineLimit(1).minimumScaleFactor(0.8) }
+            .frame(maxWidth: .infinity, minHeight: 28, alignment: .leading).contentShape(Rectangle())
             .accessibilityElement(children: .ignore).accessibilityLabel(title + (done ? ", done" : missed ? "" : ", pending"))
     }
 }
@@ -153,10 +218,14 @@ struct ExtrasWidgetView: View {
             } else {
                 ForEach(extras.prefix(limit)) { extra in
                     let done = summary?.completedExtras.contains(extra.id) == true
-                    HStack(spacing: 9) {
-                        Image(systemName: done ? "checkmark.circle.fill" : "circle").foregroundStyle(done ? Theme.doneText : Theme.textTertiary).accessibilityHidden(true)
-                        Text(extra.title).font(.system(size: typeSize.isAccessibilitySize ? 17 : 13)).lineLimit(1)
-                    }.accessibilityElement(children: .ignore).accessibilityLabel(extra.title + (done ? ", done" : ", pending"))
+                    WidgetControl(request: entry.binding.map { WidgetActionRequest(.toggleExtra(extra.id), binding: $0) }) {
+                        HStack(spacing: 9) {
+                            Image(systemName: done ? "checkmark.circle.fill" : "circle").foregroundStyle(done ? Theme.doneText : Theme.textTertiary).accessibilityHidden(true)
+                            Text(extra.title).font(.system(size: typeSize.isAccessibilitySize ? 17 : 13)).lineLimit(1)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
+                        .accessibilityElement(children: .ignore).accessibilityLabel(extra.title + (done ? ", done" : ", pending"))
+                    }
                 }
                 Spacer(minLength: 0)
                 if extras.count > limit {

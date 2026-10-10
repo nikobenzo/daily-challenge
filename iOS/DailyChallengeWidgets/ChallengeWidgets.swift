@@ -17,7 +17,7 @@ struct WaterWidget: Widget {
             WidgetSurface(entry: entry, destination: "today") { WaterWidgetView(entry: entry) }
         }
         .configurationDisplayName("Water")
-        .description("Today's water toward 4,000 ml / 4 L. Open the app to log a pour.")
+        .description("Log 450 ml pours toward 4,000 ml / 4 L, or undo today's latest pour.")
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
@@ -28,7 +28,7 @@ struct RequirementsWidget: Widget {
             WidgetSurface(entry: entry, destination: "today") { RequirementsWidgetView(entry: entry) }
         }
         .configurationDisplayName("Daily requirements")
-        .description("Workout, walk, diet and Bible reading for your challenge day.")
+        .description("Tick workout, walk, clean diet and Bible reading for your challenge day.")
         .supportedFamilies([.systemMedium])
     }
 }
@@ -39,7 +39,7 @@ struct ExtrasWidget: Widget {
             WidgetSurface(entry: entry, destination: "extras") { ExtrasWidgetView(entry: entry) }
         }
         .configurationDisplayName("Extras")
-        .description("Your optional daily to-dos. Open the app to manage or tick them.")
+        .description("Tick your optional daily to-dos. Open the app to manage them.")
         .supportedFamilies([.systemMedium, .systemLarge])
     }
 }
