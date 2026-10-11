@@ -38,7 +38,8 @@ object ChallengeTime {
  * first instant of that date, which is midnight unless a transition skips it.
  */
 class ChallengeCalendar(val zone: ZoneId) {
-    fun localDate(instant: Double): LocalDate = LocalDate.ofInstant(ChallengeTime.toInstant(instant), zone)
+    // Not LocalDate.ofInstant: that is Java 9, missing on Android 10.
+    fun localDate(instant: Double): LocalDate = ChallengeTime.toInstant(instant).atZone(zone).toLocalDate()
 
     fun startOf(date: LocalDate): Double =
         (date.atStartOfDay(zone).toEpochSecond() - ChallengeTime.REFERENCE_UNIX_SECONDS).toDouble()

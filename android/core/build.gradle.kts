@@ -11,6 +11,17 @@ java {
 }
 kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) } }
 
+// The app runs this code on Android 10, whose Java library is roughly Java 8's. Compiling the
+// main sources against the Java 8 API makes a newer call (such as LocalDate.ofInstant) a build
+// error instead of a crash on the phone. Tests run on the Mac and may use any API.
+tasks.named<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>("compileKotlin") {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
+        freeCompilerArgs.add("-Xjdk-release=1.8")
+    }
+}
+tasks.named<JavaCompile>("compileJava") { options.release.set(8) }
+
 dependencies {
     implementation(libs.kotlinx.coroutines.core)
     api(libs.kotlinx.serialization.json)

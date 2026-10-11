@@ -27,6 +27,9 @@ import java.util.concurrent.TimeUnit
  * URL and the publishable key, never a secret. A placeholder or non-HTTPS URL is refused.
  */
 data class SupabaseConfiguration(val url: HttpUrl, val publishableKey: String) {
+    /** "abcd" for https://abcd.supabase.co: names this project's local folder. */
+    val projectRef: String get() = url.host.substringBefore('.')
+
     companion object {
         fun from(url: String, publishableKey: String): SupabaseConfiguration? {
             val parsed = url.trim().toHttpUrlOrNull() ?: return null
