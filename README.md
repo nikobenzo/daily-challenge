@@ -20,6 +20,8 @@ The menu-bar popup now has start-date and timezone setup, a drawn 4 L jug with +
 
 **Water reminders:** Account → Water reminders on this Mac is opt-in and device-local. Choose one Mac, enable, and allow native notifications if offered. Defaults: every 90 minutes, 09:00 to 21:00 in the challenge's timezone; stop at 4,000 ml including incoming synced water. The app must be running and awake. Permission state and System Settings guidance are shown truthfully. **Native delivery is unverified: the separate ad-hoc fixture was refused authorization on macOS 27.0.1**, including a registered GUI launch. See [owner acceptance and scheduling limits](docs/water-reminders.md#owner-acceptance) and [fixture evidence](docs/notification-fixture-verification.md).
 
+**Install on a Mac (outside the App Store):** `curl -fsSL https://nikobenzo.github.io/daily-challenge/install.sh | bash` downloads the latest [release](https://github.com/nikobenzo/daily-challenge/releases/latest), checks it is Developer ID signed and notarized, installs it to Applications and opens it (script: `site/install.sh`). Or download the zip from the release, unzip it and drag the app to Applications.
+
 The proof targets **macOS 14 or newer**. The current build uses this Mac's CPU architecture; check the other Mac's architecture and company installation policy before transfer. The current package requires a Swift 6 toolchain to build.
 
 ## Supabase preparation
