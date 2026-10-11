@@ -119,7 +119,7 @@ analytics SDK (its dependencies are `supabase-swift` and its support packages).
 | Data type | Collected for | Linked to the user | Used for tracking |
 | --- | --- | --- | --- |
 | Contact Info › Email Address | App Functionality (sign-in, account emails) | Yes | No |
-| Health & Fitness › Health and Fitness (water amounts, workout, walk, diet and reading marks) | App Functionality | Yes | No |
+| Health & Fitness › Fitness (water amounts, workout, walk, diet and reading marks) | App Functionality | Yes | No |
 | User Content › Other User Content (names of the user's extras) | App Functionality | Yes | No |
 | Identifiers › User ID (account ID) | App Functionality | Yes | No |
 | Identifiers › Device ID (random per-install ID attached to each synced entry, never an advertising ID) | App Functionality | Yes | No |
@@ -130,10 +130,11 @@ No data is shared with a third party for its own purposes: Supabase and Resend p
 water reminders are local notifications and send nothing off the device.
 
 Owner checks before answering: (1) whether to list the per-install device ID (listed here to be safe; it is
-created by the app and not an advertising or hardware identifier); (2) the Health & Fitness choice between "Health" and
-"Fitness"; the data is self-logged habit data, not HealthKit, so pick the closest and keep it consistent with the
-policy; (3) that no SDK has been added since this draft. The app declares no `PrivacyInfo.xcprivacy`
-privacy manifest in `iOS/`; see [Open items](#open-items).
+created by the app and not an advertising or hardware identifier); (2) the Health & Fitness choice, recorded here as "Fitness"
+because the data is self-logged habit data, not HealthKit; the app's privacy manifest declares Fitness too, so change
+both if the owner picks "Health"; (3) that no SDK has been added since this draft. The app and the widget extension
+each declare a `PrivacyInfo.xcprivacy` privacy manifest (see [docs/ios-testflight.md](ios-testflight.md)); it
+matches this table.
 
 ## App Review notes (draft, 4,000 bytes max)
 
@@ -201,6 +202,6 @@ cannot be submitted.
 ## Open items
 
 - **Account deletion** is in the iPhone app (Account > Delete account, landed in 184a0f1), matching the privacy policy and review notes. Re-check the wording against the released build.
-- **Privacy manifest:** `iOS/` has no `PrivacyInfo.xcprivacy`. The app uses `UserDefaults`, a required-reason API Apple expects a declared reason for. Add one before submitting.
+- **Privacy manifest:** done. `iOS/DailyChallenge/PrivacyInfo.xcprivacy` and `iOS/DailyChallengeWidgets/PrivacyInfo.xcprivacy` exist and `scripts/ios-archive.sh --check` verifies them in the archive. Re-check them against the App Privacy answers before submitting.
 - **Contact email, owner name, published URLs and demo account** are placeholders.
 - The GitHub repository description still says "75 Hard"; the public repository text is not part of the app but is visible next to the Pages site. Change it in the repository settings.
