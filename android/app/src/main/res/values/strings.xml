@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Daily Challenge</string>
+    <string name="reminder_channel">Water reminders</string>
+    <string name="reminder_channel_description">Check-ins during your chosen hours until today\'s 4,000 ml is logged.</string>
+</resources>
