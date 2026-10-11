@@ -184,3 +184,5 @@ A working signed build needs your own Supabase project and signing setup. The [d
 ## About
 
 Daily Challenge is a personal project by Mykola Yakovetskyi, built to make a 75-day challenge easier to keep. It is not seeking outside contributions; see [CONTRIBUTING.md](CONTRIBUTING.md) for how to report problems.
+
+If Daily Challenge helps you, you can [buy me a coffee](https://buymeacoffee.com/mykoladev). It is entirely optional.
