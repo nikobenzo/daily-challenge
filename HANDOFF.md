@@ -60,7 +60,7 @@ The signed-out popup (`AuthView.swift`) offers Sign in, Create account and Forgo
 
 ## Water reminders implementation (8 October)
 
-Water-only reminders are implemented. See [README usage](README.md) and the [scheduling contract, limitations and owner checks](docs/water-reminders.md), including target-day eligibility for midnight slots.
+Water-only reminders are implemented. See [README usage](docs/DEVELOPMENT.md) and the [scheduling contract, limitations and owner checks](docs/water-reminders.md), including target-day eligibility for midnight slots.
 
 **Native delivery remains unverified:** the isolated ad-hoc fixture on macOS 27.0.1 returned `UNErrorDomain` code 1, including the bounded registered GUI-launch diagnostic. This does not prove signing is the root cause. Firstmate authorized implementation with truthful permission state, not signing/security changes. [Evidence](docs/notification-fixture-verification.md) must be retained in the PR. Owner acceptance: choose one Mac, enable in Account, allow native permission if offered, inspect System Settings > Notifications if denied, then verify actual delivery/completion/undo/sleep/synced completion. Neither fixture tests nor an enabled toggle prove native delivery. No cloud CI.
 
@@ -70,7 +70,7 @@ Account offers opt-in, device-local launch at login using `SMAppService.mainApp`
 
 ## JSON backup implementation (8 October)
 
-Account → Backups now exports portable version-1 JSON and previews/ confirms same-account, same-challenge ID-based imports. See [user steps and personal-data warning](README.md#personal-data-backups). `ChallengeBackup.swift` owns pure encoding/validation/planning; `ChallengeStore` uses the migration recovery-copy mechanism before atomic import and queues new immutable events for normal sync. Re-imports do not duplicate or acknowledge pending entries. Settings are the immutable challenge identity/start date, not device-local preferences; optional diet-rule text remains unimplemented. Empty devices must adopt through sync before import. No cross-account restore or destructive replacement.
+Account → Backups now exports portable version-1 JSON and previews/ confirms same-account, same-challenge ID-based imports. See [user steps and personal-data warning](docs/DEVELOPMENT.md#personal-data-backups). `ChallengeBackup.swift` owns pure encoding/validation/planning; `ChallengeStore` uses the migration recovery-copy mechanism before atomic import and queues new immutable events for normal sync. Re-imports do not duplicate or acknowledge pending entries. Settings are the immutable challenge identity/start date, not device-local preferences; optional diet-rule text remains unimplemented. Empty devices must adopt through sync before import. No cross-account restore or destructive replacement.
 
 Fixture tests cover validation, round trips, undo, derived recalculation, backup-before-apply/failure and normal sync retries. Actual native panels/popup interaction remain owner acceptance; no real files, Keychain or running app were accessed.
 

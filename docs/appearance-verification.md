@@ -95,7 +95,7 @@ The captain authorized use of that screenshot as the real-environment failing re
 ## Changes
 
 - `AppAppearance.swift`: shared production `TrackerPopup` root supplies an opaque semantic `windowBackgroundColor`, independent of the desktop. Cards retain system materials over that backing; Reduce Transparency or Increased Contrast selects solid semantic cards, with an explicit border for Increased Contrast.
-- The [appearance selector](../README.md#current-state-functional-tracker-with-production-sync) uses the device-local `appearancePreference` UserDefaults key; missing or invalid values fall back to System. `NSApplication.appearance` applies overrides to native windows, controls and popovers immediately; System clears the override to inherit macOS rather than caching the current mode. Accessibility display changes reapply the appropriate native appearance.
+- The [appearance selector](DEVELOPMENT.md#current-state-functional-tracker-with-production-sync) uses the device-local `appearancePreference` UserDefaults key; missing or invalid values fall back to System. `NSApplication.appearance` applies overrides to native windows, controls and popovers immediately; System clears the override to inherit macOS rather than caching the current mode. Accessibility display changes reapply the appropriate native appearance.
 - Custom-pour content has the same backing. Jug graduation labels have neutral semantic backing even when the water rises behind them; the vessel uses semantic colour and stronger outlines.
 - Challenge schema, storage, auth keys, shipped bundle ID and target are unchanged. No captain files, accounts or Keychain entries were accessed. Test auth has no SDK client and uses a temporary fixture directory.
 

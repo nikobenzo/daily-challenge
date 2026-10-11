@@ -4,17 +4,17 @@
 
 The user approved connecting the local foundation to the native menu-bar popup.
 
-- Authenticated account → server adoption or explicit start-date and timezone setup (searchable picker defaulting to this Mac's zone; never shown when adopting); see [setup behavior](../README.md#first-mac-tracker-checks). All five requirements are explained.
+- Authenticated account → server adoption or explicit start-date and timezone setup (searchable picker defaulting to this Mac's zone; never shown when adopting); see [setup behavior](DEVELOPMENT.md#first-mac-tracker-checks). All five requirements are explained.
 - Today → five ring gauges (water %, workout, walk, diet, Bible), drawn 4 L jug, actual uncapped ml count, +450 ml, latest-pour undo, and validated custom amounts.
 - Workout (45 minutes, home/gym), walk (45 minutes), Bible (10 pages) → one-tap reversible marks on their Today rings and History pills.
 - Diet → pending/clean/missed cycle; right-click for direct selection. No invented food rules.
 - Current streak / 75, best streak, and number of currently valid milestones. Tracking does not stop at 75.
 - History → Monday-first monthly calendar, distinct day-state symbols, explicit Edit this day unlock (pencil), selected-day water/habit corrections, and newest-first activity/correction audit.
-- Account → the preexisting sign-in/session and separate test-message sync diagnostics, plus [personal-data backups](../README.md#personal-data-backups) and the Extras row (below).
+- Account → the preexisting sign-in/session and separate test-message sync diagnostics, plus [personal-data backups](DEVELOPMENT.md#personal-data-backups) and the Extras row (below).
 - Extras → optional personal to-dos under the rings that carry over until done; [daily checklist extras](#daily-checklist-extras).
 - Production challenge footer and manual retry; see [sync scheduling and status](production-sync.md#scheduling-and-status).
 
-No Dock icon or ordinary main window. The popup follows the [design system](design-system.md): a glass sheet and detached footer. See [motion usage](../README.md#current-state-functional-tracker-with-production-sync) and the [bounded motion implementation](motion-verification.md#implementation) for jug effects, celebrations and accessibility fallback. History and Account share one fixed height; the History Activity list scrolls inside it.
+No Dock icon or ordinary main window. The popup follows the [design system](design-system.md): a glass sheet and detached footer. See [motion usage](DEVELOPMENT.md#current-state-functional-tracker-with-production-sync) and the [bounded motion implementation](motion-verification.md#implementation) for jug effects, celebrations and accessibility fallback. History and Account share one fixed height; the History Activity list scrolls inside it.
 
 ## Daily checklist extras
 
@@ -63,11 +63,11 @@ open "build/Daily Challenge.app"
 
 Quit the older proof first. The legacy script/target name and `app.daily-challenge.proof` bundle ID remain intentionally unchanged for authentication continuity. The new bundle is named Daily Challenge and locally ad-hoc signed, not notarized. The old proof bundle is not overwritten by the build.
 
-Follow the [first-Mac tracker checks](../README.md#first-mac-tracker-checks) before everyday tracking. Use History only for explicit corrections. The start date cannot be changed by rerunning setup. Do not delete or overwrite the account file to change it.
+Follow the [first-Mac tracker checks](DEVELOPMENT.md#first-mac-tracker-checks) before everyday tracking. Use History only for explicit corrections. The start date cannot be changed by rerunning setup. Do not delete or overwrite the account file to change it.
 
 ## Appearance
 
-See [appearance selection](../README.md#current-state-functional-tracker-with-production-sync) for usage and [appearance verification](appearance-verification.md) for implementation details, fixtures, regression coverage and pending real-popup acceptance.
+See [appearance selection](DEVELOPMENT.md#current-state-functional-tracker-with-production-sync) for usage and [appearance verification](appearance-verification.md) for implementation details, fixtures, regression coverage and pending real-popup acceptance.
 
 ## Automated checks
 
@@ -94,4 +94,4 @@ DAILY_CHALLENGE_SNAPSHOT_DIR=/tmp/daily-challenge-interface-previews \
 - Both-Mac install and diagnostics convergence; see the separate [production acceptance checklist](production-sync.md#two-actual-macs-owner-acceptance-checklist).
 - [Motion energy evidence and outstanding owner checks](motion-verification.md#fixture-cpu-measurements--acceptance-remains-incomplete).
 
-See [Account settings usage](../README.md#current-state-functional-tracker-with-production-sync) and the [current roadmap](../HANDOFF.md#roadmap-and-remaining-acceptance) for implemented settings, deferred features and feature-specific owner acceptance.
+See [Account settings usage](DEVELOPMENT.md#current-state-functional-tracker-with-production-sync) and the [current roadmap](../HANDOFF.md#roadmap-and-remaining-acceptance) for implemented settings, deferred features and feature-specific owner acceptance.

@@ -55,7 +55,7 @@ Show discreet synced, pending, and error states. Pending work survives relaunch.
 
 ## Export/import
 
-Manual export/import is implemented. See [personal-data backups](../README.md#personal-data-backups) for the supported contents, validation/merge contract, recovery copies, privacy guidance, and remaining acceptance. Cross-account restore requires an explicit future design.
+Manual export/import is implemented. See [personal-data backups](../docs/DEVELOPMENT.md#personal-data-backups) for the supported contents, validation/merge contract, recovery copies, privacy guidance, and remaining acceptance. Cross-account restore requires an explicit future design.
 
 ## Acceptance
 

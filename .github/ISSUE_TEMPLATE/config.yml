@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and help
+    url: https://nikobenzo.github.io/daily-challenge/support.html
+    about: Common questions, plus the support email address.
+  - name: Security issue
+    url: https://github.com/nikobenzo/daily-challenge/security/advisories/new
+    about: Please report vulnerabilities privately, not as a public issue.

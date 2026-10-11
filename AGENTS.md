@@ -1,6 +1,7 @@
 # Project agent memory
 
 - Read `HANDOFF.md` for current acceptance and roadmap boundaries; `CONTEXT.md` defines challenge terminology.
+- Read `docs/DEVELOPMENT.md` (the former README) for build, status and owner-step details; `README.md` is the public overview.
 - Real records exist. Tests must inject temporary directories/accounts and avoid production Keychain; see fixture initializers and `Tests/TrackerInterfaceTests/`. Preserve the legacy identity identifiers documented in `HANDOFF.md`.
 - For sync/storage work, read `docs/production-sync.md` for migration and conflict policies. Hosted migrations are owner-only; verify RLS with `scripts/test-sync-security.sh` on disposable local PostgreSQL.
 - For appearance work, read `docs/appearance-verification.md`: isolated renders with a test-added backing can hide defects in the real popup. Use the production root regression and distinguish in-process renders from real-popup acceptance.

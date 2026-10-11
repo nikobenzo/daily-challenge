@@ -1,0 +1,39 @@
+name: Bug report
+description: Something in the Mac or iPhone app does not work as expected.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a problem. Please do not include your password, sign-in codes or other private details.
+  - type: dropdown
+    id: device
+    attributes:
+      label: Device
+      options:
+        - Mac
+        - iPhone
+        - iPhone widget
+        - Both
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: Open Account and look for the version near the bottom.
+      placeholder: "1.0 (9)"
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: macOS or iOS version
+      placeholder: "macOS 15.5 or iOS 26.1"
+  - type: textarea
+    id: steps
+    attributes:
+      label: What happened?
+      description: The steps you took, what you expected, and what happened instead. Screenshots help.
+    validations:
+      required: true
