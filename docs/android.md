@@ -95,7 +95,9 @@ Screens: `signIn`, `createAccount`, `forgotPassword`, `confirmCode`, `resetPassw
 `adb exec-out screencap -p > docs/screenshots/android/<name>.png`. Launching without a fixture
 opens the real app again.
 
-Screenshots: `docs/screenshots/android/`.
+Screenshots: `docs/screenshots/android/`. Those in `emulator/` come from an Android 10 (API 29)
+emulator at 1080 by 2280, close to the Redmi Note 7's screen; captures from a real phone go
+directly in `docs/screenshots/android/`.
 
 ## How it matches the other apps
 
@@ -123,8 +125,8 @@ Screenshots: `docs/screenshots/android/`.
 
 ## Owner acceptance checklist (real account, real phone)
 
-Workers verified signed-out screens, setup and tracker flows on fixtures only; no real account,
-sign-in, sync or deletion was used. Use a disposable account for these, never the family's
+Workers verified signed-out screens, setup and tracker flows on fixtures only, with the 13 UI
+tests on an Android 10 emulator; no real account, sign-in, sync or deletion was used. Use a disposable account for these, never the family's
 real history, and confirm the hosted migrations are deployed first (`20261010000100_extras_action_kinds`
 for extras, `20261011000100_account_deletion` for deletion; see
 [production sync](production-sync.md)).
