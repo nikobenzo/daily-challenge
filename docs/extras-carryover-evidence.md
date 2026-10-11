@@ -46,7 +46,11 @@ the `-widget-fixture carry-over` variant; `WidgetRenderTests.fixture("carry-over
 | iPhone History, next day (Late) | simulator app | `screenshots/ios/historyCarryOver-*.png`, `history-carryover-large-text-*.png` |
 | iPhone History, first day | simulator app | `screenshots/ios/historyExtras-*.png` |
 | Extras widget medium/large | in-process render | `screenshots/ios/widgets/rendered-extras-{medium,large}-carry-over-*.png` |
-| Extras widget on the Home Screen | placed SpringBoard capture | `screenshots/ios/widgets/home-placed-a-carry-over-*.png` (see below) |
+| Extras widget on the Home Screen | placed SpringBoard capture | `screenshots/ios/widgets/home-placed-a-carry-over-*.png` |
+
+The placed captures come from `WIDGET_CAPTURE_MODE=phase5 WIDGET_VARIANTS=carry-over
+iOS/scripts/capture-widgets.sh` (layout a placed once, Light then Dark; **TEST SUCCEEDED** both),
+where SpringBoard also reads the row as "Stretch, late, pending".
 
 The History popover on the Mac cannot be opened by the real-popup probe, so it is an in-process
 render only. Manage extras captures on both platforms were refreshed for the new caption
