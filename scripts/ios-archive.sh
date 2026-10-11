@@ -12,8 +12,10 @@
 #     ASC_KEYCHAIN_ITEM   keychain item created with
 #                         xcrun altool --store-password-in-keychain-item <item> -u <email> -p <app-specific password>
 #
-#   --check   archive and ad-hoc sign to prove the Release build compiles and carries its
-#             entitlements; needs no credentials, contacts nothing and uploads nothing.
+#   --check      archive and ad-hoc sign to prove the Release build compiles and carries its
+#                entitlements; needs no credentials, contacts nothing and uploads nothing.
+#   --app-store  export a build that can be submitted for App Review. Without it the export is
+#                marked TestFlight internal testing only and can never be submitted.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT="$PWD"
@@ -25,12 +27,18 @@ TEAM_ID=L644Y3WX5T
 APP_GROUP=group.app.daily-challenge.ios
 
 check=0
+app_store=0
 for arg in "$@"; do
   case "$arg" in
     --check) check=1 ;;
-    *) echo "Unknown option: $arg (expected --check)" >&2; exit 2 ;;
+    --app-store) app_store=1 ;;
+    *) echo "Unknown option: $arg (expected --check or --app-store)" >&2; exit 2 ;;
   esac
 done
+if [[ "$check" == 1 && "$app_store" == 1 ]]; then
+  echo '--check uploads nothing, so --app-store does not apply to it.' >&2
+  exit 2
+fi
 
 owner_steps() {
   cat >&2 <<'STEPS'
@@ -167,10 +175,21 @@ fi
 
 # The build number must be new for every upload: raise CFBundleVersion in VERSION.
 version="$(sed -n 's/^CFBundleShortVersionString=//p' VERSION) ($(sed -n 's/^CFBundleVersion=//p' VERSION))"
-echo "Archiving Daily Challenge for iPhone $version"
+if [[ "$app_store" == 1 ]]; then
+  echo "Archiving Daily Challenge for iPhone $version as an App Store build (can be submitted for review)"
+else
+  echo "Archiving Daily Challenge for iPhone $version as an internal TestFlight build"
+fi
 
 rm -rf "$EXPORT"
 archive
+
+# Internal-only is the default: it keeps a build out of external testing and review by mistake.
+# --app-store omits the key, which is the only difference in the export.
+internal_only=""
+if [[ "$app_store" == 0 ]]; then
+  internal_only="  <key>testFlightInternalTestingOnly</key><true/>"
+fi
 
 options="$OUT/ExportOptions.plist"
 cat > "$options" <<PLIST
@@ -184,7 +203,7 @@ cat > "$options" <<PLIST
   <key>teamID</key><string>$TEAM_ID</string>
   <key>uploadSymbols</key><true/>
   <key>manageAppVersionAndBuildNumber</key><false/>
-  <key>testFlightInternalTestingOnly</key><true/>
+$internal_only
 </dict>
 </plist>
 PLIST
@@ -206,4 +225,8 @@ if [[ "$upload" == key ]]; then
 else
   xcrun altool --upload-app -f "$ipa" -t ios -u "$ASC_APPLE_ID" -p "@keychain:$ASC_KEYCHAIN_ITEM"
 fi
-echo "Uploaded $version. In App Store Connect > TestFlight, add it to the internal group once processing finishes."
+if [[ "$app_store" == 1 ]]; then
+  echo "Uploaded $version. In App Store Connect, choose it under the app version's Build section once processing finishes, then submit for review."
+else
+  echo "Uploaded $version. In App Store Connect > TestFlight, add it to the internal group once processing finishes."
+fi

@@ -201,6 +201,23 @@ step; the remaining items below describe the existing distribution workflow.
    Distribution the "Family" group gets the build; otherwise TestFlight › the build › Groups ›
    add "Family". Add a short "What to Test" note.
 
+### App Store builds (`--app-store`)
+
+The default export is marked `testFlightInternalTestingOnly`, which keeps a build out of external
+testing and App Review for good. To upload a build that can be **submitted for review** (and used
+for external TestFlight), run the same command with the flag:
+
+```bash
+bash scripts/ios-archive.sh --app-store
+```
+
+The only difference is that the export options omit `testFlightInternalTestingOnly`; archiving,
+ad-hoc entitlement signing, the App Group check on the exported IPA and the upload are identical,
+and `--check` cannot be combined with it. An internal-only build can never be converted, so raise
+`CFBundleVersion` and upload again with `--app-store` rather than reusing an internal build. After
+processing, pick the build under the app version's **Build** section in App Store Connect. The
+listing text, privacy answers and screenshots are drafted in [app-store-listing.md](app-store-listing.md).
+
 ## What TestFlight internal testing does and does not review
 
 - **Internal builds are not reviewed by App Review.** They are available to the internal group
