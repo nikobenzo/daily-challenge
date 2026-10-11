@@ -1,0 +1,9 @@
+[
+  {"id":"01-daily-goal","tag":"75-DAY CHALLENGE","headline":["One day.","Five clear goals."],"detail":"Water, workout, walk, diet and Bible reading.","source":"docs/screenshots/ios/today-light.png","theme":"light","layout":"phone"},
+  {"id":"02-home-screen","tag":"HOME SCREEN WIDGETS","headline":["Check in.","Keep moving."],"detail":"Log water and tick off goals from your Home Screen.","source":"docs/screenshots/ios/widgets/home-placed-a-partial-light.png","theme":"blue","layout":"phone"},
+  {"id":"03-water","tag":"WATER TRACKING","headline":["Every pour", "adds up."],"detail":"See your progress. Add 450 ml with a tap.","source":"docs/screenshots/ios/today-light.png","theme":"light","layout":"water"},
+  {"id":"04-extras","tag":"YOUR DAILY EXTRAS","headline":["Small extras.","Less to forget."],"detail":"Unfinished to-dos carry over with a Late label.","source":"docs/screenshots/ios/today-extras-detail-light.png","theme":"light","layout":"extras"},
+  {"id":"05-history","tag":"HISTORY & STREAKS","headline":["See your", "streak grow."],"detail":"A clear calendar of the days you complete.","source":"docs/screenshots/ios/history-light.png","theme":"light","layout":"phone"},
+  {"id":"06-dark-mode","tag":"LIGHT & DARK","headline":["Your routine.","Your look."],"detail":"A clear view of your day, in light or dark.","source":"docs/screenshots/ios/today-dark.png","theme":"dark","layout":"phone"},
+  {"id":"07-complete","tag":"DAILY PROGRESS","headline":["Five goals.","One good day."],"detail":"Complete your requirements and build your streak.","source":"docs/screenshots/ios/todayComplete-light.png","theme":"light","layout":"phone"}
+]
