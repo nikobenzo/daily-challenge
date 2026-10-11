@@ -9,11 +9,17 @@ import WidgetKit
 /// and the reload shows the stored state (or "Open Daily Challenge"), never success.
 enum WidgetIntentRunner {
     static func run(_ request: WidgetActionRequest?) {
-        defer { WidgetCenter.shared.reloadAllTimelines() }
         guard let request else { return }
         // A fresh event ID for every perform(): parameters are archived with the
         // rendered timeline, so a render-time ID would merge distinct taps.
-        _ = try? WidgetActionRecorder(store: .widgetExtension()).perform(request)
+        let outcome = try? WidgetActionRecorder(store: .widgetExtension()).perform(request)
+        // WidgetKit reloads the tapped widget's kind itself once perform() returns. A
+        // blanket reload here re-rendered that widget again (and every other kind), and
+        // SpringBoard drops a tap that lands while a widget is re-rendering: rapid ticks
+        // were lost. Only the other kinds whose content the event changed reload.
+        if case .recorded = outcome {
+            for kind in request.action.alsoChangedKinds { WidgetCenter.shared.reloadTimelines(ofKind: kind) }
+        }
     }
 }
 

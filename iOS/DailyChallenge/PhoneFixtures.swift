@@ -191,6 +191,10 @@ import WidgetKit
             clock.now = now; tracker.showToday()
             _ = tracker.addExtra("Prepare tomorrow’s healthy lunch")
             tracker.toggleExtra(extraID("Prepare tomorrow’s healthy lunch", in: tracker))
+        } else if variant == "extras-eight" {
+            // The tap-mapping reproduction: eight extras (two Cyrillic), four ticked.
+            for title in widgetTapExtraTitles { _ = tracker.addExtra(title) }
+            for extra in tracker.activeExtras where widgetTapExtrasDone.contains(extra.title) { tracker.toggleExtra(extra.id) }
         } else if variant != "extras-empty" && variant != "empty" {
             let count = ["extras-ten", "long-names", "overflow"].contains(variant) ? 10 : 3
             for title in widgetExtraTitles(longNames: variant == "long-names").prefix(count) { _ = tracker.addExtra(title) }
@@ -204,6 +208,10 @@ import WidgetKit
         return PhoneApp(auth: auth(now), tracker: tracker,
                         reminders: nil, defaults: UserDefaults(suiteName: "widget-fixture-\(UUID())")!, schedulesRefresh: false)
     }
+
+    nonisolated static let widgetTapExtraTitles = ["Testing1", "Go shopping", "Get fairy", "Cancel subscription",
+                                                   "Call mama", "Позвонить маме", "Света", "Игорь"]
+    nonisolated static let widgetTapExtrasDone: Set<String> = ["Testing1", "Call mama", "Позвонить маме", "Света"]
 
     /// Synthetic extras for widget fixtures; `longNames` gives ten maximum-length (40) titles.
     nonisolated static func widgetExtraTitles(longNames: Bool) -> [String] {

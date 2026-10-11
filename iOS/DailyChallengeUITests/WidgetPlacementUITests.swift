@@ -1,3 +1,4 @@
+import ObjectiveC
 import XCTest
 
 /// Run explicitly on a disposable simulator; records the real SpringBoard UI.
@@ -147,6 +148,154 @@ final class WidgetPlacementUITests: XCTestCase {
         app.tabBars.buttons["History"].tap()
         sleep(2)
         capture(app, "app-history-after-widget-actions")
+    }
+
+    /// Tap mapping on the placed widgets (`-widget-fixture extras-eight`: eight extras,
+    /// two Cyrillic, four ticked). Every tap must flip exactly the tapped row, read back
+    /// from SpringBoard's accessibility tree: one row at a time with the timeline
+    /// settled, then rapid taps before it reloads. `WIDGET_PLACE=1` places Extras large
+    /// and Daily requirements (layout c) or Extras medium and Daily requirements (layout d).
+    @MainActor func testWidgetTapMapping() throws {
+        guard ProcessInfo.processInfo.arguments.contains("-capture-widgets") else {
+            throw XCTSkip("Use the WidgetCapture scheme on an isolated simulator")
+        }
+        let environment = ProcessInfo.processInfo.environment
+        let layout = environment["WIDGET_LAYOUT"] ?? "c"
+        let app = XCUIApplication(bundleIdentifier: "app.daily-challenge.ios")
+        let board = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        continueAfterFailure = true
+        if environment["WIDGET_PLACE"] == "1" {
+            app.launchArguments = ["-widget-fixture", "extras-eight"]
+            app.launch()
+            XCTAssertTrue(app.buttons["water-add"].waitForExistence(timeout: 10))
+            XCUIDevice.shared.press(.home)
+            board.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.75)).press(forDuration: 1.5)
+            let extras = layout == "d" ? (3, "extras-medium", "Extras", "Medium") : (4, "extras-large", "Extras", "Large")
+            for (page, name, title, family) in [(2, "requirements-medium", "Daily requirements", "Medium"), extras] {
+                addWidget(board, page: page, name: name, title: title, family: family)
+            }
+            let done = board.buttons["Done"]
+            if done.waitForExistence(timeout: 5) { done.tap() }
+            sleep(2)
+        }
+        app.launchArguments = ["-widget-fixture", "extras-eight"]
+        app.launch()
+        _ = app.wait(for: .runningForeground, timeout: 10)
+        sleep(2)
+        XCUIDevice.shared.press(.home)
+        app.terminate()
+        let titles = layout == "d" ? Array(Self.tapTitles.prefix(3)) : Self.tapTitles
+        var expected = Dictionary(uniqueKeysWithValues: titles.map { ($0, Self.tapDone.contains($0)) })
+        let first = row(board, titles[0])
+        for (from, to) in [(0.1, 0.9), (0.1, 0.9), (0.9, 0.1), (0.9, 0.1), (0.9, 0.1)] where !first.waitForExistence(timeout: 4) {
+            board.coordinate(withNormalizedOffset: CGVector(dx: from, dy: 0.5))
+                .press(forDuration: 0.05, thenDragTo: board.coordinate(withNormalizedOffset: CGVector(dx: to, dy: 0.5)))
+            sleep(1)
+        }
+        XCTAssertTrue(first.waitForExistence(timeout: 15), board.debugDescription)
+        sleep(3)
+        capture(board, "tap-\(layout)-before")
+        XCTAssertEqual(states(board, titles), expected, "fixture state")
+
+        // `WIDGET_RAPID_ROUNDS=n` measures only n rapid rounds, `WIDGET_RAPID_GAP_MS` apart.
+        let stress = environment["WIDGET_RAPID_ROUNDS"].flatMap(Int.init)
+        // Settled: one row at a time, waiting for the reload to land before the next tap.
+        for (index, title) in (stress == nil ? titles + titles.reversed() : []).enumerated() {
+            row(board, title).tap()
+            expected[title]!.toggle()
+            XCTAssertTrue(wait(board, title, done: expected[title]!), "tap \(index) on \(title) never flipped it")
+            sleep(1)
+            let read = states(board, titles)
+            XCTAssertEqual(read, expected, "settled tap \(index) on \(title)")
+            capture(board, "tap-\(layout)-settled-\(index)")
+        }
+        // Rapid, as a person taps: XCUITest normally waits for SpringBoard to go idle
+        // (the reload to land) before each event, which hides overlapping intents. Tap
+        // fixed row coordinates with that wait skipped; a 300 ms gap plus the event's own
+        // cost lands taps about 0.8 s apart, the pace of the recording.
+        let frames = Dictionary(uniqueKeysWithValues: titles.map { ($0, row(board, $0).frame) })
+        let rapid = titles.count > 3 ? [titles[7], titles[6], titles[5], titles[4], titles[3], titles[2], titles[1]] : [titles[2], titles[1], titles[0]]
+        let gap = useconds_t((environment["WIDGET_RAPID_GAP_MS"].flatMap(Int.init) ?? 300) * 1_000)
+        var lost = 0
+        for round in 0..<(stress ?? 2) {
+            Self.skipQuiescence(true)
+            for title in rapid {
+                board.coordinate(withNormalizedOffset: .zero)
+                    .withOffset(CGVector(dx: frames[title]!.midX, dy: frames[title]!.midY)).tap()
+                expected[title]!.toggle()
+                usleep(gap)
+            }
+            Self.skipQuiescence(false)
+            sleep(8)
+            let read = states(board, titles)
+            let missed = titles.filter { read[$0] != expected[$0] }
+            lost += missed.count
+            XCTAssertEqual(read, expected, "after rapid round \(round) \(rapid): lost \(missed)")
+            capture(board, "tap-\(layout)-rapid-\(round)")
+            expected = read // a lost tap is reported once, not in every later round
+        }
+        let report = XCTAttachment(string: "rapid taps \(gap / 1_000) ms apart: lost \(lost) of \(rapid.count * (stress ?? 2))")
+        report.name = "tap-\(layout)-rapid-summary"; report.lifetime = .keepAlways; add(report)
+        if stress != nil { return }
+        // Daily requirements share the intent path: workout off, walk on, Bible on, then back.
+        var rings = ["Workout": true, "Walk": false, "Bible": false]
+        for name in ["Workout", "Walk", "Bible", "Walk", "Workout", "Bible"] {
+            board.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", name + ", ")).firstMatch.tap()
+            rings[name]!.toggle()
+            let label = rings[name]! ? "done" : "pending"
+            let ring = board.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label ENDSWITH %@", name + ", ", ", " + label)).firstMatch
+            XCTAssertTrue(ring.waitForExistence(timeout: 10), "\(name) never became \(label)")
+            sleep(1)
+            for (other, done) in rings {
+                let read = board.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", other + ", ")).firstMatch.label
+                XCTAssertTrue(read.hasSuffix(done ? ", done" : ", pending"), "after \(name): \(read)")
+            }
+        }
+        // The same rings back to back, at the rapid pace.
+        let ringFrames = Dictionary(uniqueKeysWithValues: rings.keys.map { name in
+            (name, board.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", name + ", ")).firstMatch.frame)
+        })
+        Self.skipQuiescence(true)
+        for name in ["Walk", "Bible", "Workout", "Bible", "Walk"] {
+            board.coordinate(withNormalizedOffset: .zero)
+                .withOffset(CGVector(dx: ringFrames[name]!.midX, dy: ringFrames[name]!.midY)).tap()
+            rings[name]!.toggle()
+            usleep(gap)
+        }
+        Self.skipQuiescence(false)
+        sleep(8)
+        for (name, done) in rings {
+            let read = board.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", name + ", ")).firstMatch.label
+            XCTAssertTrue(read.hasSuffix(done ? ", done" : ", pending"), "after rapid ring taps: \(read)")
+        }
+        capture(board, "tap-\(layout)-requirements")
+    }
+
+    /// XCUITest's idle waits before and after each synthesized event (private
+    /// XCUIApplicationProcess switches); restored right after the rapid taps.
+    static func skipQuiescence(_ skip: Bool) {
+        guard let process = NSClassFromString("XCUIApplicationProcess") else { return XCTFail("no XCUIApplicationProcess") }
+        for name in ["shouldSkipPreEventQuiescence", "shouldSkipPostEventQuiescence"] {
+            guard let method = class_getInstanceMethod(process, NSSelectorFromString(name)) else { return XCTFail("no \(name)") }
+            let body: @convention(block) (AnyObject) -> Bool = { _ in skip }
+            method_setImplementation(method, imp_implementationWithBlock(body))
+        }
+    }
+
+    static let tapTitles = ["Testing1", "Go shopping", "Get fairy", "Cancel subscription", "Call mama", "Позвонить маме", "Света", "Игорь"]
+    static let tapDone: Set<String> = ["Testing1", "Call mama", "Позвонить маме", "Света"]
+
+    @MainActor private func row(_ board: XCUIApplication, _ title: String) -> XCUIElement {
+        board.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", title + ", ")).firstMatch
+    }
+
+    @MainActor private func wait(_ board: XCUIApplication, _ title: String, done: Bool) -> Bool {
+        board.buttons.matching(NSPredicate(format: "label == %@", title + (done ? ", done" : ", pending"))).firstMatch
+            .waitForExistence(timeout: 10)
+    }
+
+    @MainActor private func states(_ board: XCUIApplication, _ titles: [String]) -> [String: Bool] {
+        Dictionary(uniqueKeysWithValues: titles.map { ($0, row(board, $0).label.hasSuffix(", done")) })
     }
 
     /// Phase 5, driven only through SpringBoard XCUITest. Environment (set by

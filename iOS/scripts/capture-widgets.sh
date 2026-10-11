@@ -24,6 +24,13 @@ case "$MODE" in
     [[ -n "${WIDGET_HOME_STYLE:-}" ]] && export TEST_RUNNER_WIDGET_HOME_STYLE="$WIDGET_HOME_STYLE"
     xcrun simctl ui "$WIDGET_SIMULATOR_ID" content_size "${CONTENT_SIZE:-large}"
     xcrun simctl ui "$WIDGET_SIMULATOR_ID" increase_contrast "${INCREASE_CONTRAST:-disabled}" ;;
+  # Tap mapping: optionally place layout c (Extras large) or d (Extras medium) with Daily
+  # requirements (WIDGET_PLACE=1), then tap rows one at a time and rapidly.
+  taps) SCHEME=WidgetCapture; METHOD=testWidgetTapMapping
+    export TEST_RUNNER_WIDGET_LAYOUT="${WIDGET_LAYOUT:-c}" TEST_RUNNER_WIDGET_PLACE="${WIDGET_PLACE:-0}"
+    # WIDGET_RAPID_ROUNDS=n skips the settled taps and measures n rapid rounds, WIDGET_RAPID_GAP_MS apart.
+    [[ -n "${WIDGET_RAPID_ROUNDS:-}" ]] && export TEST_RUNNER_WIDGET_RAPID_ROUNDS="$WIDGET_RAPID_ROUNDS"
+    [[ -n "${WIDGET_RAPID_GAP_MS:-}" ]] && export TEST_RUNNER_WIDGET_RAPID_GAP_MS="$WIDGET_RAPID_GAP_MS" ;;
   # Phase 5 Lock Screen: add the water ring to the Cover Sheet and capture WIDGET_VARIANTS.
   lock) SCHEME=WidgetCapture; METHOD=testPhase5LockScreen
     export TEST_RUNNER_WIDGET_VARIANTS="${WIDGET_VARIANTS:-partial}" ;;
@@ -37,7 +44,7 @@ case "$MODE" in
       "$([[ "${REDUCE_MOTION:-disabled}" == enabled ]] && echo YES || echo NO)"
     xcrun simctl spawn "$WIDGET_SIMULATOR_ID" launchctl kickstart -k system/com.apple.SpringBoard >/dev/null 2>&1 || true
     sleep 5 ;;
-  *) echo "Expected WIDGET_CAPTURE_MODE=placement|actions|gallery|phase5|lock|animations" >&2; exit 2 ;;
+  *) echo "Expected WIDGET_CAPTURE_MODE=placement|actions|gallery|phase5|taps|lock|animations" >&2; exit 2 ;;
 esac
 RESULT="$ROOT/.build/widget-$MODE-$APPEARANCE-$(date +%s).xcresult"
 mkdir -p "$OUT"

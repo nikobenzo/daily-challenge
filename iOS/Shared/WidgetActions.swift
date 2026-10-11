@@ -43,6 +43,25 @@ struct WidgetActionRequest: Equatable, Sendable {
     }
 }
 
+extension WidgetActionRequest.Action {
+    /// Widget kinds, besides the tapped one, whose content a recorded action changes.
+    /// Water moves the daily requirements' completion badge and streak; a requirement
+    /// is drawn only by its own widget, and extras only by theirs.
+    var alsoChangedKinds: [String] {
+        switch self {
+        case .pour, .undoPour: [WidgetKinds.requirements]
+        case .toggleHabit, .toggleDiet, .toggleExtra: []
+        }
+    }
+}
+
+/// `Widget.kind` identifiers, shared with the app target for reload decisions and tests.
+enum WidgetKinds {
+    static let water = "DailyChallenge.Water"
+    static let requirements = "DailyChallenge.Requirements"
+    static let extras = "DailyChallenge.Extras"
+}
+
 enum WidgetActionOutcome: Equatable, Sendable {
     /// Durably saved in the shared history and pending queue; not yet uploaded.
     case recorded(UUID)

@@ -166,6 +166,50 @@ private let afternoon = instant("2026-10-09T14:00:00Z")
     #expect(try h.stored().pending.count == 26)
 }
 
+/// The tap-mapping report: eight extras (two Cyrillic titles), four ticked. Every row
+/// control is taken from one rendered entry, as rapid taps all hit one archived timeline
+/// before WidgetKit reloads; each tap flips exactly its own row and leaves the rest.
+@Test @MainActor func rapidExtraTapsFromOneRenderFlipOnlyTheTappedRow() throws {
+    let h = Harness(); defer { h.cleanup() }
+    let titles = ["Testing1", "Go shopping", "Get fairy", "Cancel subscription", "Call mama", "Позвонить маме", "Света", "Игорь"]
+    for title in titles { #expect(h.tracker.addExtra(title) == nil) }
+    for extra in h.tracker.activeExtras where ["Testing1", "Call mama", "Позвонить маме", "Света"].contains(extra.title) {
+        h.tracker.toggleExtra(extra.id)
+    }
+    let rendered = ChallengeWidgetProvider(store: PhoneSharedStore(root: h.root)).entries(now: h.clock.value)[0]
+    let rows = try #require(rendered.summary?.extras)
+    #expect(rows.map(\.title) == titles)
+    let binding = try #require(rendered.binding)
+    var expected = Dictionary(uniqueKeysWithValues: rows.map { ($0.id, rendered.summary!.completedExtras.contains($0.id)) })
+    #expect(expected.values.filter { $0 }.count == 4)
+    // Bottom to top as in the recording, then back down, with no re-render in between.
+    for (index, row) in (rows.reversed() + rows).enumerated() {
+        h.clock.value = afternoon.addingTimeInterval(Double(index + 1))
+        guard case .recorded = try h.recorder().perform(WidgetActionRequest(.toggleExtra(row.id), binding: binding)) else {
+            Issue.record("tap \(index) on \(row.title) recorded nothing"); continue
+        }
+        expected[row.id]!.toggle()
+        let today = try h.today()
+        #expect(Dictionary(uniqueKeysWithValues: rows.map { ($0.id, today.completedExtras.contains($0.id)) }) == expected,
+                "tap \(index) on \(row.title)")
+    }
+    #expect(try h.today().completedExtras == Set(rows.filter { ["Testing1", "Call mama", "Позвонить маме", "Света"].contains($0.title) }.map(\.id)))
+    #expect(h.reloads.value == 16)
+}
+
+/// WidgetKit reloads the tapped widget itself after `perform()`, and SpringBoard drops a
+/// tap that lands while a widget re-renders. A tap therefore reloads no other kind unless
+/// its event changed that kind's content: only water reaches the requirements badge.
+@Test func aWidgetTapReloadsOnlyTheOtherKindsItsEventChanged() {
+    let extra = UUID()
+    #expect(WidgetActionRequest.Action.toggleExtra(extra).alsoChangedKinds.isEmpty)
+    for habit in Challenge.Habit.allCases { #expect(WidgetActionRequest.Action.toggleHabit(habit).alsoChangedKinds.isEmpty) }
+    #expect(WidgetActionRequest.Action.toggleDiet.alsoChangedKinds.isEmpty)
+    #expect(WidgetActionRequest.Action.pour.alsoChangedKinds == [WidgetKinds.requirements])
+    #expect(WidgetActionRequest.Action.undoPour.alsoChangedKinds == [WidgetKinds.requirements])
+    #expect(Set([WidgetKinds.water, WidgetKinds.requirements, WidgetKinds.extras]).count == 3)
+}
+
 @Test @MainActor func archivedUnknownAndForgedRequestsAreRefusedWithoutChangingHistory() throws {
     let h = Harness(); defer { h.cleanup() }
     #expect(h.tracker.addExtra("Stretch") == nil)

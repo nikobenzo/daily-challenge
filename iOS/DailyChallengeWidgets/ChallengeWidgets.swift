@@ -11,7 +11,7 @@ struct ChallengeWidgets: WidgetBundle {
 }
 
 struct WaterWidget: Widget {
-    static let kind = "DailyChallenge.Water"
+    static let kind = WidgetKinds.water
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: Self.kind, provider: ChallengeWidgetProvider()) { entry in
             WidgetSurface(entry: entry, destination: "today") { WaterWidgetView(entry: entry) }
@@ -23,7 +23,7 @@ struct WaterWidget: Widget {
     }
 }
 struct RequirementsWidget: Widget {
-    static let kind = "DailyChallenge.Requirements"
+    static let kind = WidgetKinds.requirements
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: Self.kind, provider: ChallengeWidgetProvider()) { entry in
             WidgetSurface(entry: entry, destination: "today") { RequirementsWidgetView(entry: entry) }
@@ -34,7 +34,7 @@ struct RequirementsWidget: Widget {
     }
 }
 struct ExtrasWidget: Widget {
-    static let kind = "DailyChallenge.Extras"
+    static let kind = WidgetKinds.extras
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: Self.kind, provider: ChallengeWidgetProvider()) { entry in
             WidgetSurface(entry: entry, destination: "extras") { ExtrasWidgetView(entry: entry) }
