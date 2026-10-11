@@ -1,8 +1,9 @@
-# Daily Challenge - App Store screenshot research
+# Daily Challenge - App Store visual research
 
 Checked 11 October 2026. Deliverable: seven English (UK) marketing screenshots,
-with the app's real fixture UI. These are screenshot-gallery assets, not the new
-product-page header or search-result creative assets.
+with the app's real fixture UI, plus the optional static product-page header
+documented below. The seven portrait frames remain screenshot-gallery assets.
+No search-result asset is part of either delivery.
 
 ## What “well-performing” means here
 
@@ -86,7 +87,7 @@ recommend a clear focal point, short text, readable key elements and safe areas,
 consistent visual style, and strongest features first. They prohibit unverifiable
 claims, specific pricing and Apple-designated awards in assets. These guidelines
 also distinguish screenshot galleries from the newer header/search creative
-asset formats. This task produces only the requested screenshot gallery.
+asset formats. The seven-frame delivery above covers the screenshot gallery.
 
 ## Chosen concept: a clear daily view
 
@@ -100,3 +101,80 @@ It does not imitate their UI or claim their results.
 
 Sources, captions and reproducible export instructions are in
 [screenshots/app-store/marketing/README.md](screenshots/app-store/marketing/README.md).
+
+## Optional product-page header (11 October 2026)
+
+### Apple requirements checked
+
+[Creative asset specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/creative-assets-specifications)
+list exactly these two static header formats:
+
+| Canvas | Apple aspect label | Static extensions |
+| --- | --- | --- |
+| 3840 × 1646 px | 21:9 | JPEG, JPG, PNG |
+| 5244 × 2950 px | 16:9 (universal) | PNG only |
+
+Use the exact pixel dimensions, rather than rounding a computed aspect ratio.
+Neither alpha channels nor transparency are allowed. Both exports are opaque
+RGB PNGs. Apple's header image table publishes **no maximum byte size**; the
+500 MB limit on that page belongs to In-App Event images, so it must not be
+presented as a header limit. Actual export byte counts are in the header manifest.
+
+[Manage App Store assets](https://developer.apple.com/help/app-store-connect/manage-app-information/manage-your-app-store-assets#manage-creative-assets)
+confirms these assets are optional and available on iOS/iPadOS 27 and later.
+App Store Connect's Preview supports device, orientation and language checks.
+That final native preview remains owner acceptance; this delivery does not upload
+or access App Store Connect. Although the larger format is eligible for both
+placements, it is delivered here solely as a header alternative.
+
+[Asset best practices](https://developer.apple.com/app-store/asset-best-practices/)
+calls for one clear idea, a brief phrase, readable central artwork, and consistent
+brand styling. It permits text; it does not specify a text percentage, font-size
+minimum, or ban the app's own logo. It excludes other marketplace logos, URLs,
+copyright symbols, pricing/discounts, unverifiable claims and Apple recognitions.
+Artwork should suit a global audience and a 4+ age rating. We use the app's own
+drop icon, generic challenge wording, and no pricing, awards or result claims.
+
+### Safe areas measured directly from Apple's template
+
+Apple's web guidance gives no numeric crop guarantee. We downloaded the
+[official Sketch creative-assets template](https://developer.apple.com/go/?id=sketch-creative-assets-templates)
+linked from its best-practices page. Direct file:
+[creative_assets-templates.sketch](https://devimages-cdn.apple.com/design/resources/download/app-store/creative_assets-templates.sketch).
+SHA-256: `0f6f6f86e89ccf8a74f9214b29481c6748e21fc677ecc72fbc623ae3470d8957`.
+
+These are **our measurements of Apple's drawn Art Safe Area rectangles**, not
+numbers stated in the web specification. Coordinates are canvas-relative,
+top-left origin:
+
+| Header canvas | Safe x, y | Safe width, height | Left / top / right / bottom margins |
+| --- | --- | --- | --- |
+| 3840 × 1646 | 1097, 493 | 1646 × 661 | 1097 / 493 / 1097 / 492 |
+| 5244 × 2950 | 1921, 660 | 1402 × 962 | 1921 / 660 / 1921 / 1328 |
+
+The wide rectangle is centred. The universal rectangle sits above the canvas
+centre, so merely centring the headline in the whole image is unsafe. In the
+Sketch ZIP's `pages/39283581-C38C-4962-8796-F0C6E61C17B4.json`, inspect
+`Header - 3840x1646` and `16x9Universal - 5244x2950`, then the actual nested
+`Art Safe Area/Art Area/Art Safe Area/Rectangle` shape. The universal outer group
+has stale 1658 × 1060 bounds; the drawn rectangle is 1402 × 962. Nested Art Area
+origins are zero. Do not substitute the outer group's dimensions or extrapolate
+a precise iPhone crop from the canvas aspect ratio.
+
+We therefore use the template rectangle as a conservative crop stress test.
+Headline, full listing name, small drop mark, challenge tag, Today rings, jug,
+water total, logging controls and their caption all fit within it. A second,
+decorative large drop mark and a real placed-widget phone sit outside it and
+may disappear on narrower views. The central message does not depend on them.
+
+### Header design and review
+
+“Make every day count.” leads with the daily benefit. Paper blue, ink, pale glass,
+system SF type and the existing drop icon match the landed gallery. The Today
+panel is a uniform crop of the real raw capture, retaining all five rings and
+the complete water controls. The full Home Screen capture provides peripheral
+context. No UI is invented, relabelled or combined into a fictitious app screen.
+Today and widgets remain separate fixture examples, with different dates/days.
+
+Reproduction, provenance, crop limitations and visual review evidence:
+[header README](screenshots/app-store/marketing/header/README.md).

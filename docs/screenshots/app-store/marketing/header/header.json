@@ -1,0 +1,27 @@
+{
+  "brand": "Daily Challenge Tracker",
+  "tag": "75-DAY CHALLENGE",
+  "headline": ["Make every", "day count."],
+  "sources": {
+    "icon": "Resources/AppIcon/icon_1024.png",
+    "today": "docs/screenshots/app-store/raw/01-today-light.png",
+    "widgets": "docs/screenshots/app-store/raw/04-widgets-home-light.png"
+  },
+  "today_crop": [48, 492, 1224, 1030],
+  "exports": [
+    {
+      "id": "header-3840x1646",
+      "size": [3840, 1646],
+      "safe_area": [1097, 493, 1646, 661],
+      "today_width": 610,
+      "layout": "wide"
+    },
+    {
+      "id": "header-5244x2950",
+      "size": [5244, 2950],
+      "safe_area": [1921, 660, 1402, 962],
+      "today_width": 566,
+      "layout": "universal"
+    }
+  ]
+}

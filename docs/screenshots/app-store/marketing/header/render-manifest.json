@@ -1,0 +1,100 @@
+[
+  {
+    "output": "docs/screenshots/app-store/marketing/header/header-3840x1646.png",
+    "size": [
+      3840,
+      1646
+    ],
+    "mode": "RGB",
+    "bytes": 1509572,
+    "sha256": "89049679224ff7b569a8d8be293b5630df12bf950ec954141ec54a50e78acee2",
+    "safe_area": [
+      1097,
+      493,
+      1646,
+      661
+    ],
+    "today_crop": [
+      48,
+      492,
+      1224,
+      1030
+    ],
+    "inputs": {
+      "icon": {
+        "path": "Resources/AppIcon/icon_1024.png",
+        "size": [
+          1024,
+          1024
+        ],
+        "sha256": "1265882d4406ee38c746cd8c27201cd5f25f728dcadde0ae7cef150e95d2d79f"
+      },
+      "today": {
+        "path": "docs/screenshots/app-store/raw/01-today-light.png",
+        "size": [
+          1320,
+          2868
+        ],
+        "sha256": "1d5ac040043570b1c1dbbc83da4c1e296c8bbbaa3f946a11f6652c5e79a6b833"
+      },
+      "widgets": {
+        "path": "docs/screenshots/app-store/raw/04-widgets-home-light.png",
+        "size": [
+          1320,
+          2868
+        ],
+        "sha256": "b0b5fe8f39b97f208c088b3842486690c02daae56ca397a3cb3b00675e45f774"
+      }
+    },
+    "key_content_bounds": "result: \"[{\\\"class\\\":\\\"brand\\\",\\\"x\\\":1155,\\\"y\\\":605.875,\\\"width\\\":790,\\\"height\\\":64},{\\\"class\\\":\\\"tag\\\",\\\"x\\\":1155,\\\"y\\\":719.875,\\\"width\\\":790,\\\"height\\\":28},{\\\"class\\\":\\\"\\\",\\\"x\\\":1155,\\\"y\\\":771.875,\\\"width\\\":790,\\\"height\\\":269.25},{\\\"class\\\":\\\"today-wrap\\\",\\\"x\\\":2075,\\\"y\\\":541.84375,\\\"width\\\":610,\\\"height\\\":563.3125}]\""
+  },
+  {
+    "output": "docs/screenshots/app-store/marketing/header/header-5244x2950.png",
+    "size": [
+      5244,
+      2950
+    ],
+    "mode": "RGB",
+    "bytes": 2455363,
+    "sha256": "fe7db5e089df88bd83e43ac5b73100e80514b02dba478b9469823bd30168b578",
+    "safe_area": [
+      1921,
+      660,
+      1402,
+      962
+    ],
+    "today_crop": [
+      48,
+      492,
+      1224,
+      1030
+    ],
+    "inputs": {
+      "icon": {
+        "path": "Resources/AppIcon/icon_1024.png",
+        "size": [
+          1024,
+          1024
+        ],
+        "sha256": "1265882d4406ee38c746cd8c27201cd5f25f728dcadde0ae7cef150e95d2d79f"
+      },
+      "today": {
+        "path": "docs/screenshots/app-store/raw/01-today-light.png",
+        "size": [
+          1320,
+          2868
+        ],
+        "sha256": "1d5ac040043570b1c1dbbc83da4c1e296c8bbbaa3f946a11f6652c5e79a6b833"
+      },
+      "widgets": {
+        "path": "docs/screenshots/app-store/raw/04-widgets-home-light.png",
+        "size": [
+          1320,
+          2868
+        ],
+        "sha256": "b0b5fe8f39b97f208c088b3842486690c02daae56ca397a3cb3b00675e45f774"
+      }
+    },
+    "key_content_bounds": "result: \"[{\\\"class\\\":\\\"brand\\\",\\\"x\\\":1971,\\\"y\\\":947.765625,\\\"width\\\":640,\\\"height\\\":56},{\\\"class\\\":\\\"tag\\\",\\\"x\\\":1971,\\\"y\\\":1053.765625,\\\"width\\\":640,\\\"height\\\":28},{\\\"class\\\":\\\"\\\",\\\"x\\\":1971,\\\"y\\\":1105.765625,\\\"width\\\":640,\\\"height\\\":228.46875},{\\\"class\\\":\\\"today-wrap\\\",\\\"x\\\":2707,\\\"y\\\":877.859375,\\\"width\\\":566,\\\"height\\\":526.28125}]\""
+  }
+]

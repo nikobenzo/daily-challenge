@@ -4,6 +4,9 @@ Seven English (UK) frames, in upload order. Use the numbered PNGs inside
 `iphone-6.9/` (1320 × 2868) and `iphone-medium/` (1206 × 2622).
 Contact sheets are for review only; do not upload them as screenshots.
 
+The optional product-page header is a separate creative asset. Its two exports,
+safe-area previews and rebuild instructions are in [header/README.md](header/README.md).
+
 | Frame | Benefit | Product evidence |
 | --- | --- | --- |
 | 01 | One day. Five clear goals. | Today: five rings, jug and current streak |

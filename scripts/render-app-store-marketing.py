@@ -16,6 +16,7 @@ from PIL import Image, ImageDraw
 ROOT = Path(__file__).resolve().parents[1]
 DEST = ROOT / 'docs/screenshots/app-store/marketing'
 SIZES = {'iphone-6.9': (1320, 2868), 'iphone-medium': (1206, 2622)}
+HEADER = DEST / 'header'
 
 def run(*args):
     env = dict(os.environ, CHROME_DEVTOOLS_AXI_SESSION='dc-appstore-marketing')
@@ -25,11 +26,102 @@ def run(*args):
         raise RuntimeError(result.stdout)
     return result.stdout
 
+def render_headers():
+    """Use the same Chrome/HTML/RGB export pipeline for creative headers."""
+    config = json.loads((HEADER / 'header.json').read_text())
+    template = (HEADER / 'template.html').read_text()
+    working = ROOT / '.build/app-store-marketing/header'
+    working.mkdir(parents=True, exist_ok=True)
+    inputs = {}
+    for key, path in config['sources'].items():
+        source = ROOT / path
+        with Image.open(source) as im:
+            dimensions = list(im.size)
+        inputs[key] = {'path': path, 'size': dimensions,
+                       'sha256': hashlib.sha256(source.read_bytes()).hexdigest()}
+    run('newpage', (HEADER / 'template.html').as_uri())
+    metadata = []
+    for asset in config['exports']:
+        width, height = asset['size']
+        x, y, sw, sh = asset['safe_area']
+        values = {'WIDTH': width, 'HEIGHT': height, 'SAFE_X': x, 'SAFE_Y': y,
+                  'SAFE_W': sw, 'SAFE_H': sh, 'LAYOUT': asset['layout'],
+                  'BRAND': html.escape(config['brand']), 'TAG': html.escape(config['tag']),
+                  'HEADLINE': ''.join('<span>'+html.escape(s)+'</span>' for s in config['headline'])}
+        for key, path in config['sources'].items():
+            values[key.upper()] = (ROOT / path).as_uri()
+        # Crop the exact capture, uniformly scaled; do not reconstruct any UI.
+        cx, cy, cw, ch = config['today_crop']
+        display_width = asset['today_width']
+        scale = display_width / cw
+        values.update({'TODAY_W': display_width, 'TODAY_H': ch * scale,
+                       'SOURCE_W': inputs['today']['size'][0] * scale,
+                       'SOURCE_X': -cx * scale, 'SOURCE_Y': -cy * scale})
+        page = template
+        for key, value in values.items():
+            page = page.replace('__'+key+'__', str(value))
+        target = working / (asset['id'] + '.html')
+        target.write_text(page)
+        run('resize', width, height)
+        run('open', target.as_uri())
+        run('eval', 'async () => { await document.fonts.ready; await Promise.all(Array.from(document.images).map(i => i.decode())); return true; }')
+        bounds = run('eval', '''() => {
+          const s=document.querySelector('.safe').getBoundingClientRect();
+          const result=[];
+          for(const e of document.querySelectorAll('[data-key]')) {
+            const r=e.getBoundingClientRect();
+            if(r.left<s.left || r.top<s.top || r.right>s.right || r.bottom>s.bottom)
+              throw Error('Outside Apple safe area: '+e.className);
+            if(e.scrollWidth>e.clientWidth+1)
+              throw Error('Overflow: '+e.className);
+            // Tight headline line-height lets glyphs extend below the line box.
+            // Check their ink range against the safe area, not scrollHeight.
+            for(const span of e.tagName==='H1' ? e.querySelectorAll('span') : []) {
+              const range=document.createRange(); range.selectNodeContents(span);
+              const ink=range.getBoundingClientRect();
+              if(ink.left<s.left || ink.top<s.top || ink.right>s.right || ink.bottom>s.bottom)
+                throw Error('Unsafe headline glyphs');
+            }
+            result.push({class:e.className,x:r.x,y:r.y,width:r.width,height:r.height});
+          }
+          return result;
+        }''')
+        output = HEADER / (asset['id'] + '.png')
+        run('screenshot', output)
+        with Image.open(output) as im:
+            if im.size != (width, height):
+                raise ValueError(f'Incorrect header size: {im.size}')
+            rgb = im.convert('RGB')
+            rgb.save(output, optimize=True)
+            # Review-only overlays and crops, never upload these previews.
+            guide = rgb.copy()
+            ImageDraw.Draw(guide).rectangle((x, y, x+sw-1, y+sh-1), outline='#ff8800', width=6)
+            guide.thumbnail((1311, 738))
+            guide.save(HEADER / (asset['id'] + '-safe-area-preview.png'))
+            crop = rgb.crop((x, y, x+sw, y+sh))
+            crop.save(HEADER / (asset['id'] + '-safe-area-crop.png'))
+            # A conservative 402 pt portrait-phone view of the safe rectangle.
+            crop.resize((402, round(sh * 402 / sw)), Image.Resampling.LANCZOS).save(
+                HEADER / (asset['id'] + '-iphone-crop-preview.png'))
+        metadata.append({'output': str(output.relative_to(ROOT)), 'size': asset['size'],
+                         'mode': 'RGB', 'bytes': output.stat().st_size,
+                         'sha256': hashlib.sha256(output.read_bytes()).hexdigest(),
+                         'safe_area': asset['safe_area'], 'today_crop': config['today_crop'],
+                         'inputs': inputs, 'key_content_bounds': bounds.split('\nhelp')[0]})
+        print(f'Rendered header/{asset["id"]}', flush=True)
+    (HEADER / 'render-manifest.json').write_text(json.dumps(metadata, indent=2)+'\n')
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--size', choices=SIZES, action='append')
     parser.add_argument('--frame', help='Render only this frame id')
+    parser.add_argument('--header', action='store_true', help='Render both header creative assets and crop previews only')
     args = parser.parse_args()
+    if args.header:
+        if args.size or args.frame:
+            parser.error('--header cannot be combined with screenshot filters')
+        render_headers()
+        return
     frames = json.loads((DEST / 'frames.json').read_text())
     template = (DEST / 'template.html').read_text()
     metadata = []
