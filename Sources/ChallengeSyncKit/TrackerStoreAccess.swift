@@ -9,6 +9,9 @@ public protocol TrackerStoreAccess {
     func observeCompletion(ownerID: UUID, now: Date, localCompletionDay: Date?, localExtrasDay: Date?) throws -> CompletionCelebration?
     func activate(ownerID: UUID?) throws -> ChallengeStore?
     func transaction<Result>(ownerID: UUID, _ operation: (inout ChallengeStore) throws -> Result) throws -> (ChallengeStore, Result)
+    /// After the account is deleted on the server: unpublish it if it is still active and
+    /// remove every local copy of its history, queue and celebration ledger.
+    func removeAccountData(ownerID: UUID) throws
 }
 
 public extension TrackerStoreAccess {

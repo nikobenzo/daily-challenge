@@ -10,7 +10,9 @@ Follow the [exact hosted migration/install steps and two-Mac checklist](../docs/
 
 `20261010000100_extras_action_kinds.sql` widens that action-kind check to the three daily checklist extras kinds; apply it after abuse limits and before releasing the build with extras, following the [extras update](../docs/production-sync.md#extras-update-owner-only-once).
 
-Production SELECT/INSERT policies require the authenticated owner on both tables. Composite foreign keys and RLS protect event children and undo references; client UPDATE/DELETE and receipt-time forgery are denied. The local harness tests both schemas. Existing local tracking remains usable with pending/error status if production tables are not deployed; empty-device setup waits for a successful server check.
+`20261011000100_account_deletion.sql` makes deleting an Auth user cascade to that owner's challenge and events, and adds `delete_own_account()`, which lets a signed-in user delete only their own account with the publishable key (in-app account deletion on the iPhone). Apply it after the extras migration and before external testing or App Review, following [account deletion](../docs/production-sync.md#account-deletion-owner-only-once-before-app-review).
+
+Production SELECT/INSERT policies require the authenticated owner on both tables. Composite foreign keys and RLS protect event children and undo references; client UPDATE/DELETE and receipt-time forgery are denied, and rows are removed only by deleting their own account. The local harness tests both schemas. Existing local tracking remains usable with pending/error status if production tables are not deployed; empty-device setup waits for a successful server check.
 
 The remaining sections describe the retained **diagnostic proof**, not production activity.
 
@@ -44,7 +46,7 @@ bash scripts/test-sync-security.sh
 
 Prerequisites: PostgreSQL's `initdb`, `pg_ctl`, and `psql` on PATH. The harness creates a temporary database on a private local Unix socket, applies the actual migration, runs role-based tests, and removes it afterward. Seeds in `supabase/tests/before-migration/<migration file name>` run just before that migration, so a test can check rows that already existed when it was applied; every migration is also re-run once and must fail without changes. No hosted credentials or Docker are needed.
 
-Tests cover both schemas and the abuse limits: own-user access, cross-user isolation, forged ownership, challenge-child and undo ownership, anonymous denial, missing identity reads, prohibited update/delete, receipt-time forgery, invalid proof messages, duplicate insert retries, and the timezone column's default for existing rows, owner-only insert, immutability and unchanged policies. The local harness supplies a minimal stand-in for Supabase Auth; live JWT validation, email delivery, native session persistence, network retry/reconciliation, and work-Mac installation remain to be tested with the actual app.
+Tests cover both schemas, the abuse limits and account deletion: own-user access, cross-user isolation, forged ownership, challenge-child and undo ownership, anonymous denial, missing identity reads, prohibited update/delete, receipt-time forgery, invalid proof messages, duplicate insert retries, and the timezone column's default for existing rows, owner-only insert, immutability and unchanged policies. The local harness supplies a minimal stand-in for Supabase Auth; live JWT validation, email delivery, native session persistence, network retry/reconciliation, and work-Mac installation remain to be tested with the actual app.
 
 ## Next gate
 

@@ -7,6 +7,7 @@
 #   CAPTURE_PHASE2_ONLY=1   capture shared Today + recovery only
 #   CAPTURE_PHASE5_ONLY=1   capture the Manage extras screens only (design field fill)
 #   CAPTURE_EXTRAS_ONLY=1   capture the extras screens only (carry-over fixtures)
+#   CAPTURE_DELETION_ONLY=1   capture Delete account (both confirmation steps) only
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
@@ -73,8 +74,24 @@ if [[ "${CAPTURE_PHASE5_ONLY:-0}" == 1 ]]; then
   exit 0
 fi
 
+# Delete account: step one (the sheet) and step two (the final alert).
+capture_deletion() {
+  capture account-delete-row account "$1" -fixture-scroll-to fixture-account-delete
+  capture delete-account account "$1" -delete-account
+  capture delete-account-confirm account "$1" -delete-account-confirm
+  capture delete-account-large-text account "$1" -delete-account -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityL
+}
+if [[ "${CAPTURE_DELETION_ONLY:-0}" == 1 ]]; then
+  for appearance in light dark; do capture_deletion "$appearance"; done
+  xcrun simctl status_bar "$udid" clear
+  xcrun simctl terminate "$udid" "$BUNDLE_ID" 2>/dev/null || true
+  echo "Delete account screenshots: $OUT"
+  exit 0
+fi
+
 for appearance in light dark; do
   if [[ "${CAPTURE_EXTRAS_ONLY:-0}" != 1 ]]; then
+    capture_deletion "$appearance"
     for screen in sharedToday storageRecovery signIn createAccount confirmCode forgotPassword resetPassword checking setup today todayComplete history account; do
       capture "$screen" "$screen" "$appearance"
     done

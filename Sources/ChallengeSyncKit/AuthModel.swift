@@ -90,6 +90,9 @@ public final class AuthModel {
 
     /// The app's one client. Nil for offline fixtures and when configuration is missing.
     @ObservationIgnored public private(set) var client: SupabaseClient?
+    /// Deletes the signed-in account on the server. The client's own unless a test or
+    /// fixture supplies one; nil when there is neither.
+    @ObservationIgnored public var accountDeletion: (any AccountDeletionTransport)?
     @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private var started = false
     /// Set while a recovery code's session waits for its new password, so that session
@@ -113,6 +116,7 @@ public final class AuthModel {
                     emitLocalSessionAsInitialSession: true
                 ))
             )
+            accountDeletion = client.map(SupabaseAccountDeletion.init)
             configurationReady = true
         } catch {
             status = "Configuration unavailable"
@@ -141,6 +145,7 @@ public final class AuthModel {
     public init(client: SupabaseClient, now: @escaping () -> Date = Date.init) {
         self.now = now
         self.client = client
+        self.accountDeletion = SupabaseAccountDeletion(client: client)
         self.configurationReady = true
         self.status = "Sign in to test private sync"
     }
@@ -443,6 +448,40 @@ public final class AuthModel {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    /// Permanently deletes the signed-in account and its synced history on the server
+    /// (App Review Guideline 5.1.1(v)). Nothing on this device changes unless the server
+    /// confirms the deletion: a failure or lost connection leaves the account, the
+    /// session and every local entry as they were. Once deleted, the session is removed
+    /// here and `removeLocalData` erases this device's copies of the account.
+    /// Returns whether the account was deleted.
+    @discardableResult
+    public func deleteAccount(removingLocalData removeLocalData: (UUID) throws -> Void) async -> Bool {
+        guard !isBusy, let owner = ownerID, let accountDeletion else { return false }
+        beginAttempt("Deleting account…")
+        defer { endAttempt() }
+        do {
+            try await accountDeletion.deleteAccount(ownerID: owner)
+        } catch {
+            errorMessage = "Your account was not deleted and nothing was removed. \(describe(error))"
+            status = "Account not deleted"
+            return false
+        }
+        // The account no longer exists. Signing out removes the saved session before any
+        // network request, so it succeeds offline too; the server's reply doesn't matter.
+        try? await client?.auth.signOut(scope: .local)
+        if ownerID == owner { activate(nil) }
+        show(.signIn)
+        status = "Account deleted"
+        do {
+            try removeLocalData(owner)
+            notice = "Your account and all its challenge history have been deleted."
+        } catch {
+            errorMessage = "Your account and its synced history were deleted, but the copy on this device "
+                + "could not be removed: \(error.localizedDescription) Deleting the app removes it."
+        }
+        return true
     }
 
     /// Lets a device's own diagnostics share the busy state, so they never overlap an auth request.

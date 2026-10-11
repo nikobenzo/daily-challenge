@@ -4,7 +4,7 @@ Implementation delivered for owner deployment and two-Mac acceptance. Automated 
 
 ## Ownership and transport
 
-`20261008000200_challenge_sync.sql` adds immutable `challenges` (one per Auth owner) and `challenge_events`. Every row is owner-scoped. SELECT/INSERT use RLS; anonymous access and client UPDATE/DELETE are denied. Composite foreign keys and RLS protect challenge children, and the undo foreign key cannot reference another owner's event. Clients cannot set server receipt time. Only the public URL and publishable key belong in the app; sessions retain the existing Keychain identifiers.
+`20261008000200_challenge_sync.sql` adds immutable `challenges` (one per Auth owner) and `challenge_events`. Every row is owner-scoped. SELECT/INSERT use RLS; anonymous access and client UPDATE/DELETE are denied. Rows are removed only when their Auth user is deleted ([account deletion](#account-deletion-owner-only-once-before-app-review)). Composite foreign keys and RLS protect challenge children, and the undo foreign key cannot reference another owner's event. Clients cannot set server receipt time. Only the public URL and publishable key belong in the app; sessions retain the existing Keychain identifiers.
 
 The transport, the coordinator (`TrackerModel`) and authentication (`AuthModel`) live in the platform-neutral `ChallengeSyncKit` library, so the Mac and iPhone apps run the same sync, conflict and acknowledgment code; each app supplies only its lifecycle triggers, Keychain names and wording.
 
@@ -72,6 +72,29 @@ If a build with timezone setup is installed first, an existing challenge keeps s
 2. Optionally confirm (read-only): `select conname, convalidated from pg_constraint where conname like 'challenge_events_action_kind%';` shows only `challenge_events_action_kind_v2`, validated.
 
 **Why first:** without it, the first extras event a Mac uploads is rejected (`23514`), and because uploads are batched, the other changes pending in that batch wait with it. Sync shows an error, nothing is lost, and everything uploads once the migration is applied. An app from before extras cannot decode extras rows at all: builds that skip unreadable rows show "could not be read and were skipped" and keep syncing everything else, while older builds stop syncing until updated. Update every Mac (automatic updates) before relying on extras.
+
+## Account deletion (owner only, once, before App Review)
+
+Apple requires in-app account deletion for any app that lets people create an account (App Review Guideline 5.1.1(v)); the iPhone app offers it under **Account › Delete account**. `20261011000100_account_deletion.sql` makes it work with only the publishable key and the person's own session, on the free plan (no Edge Function or service-role key):
+
+- `challenges.owner_id → auth.users` and `challenge_events → challenges` are re-created with `on delete cascade` (now named `challenges_owner_cascade` and `challenge_events_challenge_cascade`), so deleting an Auth user removes their challenge and every event; `sync_probe_entries` already cascaded. The undo foreign key is unchanged (deferred): a cascade removes an undo together with its pour.
+- `public.delete_own_account()` is a `security definer` function with no arguments that deletes `auth.users where id = auth.uid()`. Only `authenticated` may execute it; anonymous callers are refused and a session can only ever delete its own account. Calling it again after success changes nothing.
+- RLS policies and table grants are unchanged: clients still cannot update or delete rows directly.
+
+The implementation worker must **not** apply it. Owner steps:
+
+1. Optional pre-check in the SQL Editor (read-only): `select has_table_privilege('postgres', 'auth.users', 'DELETE');` returns `true`. If it returns `false`, stop and arrange diagnosis; do not change Auth schema privileges.
+2. Apply it **once, after `20261010000100_extras_action_kinds.sql` and before submitting an iPhone build for external testing or App Review**. Open a new query at https://supabase.com/dashboard/project/ujyvvyrugenknhjodfhc/sql/new , copy the **complete** file and run it. Expect "Success. No rows returned". It is transactional: if it already ran, it stops with `constraint "challenge_events_owner_id_challenge_id_fkey" of relation "challenge_events" does not exist` and changes nothing. Keep any error text; do not drop constraints or rerun blindly.
+3. Optionally confirm (read-only): `select conname, confdeltype from pg_constraint where conname in ('challenges_owner_cascade', 'challenge_events_challenge_cascade');` shows both with `c` (cascade), and `select proname, prosecdef from pg_proc where proname = 'delete_own_account';` shows one row with `true`.
+4. Accept it with a **disposable account only**, never the real one: create a new account in the iPhone app, start a challenge and add water, then Account › Delete account › **Delete account…** › **Delete account**. The app returns to sign-in saying the account and its history were deleted; Authentication › Users in the dashboard no longer lists it, and `select count(*) from public.challenges where owner_id = '<its id>';` returns 0. The [iPhone checklist](ios-testflight.md#owner-acceptance-checklist-on-a-real-iphone) covers the phone side.
+
+**Before it is applied** the button is harmless: the app shows "The server needs the account deletion update first" and nothing is deleted or signed out.
+
+**What the app does.** Nothing on the iPhone changes unless the server confirms the deletion. Offline, a server error or a missing migration leaves the account, the session and every local entry (including unsynced changes) exactly as they were, and says so. Once the server confirms, the app signs out locally (the saved session is removed even offline), unpublishes the account from the App Group so the widgets show the signed-out state and refuse earlier taps, then removes that account's `challenge-<owner>.json` (with its backups) and `celebrations-<owner>.json` from the App Group and the app's private pre-group folder. Other accounts' files and the device-local reminder and appearance settings stay.
+
+**Other devices.** Their access token stays valid until it expires (an hour by default) but reads return nothing and writes are refused because the account no longer exists; the next session refresh fails and they sign out. Their local files are not removed: a Mac keeps its copy on disk until Mac account deletion is built (later, with the Mac App Store). A deleted account cannot be signed in to again; creating a new account with the same email starts empty.
+
+**Known limitation.** If the server deleted the account but the reply was lost, retrying while the session lasts succeeds and finishes the cleanup. If the session ends first, the iPhone signs out and keeps its now-unreachable local copy; deleting the app removes it.
 
 ## Abuse limits (owner only, once, before going public)
 

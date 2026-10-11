@@ -26,6 +26,19 @@ import WidgetKit
             && ProcessInfo.processInfo.arguments.contains("-manage-extras")
     }
 
+    /// `-delete-account` opens Delete account (step one); `-delete-account-confirm` also
+    /// shows the final alert (step two).
+    static var showingDeletion: Bool {
+        let arguments = ProcessInfo.processInfo.arguments
+        return arguments.contains("-fixture")
+            && (arguments.contains("-delete-account") || arguments.contains("-delete-account-confirm"))
+    }
+
+    static var showingDeletionConfirmation: Bool {
+        ProcessInfo.processInfo.arguments.contains("-fixture")
+            && ProcessInfo.processInfo.arguments.contains("-delete-account-confirm")
+    }
+
     /// 9 October 2026, 15:00 in Jersey: a fixed clock keeps renders identical.
     static let now = ISO8601DateFormatter().date(from: "2026-10-09T14:00:00Z")!
     static let zone = TimeZone(identifier: "Europe/Jersey")!
@@ -95,6 +108,9 @@ import WidgetKit
                              now: { now })
         default:
             auth = AuthModel(fixtureOwnerID: owner, email: "sam@example.com", now: { now })
+            // `-deletion-fails` makes the fixture server unreachable for Delete account.
+            auth.accountDeletion = FixtureAccountDeletion(
+                reachable: !ProcessInfo.processInfo.arguments.contains("-deletion-fails"))
         }
         let reminders = WaterReminderController(defaults: defaults, center: FixtureNotificationCenter(),
                                                 wording: .iPhone, policy: .queued, clock: { now })
@@ -283,6 +299,17 @@ import WidgetKit
     func requestPermission() async throws {}
     func cancel() {}
     func schedule(at date: Date, timeZone: TimeZone) async throws {}
+}
+
+/// Delete account against no server: succeeds after a short visible pause, or fails as
+/// offline. Only the fixture's temporary folder is ever removed.
+@MainActor final class FixtureAccountDeletion: AccountDeletionTransport {
+    let reachable: Bool
+    init(reachable: Bool) { self.reachable = reachable }
+    func deleteAccount(ownerID: UUID) async throws {
+        try await Task.sleep(for: .milliseconds(500))
+        guard reachable else { throw URLError(.notConnectedToInternet) }
+    }
 }
 
 /// A server that cannot be reached, so setup waits on "Checking for your existing challenge".

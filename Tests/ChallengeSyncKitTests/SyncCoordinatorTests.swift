@@ -217,6 +217,10 @@ private final class FreshFixtureAccess: TrackerStoreAccess {
         let result = try operation(&store)
         return (store, result)
     }
+    func removeAccountData(ownerID: UUID) throws {
+        if owner == ownerID { owner = nil }
+        try TrackerModel.removeAccountFiles(ownerID: ownerID, in: [directory])
+    }
 }
 
 @Test @MainActor func optedInCoordinatorDerivesTogglesAndSyncMergesFromDisk() async throws {

@@ -30,6 +30,7 @@
 		7803A2B6B83C56CB86DE75FB /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52CECB8A3AA40F95A0D695BE /* Theme.swift */; };
 		7A6899D3153FC32542CF5770 /* WidgetTimeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7294939D231DA52CC101476D /* WidgetTimeline.swift */; };
 		7ADFCC2415399E635B2E3895 /* PhoneComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = D21C3753FE4E3D2CC52A5F5D /* PhoneComponents.swift */; };
+		8A27EE77A160A8C3E30C1B21 /* PhoneAccountDeletionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64F3200B2498B1EB31A5D8C0 /* PhoneAccountDeletionTests.swift */; };
 		8B92619D945BFFD3FB3958F6 /* PhoneExtrasViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F1304E7C9C7EACDB3CCF4A8 /* PhoneExtrasViews.swift */; };
 		9153F9C8EC63739DA6CAF657 /* TodayScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B1B9630EEC07846CBAA2EDB /* TodayScreen.swift */; };
 		949581B4C183D9FA008FE263 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61FDF9718370A45B2B02D0E5 /* RootView.swift */; };
@@ -116,6 +117,7 @@
 		61FDF9718370A45B2B02D0E5 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		62D3FBAE0645D9A0B21E47D9 /* SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedComponents.swift; sourceTree = "<group>"; };
 		6348898CD05F1EAC8EE43407 /* WidgetIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetIntents.swift; sourceTree = "<group>"; };
+		64F3200B2498B1EB31A5D8C0 /* PhoneAccountDeletionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneAccountDeletionTests.swift; sourceTree = "<group>"; };
 		7294939D231DA52CC101476D /* WidgetTimeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetTimeline.swift; sourceTree = "<group>"; };
 		76AB5F804FE5C4EFBE70F2B3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		7CDF630F289537D9F5F48348 /* WidgetActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetActions.swift; sourceTree = "<group>"; };
@@ -239,6 +241,7 @@
 		57C957689489F38943847DC0 /* DailyChallengeTests */ = {
 			isa = PBXGroup;
 			children = (
+				64F3200B2498B1EB31A5D8C0 /* PhoneAccountDeletionTests.swift */,
 				398EDE8CD614D9196592714B /* PhoneExtrasTests.swift */,
 				3789CD5BBCA369DA87A3BBD3 /* PhoneSharedStoreTests.swift */,
 				5260AF24808A4F9D4B2BD3F7 /* PhoneSyncTests.swift */,
@@ -503,6 +506,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8A27EE77A160A8C3E30C1B21 /* PhoneAccountDeletionTests.swift in Sources */,
 				4E5B42B9BDBC0C9FE39D790C /* PhoneExtrasTests.swift in Sources */,
 				D63365EFFE0A3FAE99FE3AC6 /* PhoneSharedStoreTests.swift in Sources */,
 				5FC85B1D9751F186B04424BC /* PhoneSyncTests.swift in Sources */,

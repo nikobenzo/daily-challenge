@@ -278,6 +278,33 @@ public final class TrackerModel {
         }
     }
 
+    /// After the account is deleted on the server: leave it, then remove this device's
+    /// copies of its history, pending queue, backups and celebration ledger. Other
+    /// accounts' files stay.
+    public func removeLocalData(ownerID: UUID) throws {
+        if self.ownerID == ownerID { activate(ownerID: nil) }
+        if let access {
+            try access.removeAccountData(ownerID: ownerID)
+        } else {
+            try Self.removeAccountFiles(ownerID: ownerID, in: [directory])
+        }
+    }
+
+    /// Removes the account's `challenge-<owner>.json` (with its migration and import
+    /// backups) and `celebrations-<owner>.json` from each existing directory.
+    public nonisolated static func removeAccountFiles(ownerID: UUID, in directories: [URL]) throws {
+        let owner = ownerID.uuidString.lowercased()
+        let fm = FileManager.default
+        for directory in directories where fm.fileExists(atPath: directory.path) {
+            for file in try fm.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil) {
+                let name = file.lastPathComponent.lowercased()
+                if name.hasPrefix("challenge-\(owner).json") || name == "celebrations-\(owner).json" {
+                    try fm.removeItem(at: file)
+                }
+            }
+        }
+    }
+
     public func refresh() {
         now = clock()
         if followsToday { selectedDay = today }

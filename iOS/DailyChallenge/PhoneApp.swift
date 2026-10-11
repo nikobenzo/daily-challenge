@@ -79,6 +79,19 @@ final class PhoneApp {
         return app
     }
 
+    /// Deletes the account on the server, then this iPhone's private and App Group copies
+    /// of it; the widgets reload to the signed-out state. Nothing changes unless the
+    /// server confirms (AuthModel.deleteAccount). Returns whether it was deleted.
+    @discardableResult
+    func deleteAccount() async -> Bool {
+        let deleted = await auth.deleteAccount(removingLocalData: tracker.removeLocalData)
+        if deleted {
+            tab = .today
+            WidgetCenter.shared.reloadAllTimelines()
+        }
+        return deleted
+    }
+
     /// Foreground: catch up on the day, reminders and the server, as the Mac does when its popup opens.
     func becameActive() {
         tracker.reload()

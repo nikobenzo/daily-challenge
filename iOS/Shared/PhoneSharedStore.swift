@@ -98,6 +98,24 @@ final class PhoneSharedStore: TrackerStoreAccess, @unchecked Sendable {
         }
     }
 
+    /// After the account is deleted on the server: unpublish it (widgets then show the
+    /// signed-out state and refuse its pending taps), then remove its history, queue,
+    /// backups and celebration ledger from the group, any relocation stage and the
+    /// app's private pre-group folder. Other accounts' files stay.
+    func removeAccountData(ownerID: UUID) throws {
+        defer { onCommitted?() }
+        try locked { root in
+            if binding?.ownerID == ownerID { binding = nil }
+            // Unreadable metadata is cleared too rather than leaving the removal undone.
+            let published = try? readAccount(root)
+            if published == nil || published?.ownerID == ownerID { try writeAccount(nil, root: root) }
+            let stage = root.appendingPathComponent("relocation-stage", isDirectory: true)
+            try TrackerModel.removeAccountFiles(ownerID: ownerID, in: [
+                root, stage, stage.appendingPathComponent("originals", isDirectory: true)
+            ] + (legacy.map { [$0] } ?? []))
+        }
+    }
+
     /// Future consumers receive only the published account; never enumerate files
     /// to select an owner. Stale actions must supply this exact opaque binding.
     func readActive() throws -> (PhoneSharedAccount, ChallengeStore)? {

@@ -200,4 +200,45 @@ final class PhoneExtrasUITests: XCTestCase {
         reveal(cancel, in: app); cancel.tap()
         XCTAssertTrue(app.buttons["Done"].isHittable)
     }
+
+    @MainActor func testDeleteAccountNeedsTwoConfirmationsThenSignsOut() {
+        let app = launch("account")
+        let delete = app.buttons["account-delete"]
+        XCTAssertTrue(delete.waitForExistence(timeout: 5)); reveal(delete, in: app); delete.tap()
+        // Step one explains; Cancel and Keep my account leave everything as it was.
+        let proceed = app.buttons["delete-account-continue"]
+        XCTAssertTrue(proceed.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["This can't be undone."].exists)
+        app.buttons["Keep my account"].tap()
+        XCTAssertTrue(delete.waitForExistence(timeout: 5)); delete.tap()
+        XCTAssertTrue(proceed.waitForExistence(timeout: 5)); reveal(proceed, in: app); proceed.tap()
+        // Step two: the final alert. Cancel first, then delete.
+        let alert = app.alerts["Delete your account permanently?"]
+        XCTAssertTrue(alert.waitForExistence(timeout: 5))
+        alert.buttons["Cancel"].tap()
+        XCTAssertTrue(proceed.exists)
+        reveal(proceed, in: app); proceed.tap()
+        XCTAssertTrue(alert.waitForExistence(timeout: 5))
+        alert.buttons["Delete account"].tap()
+        let notice = app.staticTexts["auth-notice"]
+        XCTAssertTrue(notice.waitForExistence(timeout: 10))
+        XCTAssertEqual(notice.label, "Your account and all its challenge history have been deleted.")
+        XCTAssertFalse(app.tabBars.buttons["Account"].exists)
+    }
+
+    @MainActor func testDeleteAccountOfflineKeepsTheAccountAndSaysSo() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-fixture", "account", "-deletion-fails"]
+        app.launch()
+        let delete = app.buttons["account-delete"]
+        XCTAssertTrue(delete.waitForExistence(timeout: 5)); reveal(delete, in: app); delete.tap()
+        let proceed = app.buttons["delete-account-continue"]
+        XCTAssertTrue(proceed.waitForExistence(timeout: 5)); reveal(proceed, in: app); proceed.tap()
+        app.alerts["Delete your account permanently?"].buttons["Delete account"].tap()
+        let error = app.descendants(matching: .any)["delete-account-error"]
+        XCTAssertTrue(error.waitForExistence(timeout: 10))
+        XCTAssertTrue(error.label.contains("Your account was not deleted and nothing was removed."), error.label)
+        app.buttons["Keep my account"].tap()
+        XCTAssertTrue(app.staticTexts["account-email"].firstMatch.waitForExistence(timeout: 5))
+    }
 }

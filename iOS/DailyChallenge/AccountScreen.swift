@@ -8,6 +8,7 @@ struct AccountScreen: View {
     @Bindable var app: PhoneApp
     @State private var managingExtras = false
     @State private var confirmingSignOut = false
+    @State private var deletingAccount = false
     @State private var signOutError: String?
 
     private var auth: AuthModel { app.auth }
@@ -51,6 +52,8 @@ struct AccountScreen: View {
                     signOut
                     if let signOutError { FieldError(text: "Couldn't sign out. \(signOutError)") }
                     HairlineDivider().padding(.vertical, 6)
+                    deleteAccount
+                    HairlineDivider().padding(.vertical, 6)
                     SettingRow(symbol: "info.circle", title: "Version") {
                         Text(version).font(Theme.Fonts.field).monospacedDigit().foregroundStyle(Theme.textSecondary)
                     }
@@ -61,6 +64,10 @@ struct AccountScreen: View {
             }
         }
         .sheet(isPresented: $managingExtras) { PhoneManageExtrasView(tracker: tracker) }
+        .sheet(isPresented: $deletingAccount) { DeleteAccountView(app: app) }
+        #if DEBUG
+        .onAppear { deletingAccount = PhoneFixtures.showingDeletion }
+        #endif
     }
 
     private var version: String {
@@ -145,7 +152,7 @@ struct AccountScreen: View {
         }
     }
 
-    // MARK: Appearance and sign out
+    // MARK: Appearance, sign out and delete account
 
     private var appearance: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -180,6 +187,122 @@ struct AccountScreen: View {
             }
         } message: {
             Text("Your entries stay on the server and on your other devices. Entries not yet synced stay on this iPhone until you sign in again.")
+        }
+    }
+
+    private var deleteAccount: some View {
+        Button { deletingAccount = true } label: {
+            SettingRow(symbol: "trash", title: "Delete account", tint: Theme.danger) {
+                Image(systemName: "chevron.right").foregroundStyle(Theme.textTertiary)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(auth.isBusy || auth.accountDeletion == nil)
+        .accessibilityHint("Permanently deletes your account and all its challenge history. Asks you to confirm twice.")
+        .accessibilityIdentifier("account-delete")
+        .id("fixture-account-delete")
+    }
+}
+
+/// Delete account, step one of two: what is deleted and where, before the final alert.
+/// Nothing is deleted anywhere unless the server confirms; a failure keeps the account,
+/// this iPhone's session and every local entry, and says so.
+struct DeleteAccountView: View {
+    let app: PhoneApp
+    @Environment(\.dismiss) private var dismiss
+    @State private var confirming = false
+    @State private var failure: String?
+    @ScaledMetric(relativeTo: .body) private var iconWidth = 24.0
+
+    private var auth: AuthModel { app.auth }
+    private var email: String { auth.signedInEmail ?? "This account" }
+
+    var body: some View {
+        NavigationStack {
+            PhoneScreen {
+                GlassCard {
+                    VStack(alignment: .leading, spacing: 14) {
+                        Circle().fill(Theme.dangerTint).frame(width: 60, height: 60)
+                            .overlay { Image(systemName: "trash").font(.system(size: 24, weight: .semibold)).foregroundStyle(Theme.danger) }
+                            .frame(maxWidth: .infinity)
+                            .accessibilityHidden(true)
+                        Text("Delete your account?").font(Theme.Fonts.screenTitle).tracking(Theme.Tracking.screenTitle)
+                            .frame(maxWidth: .infinity).multilineTextAlignment(.center)
+                            .accessibilityAddTraits(.isHeader)
+                        Text(email).font(Theme.Fonts.field).foregroundStyle(Theme.textSecondary)
+                            .lineLimit(1).truncationMode(.middle).frame(maxWidth: .infinity)
+                            .accessibilityIdentifier("delete-account-email")
+                        VStack(alignment: .leading, spacing: 12) {
+                            point("person.crop.circle.badge.xmark", "Your account is deleted. You can't sign in to it again.")
+                            point("icloud.slash", "All your synced challenge history (every day, pour, habit, diet mark and extra) "
+                                  + "is permanently deleted from the server, for every device.")
+                            point("iphone", "This iPhone's copy is removed now, \(unsynced).")
+                            point("laptopcomputer", "Your other devices can no longer sync it and are signed out.")
+                        }
+                        Label("This can't be undone.", systemImage: "exclamationmark.triangle.fill")
+                            .font(Theme.Fonts.rowLabel).foregroundStyle(Theme.danger)
+                        if let failure {
+                            FieldError(text: failure).accessibilityIdentifier("delete-account-error")
+                        }
+                        Button(role: .destructive) { failure = nil; confirming = true } label: {
+                            HStack(spacing: 8) {
+                                if auth.isBusy { ProgressView() }
+                                Text(auth.isBusy ? "Deleting account…" : "Delete account…")
+                            }
+                        }
+                        .buttonStyle(TintedPillStyle(fill: Theme.dangerTint, foreground: Theme.danger, expands: true))
+                        .disabled(auth.isBusy)
+                        .accessibilityIdentifier("delete-account-continue")
+                        Button("Keep my account") { dismiss() }
+                            .buttonStyle(TintedPillStyle(expands: true))
+                            .disabled(auth.isBusy)
+                    }
+                    .padding(Theme.Size.sectionHorizontal)
+                }
+            }
+            .foregroundStyle(Theme.textPrimary)
+            .navigationTitle("Delete account").navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(auth.isBusy) }
+            }
+            .alert("Delete your account permanently?", isPresented: $confirming) {
+                Button("Delete account", role: .destructive) {
+                    Task {
+                        if await app.deleteAccount() { dismiss() } else { failure = auth.errorMessage }
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("\(email) and all its challenge history will be deleted from the server and from this iPhone. "
+                     + "This can't be undone.")
+            }
+        }
+        .interactiveDismissDisabled(auth.isBusy)
+        #if DEBUG
+        // The alert can present only once the sheet has finished presenting.
+        .task {
+            guard PhoneFixtures.showingDeletionConfirmation else { return }
+            try? await Task.sleep(for: .milliseconds(800))
+            confirming = true
+        }
+        #endif
+    }
+
+    private var unsynced: String {
+        let pending = app.tracker.store?.pendingCount ?? 0
+        return switch pending {
+        case 0: "including anything not yet synced"
+        case 1: "including 1 change not yet synced"
+        default: "including \(pending) changes not yet synced"
+        }
+    }
+
+    private func point(_ symbol: String, _ text: String) -> some View {
+        Label {
+            Text(text).font(Theme.Fonts.field).fixedSize(horizontal: false, vertical: true)
+        } icon: {
+            Image(systemName: symbol).foregroundStyle(Theme.textSecondary).frame(width: iconWidth)
         }
     }
 }

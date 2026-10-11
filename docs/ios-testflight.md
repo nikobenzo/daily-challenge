@@ -63,6 +63,7 @@ sync acceptance. Add `-light.png` / `-dark.png` to each prefix:
 | Manage extras: empty / populated / cap | `manage-extras-empty`, `manage-extras`, `manage-extras-cap` |
 | Account entry point: empty / populated | `account`, `accountExtras` |
 | History: locked / unlocked | `historyExtras`, `historyExtrasEditing` |
+| Delete account: Account row / step one / step two (final alert) / Large text | `account-delete-row`, `delete-account`, `delete-account-confirm`, `delete-account-large-text` |
 | Accessibility Large text | `today-extras-large-text`, `manage-extras-large-text`, `manage-extras-actions-large-text`, `history-extras-large-text`, `account-extras-large-text` |
 
 The accessibility captures and interactive UI test verify wrapping checklist titles, growing
@@ -91,7 +92,8 @@ recovery; do not delete or manually overwrite them. `-fixture sharedToday` and
 Sign in, create an account and reset a password with the emailed code; setup (start date and
 timezone) only after the server confirms there is no challenge yet; Today (five rings, jug,
 streak, day number); History (calendar, Edit this day for late entries, activity); Account
-(email, sync status and Sync now, water reminders, appearance, sign out on this iPhone).
+(email, sync status and Sync now, water reminders, appearance, sign out on this iPhone, delete
+account).
 Completing, undoing, late entries and conflicts follow the same rules as the Mac.
 
 - **Sync** runs at launch, when the app comes to the foreground, every 30 seconds while it is
@@ -112,7 +114,17 @@ Completing, undoing, late entries and conflicts follow the same rules as the Mac
   never affect complete days or streaks. Activity explicitly labels names, archives and ticks.
 - **Widgets:** Water (small, medium and the read-only Lock Screen ring), Daily requirements
   (medium) and Extras (medium, large); see the widget sections below.
-- **Not in v1:** backups, change password, account deletion.
+- **Delete account** (Account › Delete account, App Review Guideline 5.1.1(v)): a sheet explains
+  that the account and all synced challenge history are permanently deleted from the server for
+  every device, that this iPhone's copy (including unsynced changes) is removed, and that it
+  can't be undone; **Delete account…** then a final **Delete your account permanently?** alert
+  confirm it. Nothing changes unless the server confirms: offline or on a failure the account,
+  session and every entry stay and the sheet says so. On success the app signs out, removes this
+  account's history from the App Group and the private pre-group folder, and the widgets show the
+  signed-out state. It needs the owner's [account deletion migration](production-sync.md#account-deletion-owner-only-once-before-app-review);
+  until then it reports that the server needs the update and deletes nothing. The Mac app's
+  account deletion comes later, with the Mac App Store.
+- **Not in v1:** backups, change password.
 
 ## One-time owner steps
 
@@ -156,7 +168,11 @@ step; the remaining items below describe the existing distribution workflow.
    App Store Connect team (Users and Access › + with any role, for example Customer Support);
    up to 100. Add them to the group; they get an email invitation and install the free
    TestFlight app on their iPhone.
-6. **Export compliance** is answered in the build (`ITSAppUsesNonExemptEncryption = NO`: the app
+6. **Account deletion migration.** Before an iPhone build goes to external testing or App
+   Review, apply `20261011000100_account_deletion.sql` once, following
+   [account deletion](production-sync.md#account-deletion-owner-only-once-before-app-review).
+   Delete account cannot work without it.
+7. **Export compliance** is answered in the build (`ITSAppUsesNonExemptEncryption = NO`: the app
    uses only the system's HTTPS). Confirm this is still true before each release.
 
 ## Per-build steps
@@ -197,8 +213,9 @@ step; the remaining items below describe the existing distribution workflow.
 - **External testing** (up to 10,000 people, invitation or public link) requires Beta App Review
   of the first build of each version, test information and a privacy policy, and is judged
   against the App Review Guidelines, which include in-app account deletion for apps that
-  create accounts (guideline 5.1.1(v)). The app does not offer account deletion yet, so stay
-  with internal testing until it does.
+  create accounts (guideline 5.1.1(v)). The app offers it (Account › Delete account); apply the
+  [account deletion migration](production-sync.md#account-deletion-owner-only-once-before-app-review)
+  before external testing or App Review, or the reviewer's deletion fails.
 - App Store release is out of scope.
 
 ## Owner acceptance checklist (on a real iPhone)
@@ -230,6 +247,14 @@ transports. On a real iPhone, after installing from TestFlight:
 10. Carry-over ([day rules](tracker-interface.md#which-days-an-extra-shows)): the day after adding two
    extras and ticking one, Today, History and the Extras widget show only the open one, with a small
    "Late" caption that VoiceOver reads as "late"; the Mac shows the same.
+11. Delete account, **with a disposable account only** (never the real one), after the
+   [account deletion migration](production-sync.md#account-deletion-owner-only-once-before-app-review):
+   create it on the iPhone, start a challenge, add water and place a widget. In Airplane mode,
+   Account › Delete account › Delete account… › Delete account reports that nothing was deleted,
+   and the account, entries and widget are unchanged. Back online, repeat: the app returns to
+   sign-in saying the account was deleted, the widget shows the signed-out state, signing in
+   with it fails, and the dashboard no longer lists the user. Check the sheet and alert in Light,
+   Dark, VoiceOver and a large text size.
 
 ## Read-only widgets (Phase 3)
 
