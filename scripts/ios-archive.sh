@@ -124,6 +124,10 @@ assert e['CFBundleIdentifier'] == 'app.daily-challenge.ios.widgets'
 assert e['NSExtension']['NSExtensionPointIdentifier'] == 'com.apple.widgetkit-extension'
 for key in ('CFBundleVersion', 'CFBundleShortVersionString'):
     assert a[key] == e[key], f'Mismatched {key}'
+# The app ships iPhone-only (no iPad listing or screenshots): refuse any other device family.
+for label, plist in (('app', a), ('extension', e)):
+    assert plist.get('UIDeviceFamily') == [1], f'{label} must declare UIDeviceFamily [1] only, found {plist.get("UIDeviceFamily")}'
+print(f'UIDeviceFamily {a["UIDeviceFamily"]} (app) {e["UIDeviceFamily"]} (extension), CFBundleVersion {a["CFBundleVersion"]}')
 assert not (extension / 'Configuration.json').exists(), 'Extension must not contain server configuration'
 # Privacy manifests: each archived bundle carries one that declares no tracking and the
 # UserDefaults reason; the app also declares its collected data (docs/ios-testflight.md).

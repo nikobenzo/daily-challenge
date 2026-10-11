@@ -64,6 +64,7 @@ targets:
         com.apple.security.application-groups: [group.app.daily-challenge.ios]
     settings:
       base:
+        TARGETED_DEVICE_FAMILY: "1"
         PRODUCT_BUNDLE_IDENTIFIER: app.daily-challenge.ios
         PRODUCT_NAME: Daily Challenge
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
@@ -108,6 +109,7 @@ targets:
         com.apple.security.application-groups: [group.app.daily-challenge.ios]
     settings:
       base:
+        TARGETED_DEVICE_FAMILY: "1"
         PRODUCT_BUNDLE_IDENTIFIER: app.daily-challenge.ios.widgets
         APPLICATION_EXTENSION_API_ONLY: YES
         # Wraps widget controls in App Intent buttons; the app's in-process renders draw labels only.
@@ -133,6 +135,7 @@ targets:
         product: ChallengeSyncKit
     settings:
       base:
+        TARGETED_DEVICE_FAMILY: "1"
         PRODUCT_BUNDLE_IDENTIFIER: app.daily-challenge.ios.tests
         GENERATE_INFOPLIST_FILE: YES
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Daily Challenge.app/Daily Challenge"
@@ -145,6 +148,7 @@ targets:
       - target: DailyChallenge
     settings:
       base:
+        TARGETED_DEVICE_FAMILY: "1"
         PRODUCT_BUNDLE_IDENTIFIER: app.daily-challenge.ios.uitests
         GENERATE_INFOPLIST_FILE: YES
         TEST_TARGET_NAME: DailyChallenge

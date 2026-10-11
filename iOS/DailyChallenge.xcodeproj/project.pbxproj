@@ -618,7 +618,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "app.daily-challenge.ios.tests";
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Daily Challenge.app/Daily Challenge";
 			};
 			name = Debug;
@@ -635,7 +635,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "app.daily-challenge.ios.uitests";
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_TARGET_NAME = DailyChallenge;
 			};
 			name = Debug;
@@ -652,7 +652,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "app.daily-challenge.ios.uitests";
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_TARGET_NAME = DailyChallenge;
 			};
 			name = Release;
@@ -736,7 +736,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "app.daily-challenge.ios.tests";
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Daily Challenge.app/Daily Challenge";
 			};
 			name = Release;
@@ -759,7 +759,7 @@
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) WIDGET_EXTENSION";
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -840,7 +840,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "app.daily-challenge.ios";
 				PRODUCT_NAME = "Daily Challenge";
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -862,7 +862,7 @@
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) WIDGET_EXTENSION";
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -883,7 +883,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "app.daily-challenge.ios";
 				PRODUCT_NAME = "Daily Challenge";
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
