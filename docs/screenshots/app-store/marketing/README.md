@@ -1,6 +1,6 @@
 # App Store marketing screenshots
 
-Seven English (UK) frames, in upload order. Use the numbered PNGs inside
+Six English (UK) frames, in upload order. Use the numbered PNGs inside
 `iphone-6.9/` (1320 × 2868) and `iphone-medium/` (1206 × 2622).
 Contact sheets are for review only; do not upload them as screenshots.
 
@@ -12,12 +12,11 @@ Contact sheets are for review only; do not upload them as screenshots.
 | 04 | Small extras. Less to forget. | Today's extras with the amber Late labels, with enlarged crop |
 | 05 | See your streak grow. | History calendar and streak information |
 | 06 | Your routine. Your look. | Today in Dark appearance |
-| 07 | Five goals. One good day. | All five requirements complete |
 
 The generic 75-day wording refers to this app's five fixed requirements. Extras
 are personal to-dos and do not count towards complete days or streaks. Captions
 make no user-count, testimonial, ranking, medical-result or award claim. The
-optional cross-device/sign-in frame is omitted: the seven frames focus on the
+optional cross-device/sign-in frame is omitted: the six frames focus on the
 phone's daily experience. The app is iPhone-only according to `iOS/project.yml`.
 
 ## Rebuild
@@ -54,7 +53,35 @@ background-height extension for its slightly different aspect ratio.
 
 ## Capture provenance and visual review
 
-Pending final raw-source swap and visual acceptance. See
-[research](../../../app-store-visuals-research.md) for references and the design
-rationale. Final review must cover every PNG in both sizes, not only this file
-or an isolated widget render.
+All inputs now come from `docs/screenshots/app-store/raw/` on `main` at
+`24fb3e5`: real iPhone 17 Pro Max simulator captures on iOS 26.4, synthetic
+fixture data, fixed 9:41 status bar and full signal/battery. The raw capture
+commands and caveats are in `docs/app-store-listing.md` and
+`iOS/scripts/capture-app-store-screenshots.sh`. No account, Keychain, network
+or notification permission was used for these captures. The placed widget
+capture comes from SpringBoard, not an in-process widget render.
+
+Each frame is an independent feature example. The app examples use Day 12,
+while the widget example uses Day 1; their dates differ because the app fixture
+clock is fixed and WidgetKit uses the simulator's date. The gallery makes no
+claim that these examples are one continuous session or a synchronised account.
+The offline fixture's Local only label remains visible and is not relabelled as
+Synced. See [research](../../../app-store-visuals-research.md) for references
+and the design rationale.
+
+Final checks passed on 11 October 2026:
+
+- All twelve PNGs were inspected individually and in both contact sheets at
+  thumbnail size. Headlines, rings, jug, controls and Late labels are legible;
+  the water and extras crops preserve their complete focal content. The native
+  History activity list continues behind its tab bar, as in the raw capture.
+- DOM checks passed for caption overflow and canvas bounds. Export checks passed
+  for the exact dimensions, opaque RGB pixels, six frames per size and all input
+  hashes recorded in `render-manifest.json`.
+- Caption wording and punctuation checks passed. The renderer's Python syntax
+  and `git diff --check` passed. No application code changes are part of this
+  delivery.
+
+The final set has six frames. It covers all required features with the raw
+captures now available on main. Re-render and repeat the visual review whenever
+captions, inputs or layout change.

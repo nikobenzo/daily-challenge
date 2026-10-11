@@ -46,7 +46,7 @@ def main():
             with Image.open(source) as im:
                 sw, sh = im.size
             zoom_width = 1140 / .92
-            zoom_top = -(sh / sw) * zoom_width * (.32 if frame['layout'] == 'water' else .55)
+            zoom_top = -(sh / sw) * zoom_width * (.285 if frame['layout'] == 'water' else .53)
             zoom = ''
             if frame['layout'] in ('water', 'extras'):
                 zoom = ('<div class="zoom ' + frame['layout'] + '"><img src="__SOURCE__" '
@@ -59,7 +59,7 @@ def main():
                       'ZOOM_TOP': zoom_top, 'TAG': html.escape(frame['tag']),
                       'HEADLINE': ''.join('<span>'+html.escape(s)+'</span>' for s in frame['headline']),
                       'DETAIL': html.escape(frame['detail']), 'SOURCE': source.as_uri(),
-                      'ICON': (ROOT/'Resources/AppIcon/icon_1024.png').as_uri(), 'NUMBER': f'{index:02}'}
+                      'ICON': (ROOT/'Resources/AppIcon/icon_1024.png').as_uri(), 'NUMBER': f'{index:02}', 'TOTAL': f'{len(frames):02}'}
             page = template
             # ZOOM first, because its fragment contains the SOURCE placeholder.
             page = page.replace('__ZOOM__', zoom)
@@ -88,7 +88,7 @@ def main():
                              'bounds': bounds.split('\nhelp')[0]})
             print(f'Rendered {size}/{frame["id"]}', flush=True)
         if not args.frame:
-            sheet = Image.new('RGB', (7*280, 660), '#f6f8fd')
+            sheet = Image.new('RGB', (len(frames)*280, 660), '#f6f8fd')
             draw = ImageDraw.Draw(sheet)
             for index, frame in enumerate(frames):
                 with Image.open(directory/(frame['id']+'.png')) as im:
