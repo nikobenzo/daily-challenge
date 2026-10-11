@@ -1,6 +1,6 @@
 # Daily Challenge - App Store screenshot research
 
-Checked 11 October 2026. Deliverable: six English (UK) marketing screenshots,
+Checked 11 October 2026. Deliverable: seven English (UK) marketing screenshots,
 with the app's real fixture UI. These are screenshot-gallery assets, not the new
 product-page header or search-result creative assets.
 
@@ -93,7 +93,7 @@ asset formats. This task produces only the requested screenshot gallery.
 A pale blue editorial canvas, large benefit-led headline and a single real app
 capture. The first frame makes the fixed five-goal challenge understandable;
 the second shows quick Home Screen check-ins. Later frames build the story:
-water, personal extras, completed-day history and appearance.
+water, personal extras, completed-day history, appearance and daily completion.
 This adapts the strong caption/UI hierarchy seen in Habitify, WaterMinder and
 Better while preserving Daily Challenge's glass surfaces, jug, rings and icon.
 It does not imitate their UI or claim their results.

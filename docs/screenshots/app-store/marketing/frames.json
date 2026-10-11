@@ -70,5 +70,20 @@
     "source": "docs/screenshots/app-store/raw/01-today-dark.png",
     "theme": "dark",
     "layout": "phone"
+  },
+  {
+    "id": "07-complete",
+    "tag": "DAILY PROGRESS",
+    "headline": [
+      "Five goals.",
+      "One good day."
+    ],
+    "detail": "Complete your requirements and build your streak.",
+    "source": "docs/screenshots/app-store/raw/06-today-complete-light.png",
+    "source_by_size": {
+      "iphone-medium": "docs/screenshots/app-store/raw/iphone-medium/06-today-complete-light.png"
+    },
+    "theme": "light",
+    "layout": "phone"
   }
 ]

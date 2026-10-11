@@ -42,7 +42,8 @@ def main():
         for index, frame in enumerate(frames, 1):
             if args.frame and frame['id'] != args.frame:
                 continue
-            source = ROOT / frame['source']
+            source_path = frame.get('source_by_size', {}).get(size, frame['source'])
+            source = ROOT / source_path
             with Image.open(source) as im:
                 sw, sh = im.size
             zoom_width = 1140 / .92
@@ -83,7 +84,7 @@ def main():
                     raise ValueError(f'Incorrect export size {output}: {im.size}')
                 im.convert('RGB').save(output, optimize=True)
             metadata.append({'output': str(output.relative_to(ROOT)), 'size': [width, height],
-                             'source': frame['source'], 'source_size': [sw, sh],
+                             'source': source_path, 'source_size': [sw, sh],
                              'source_sha256': hashlib.sha256(source.read_bytes()).hexdigest(),
                              'bounds': bounds.split('\nhelp')[0]})
             print(f'Rendered {size}/{frame["id"]}', flush=True)
