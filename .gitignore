@@ -26,3 +26,15 @@ dist/
 *private[-_]ed25519*
 sparkle_*private*
 .claude/settings.local.json
+
+# Android (android/): Gradle caches, the local SDK path and signing material.
+.gradle/
+.kotlin/
+local.properties
+*.iml
+.idea/
+captures/
+*.apk
+*.aab
+*.jks
+*.keystore
