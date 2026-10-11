@@ -25,9 +25,16 @@ fun envLocal(): Map<String, String> {
 val env = envLocal()
 val supabaseUrl = env["SUPABASE_URL"].orEmpty()
 val supabaseKey = env["SUPABASE_PUBLISHABLE_KEY"].orEmpty()
-val configured = supabaseUrl.startsWith("https://") && supabaseKey.startsWith("sb_publishable_")
-if (!configured && gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) }) {
-    throw GradleException("Release builds need SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY in .env.local (docs/android.md).")
+// The same test the app applies at launch (SupabaseConfiguration.from): the .env.example
+// placeholder ("your-project") counts as missing.
+val configured = supabaseUrl.startsWith("https://") && "your-project" !in supabaseUrl &&
+    supabaseKey.startsWith("sb_publishable_")
+if (!configured) {
+    if (gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) }) {
+        throw GradleException("Release builds need SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY in .env.local (docs/android.md).")
+    }
+    logger.warn("warning: ${rootProject.file("../.env.local")} has no usable SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY " +
+        "(missing or the .env.example placeholder); this Debug build opens on \"Configuration unavailable\".")
 }
 
 fun quoted(value: String) = "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
