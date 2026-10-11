@@ -11,7 +11,7 @@ import WidgetKit
     enum Screen: String {
         case signIn, createAccount, forgotPassword, confirmCode, resetPassword
         case checking, setup, today, todayComplete, history, account, sharedToday, storageRecovery
-        case todayExtras, extrasCap, historyExtras, historyExtrasEditing, accountExtras
+        case todayExtras, extrasCap, historyExtras, historyExtrasEditing, accountExtras, historyCarryOver
     }
 
     static var isFixtureLaunch: Bool { ProcessInfo.processInfo.arguments.contains("-fixture") }
@@ -98,26 +98,25 @@ import WidgetKit
         }
         let reminders = WaterReminderController(defaults: defaults, center: FixtureNotificationCenter(),
                                                 wording: .iPhone, policy: .queued, clock: { now })
-        let tracker = TrackerModel(directory: directory, clock: { now })
+        let clock = FixtureClock(now)
+        let tracker = TrackerModel(directory: directory, clock: { clock.now })
         let app = PhoneApp(auth: auth, tracker: tracker, reminders: reminders, defaults: defaults, schedulesRefresh: false)
         tracker.activate(ownerID: auth.ownerID)
         switch screen {
         case .checking:
             tracker.configureSync(UnreachableTransport())
-        case .today, .todayComplete, .history, .account, .todayExtras, .extrasCap, .historyExtras, .historyExtrasEditing, .accountExtras:
+        case .today, .todayComplete, .history, .account, .todayExtras, .extrasCap, .historyExtras, .historyExtrasEditing,
+             .accountExtras, .historyCarryOver:
             seed(tracker, complete: screen == .todayComplete)
-            if [.todayExtras, .extrasCap, .historyExtras, .historyExtrasEditing, .accountExtras].contains(screen) {
-                for title in ["Stretch", "Read a chapter", "Prepare tomorrow’s healthy lunch"] {
-                    _ = tracker.addExtra(title)
-                }
+            if [.todayExtras, .extrasCap, .historyExtras, .historyExtrasEditing, .accountExtras, .historyCarryOver].contains(screen) {
+                seedExtras(tracker, clock: clock)
                 if screen == .extrasCap {
-                    for title in ["Practise gratitude", "Call family", "Tidy desk", "Journal", "Go outside", "Sleep on time", "A readable extra title of forty letters!"] {
+                    for title in ["Practise gratitude", "Water the plants", "Tidy desk", "Journal", "Go outside", "Sleep on time", "Back up photos", "A readable extra title of forty letters!"] {
                         _ = tracker.addExtra(title)
                     }
                 }
-                tracker.toggleExtra(tracker.activeExtras[0].id)
                 if screen == .historyExtras || screen == .historyExtrasEditing {
-                    let archived = tracker.activeExtras[1].id
+                    let archived = extraID("Read a chapter", in: tracker)
                     tracker.selectHistoryDay(day(-2)); tracker.enableCorrections()
                     tracker.toggleExtra(archived)
                     _ = tracker.archiveExtra(archived)
@@ -127,6 +126,7 @@ import WidgetKit
                 }
             }
             if screen == .history { app.tab = .history; tracker.selectHistoryDay(day(-2)) }
+            if screen == .historyCarryOver { app.tab = .history; tracker.selectHistoryDay(day(-1)) }
             if screen == .account || screen == .accountExtras {
                 app.tab = .account
                 reminders.update(.init(enabled: true))
@@ -155,8 +155,9 @@ import WidgetKit
             return PhoneApp(auth: auth(Date()), tracker: tracker, reminders: nil,
                             defaults: UserDefaults(suiteName: "widget-fixture-\(UUID())")!, schedulesRefresh: false)
         }
-        let now = Date()
-        let tracker = TrackerModel(directory: root, clock: { now }, access: shared)
+        let clock = FixtureClock(Date())
+        let now = clock.now
+        let tracker = TrackerModel(directory: root, clock: { clock.now }, access: shared)
         // Widget account states (phase 5): signed out publishes no account; setup publishes
         // the account without a challenge; unavailable leaves unreadable account metadata.
         if variant == "signed-out" || variant == "setup" {
@@ -167,7 +168,8 @@ import WidgetKit
                             reminders: nil, defaults: UserDefaults(suiteName: "widget-fixture-\(UUID())")!, schedulesRefresh: false)
         }
         tracker.activate(ownerID: owner)
-        tracker.startChallenge(on: now, timeZone: zone)
+        let twoDaysAgo = now.addingTimeInterval(-2 * 86_400)
+        tracker.startChallenge(on: variant == "carry-over" ? twoDaysAgo : now, timeZone: zone)
         let amount: Int = switch variant {
         case "empty", "pending", "extras-empty": 0
         case "full", "complete": 4_000
@@ -180,7 +182,16 @@ import WidgetKit
             tracker.setDiet(variant == "missed" ? .missed : .clean)
         }
         if variant == "complete" { tracker.toggle(.walk); tracker.toggle(.bibleReading) }
-        if variant != "extras-empty" && variant != "empty" {
+        if variant == "carry-over" {
+            // Two open extras carried over from two days ago (late), one done then (gone),
+            // and one added and done today.
+            clock.now = twoDaysAgo; tracker.showToday()
+            for title in ["Stretch", "Read a chapter", "Call family"] { _ = tracker.addExtra(title) }
+            tracker.toggleExtra(extraID("Call family", in: tracker))
+            clock.now = now; tracker.showToday()
+            _ = tracker.addExtra("Prepare tomorrow’s healthy lunch")
+            tracker.toggleExtra(extraID("Prepare tomorrow’s healthy lunch", in: tracker))
+        } else if variant != "extras-empty" && variant != "empty" {
             let count = ["extras-ten", "long-names", "overflow"].contains(variant) ? 10 : 3
             for title in widgetExtraTitles(longNames: variant == "long-names").prefix(count) { _ = tracker.addExtra(title) }
             if let first = tracker.activeExtras.first { tracker.toggleExtra(first.id) }
@@ -209,6 +220,22 @@ import WidgetKit
             .addingTimeInterval(12 * 3_600)
     }
 
+    /// Carry-over: Stretch and Read a chapter were added two days ago and are still open,
+    /// so Today marks them late; Call family was done that day, so it shows only then;
+    /// Prepare tomorrow’s healthy lunch was added and done today.
+    private static func seedExtras(_ tracker: TrackerModel, clock: FixtureClock) {
+        clock.now = day(-2); tracker.showToday()
+        for title in ["Stretch", "Read a chapter", "Call family"] { _ = tracker.addExtra(title) }
+        tracker.toggleExtra(extraID("Call family", in: tracker))
+        clock.now = now; tracker.showToday()
+        _ = tracker.addExtra("Prepare tomorrow’s healthy lunch")
+        tracker.toggleExtra(extraID("Prepare tomorrow’s healthy lunch", in: tracker))
+    }
+
+    private static func extraID(_ title: String, in tracker: TrackerModel) -> UUID {
+        tracker.challenge!.allExtras.first { $0.title == title }!.id
+    }
+
     /// Twelve days in: ten complete, one missed, and today in progress (or complete).
     private static func seed(_ tracker: TrackerModel, complete: Bool) {
         tracker.startChallenge(on: day(-11), timeZone: zone)
@@ -234,6 +261,12 @@ import WidgetKit
             tracker.toggle(.bibleReading)
         }
     }
+}
+
+/// A settable fixture clock, so seeding can record on earlier days.
+@MainActor final class FixtureClock {
+    var now: Date
+    init(_ now: Date) { self.now = now }
 }
 
 /// Reports permission as allowed and keeps requests in memory only.

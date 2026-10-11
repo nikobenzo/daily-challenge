@@ -47,18 +47,25 @@ private func date(_ string: String) -> Date { ISO8601DateFormatter().date(from: 
 
 @Test @MainActor func extraTicksFollowHabitEditRulesAndNeverCompleteTheDay() throws {
     try withTracker { model, _, _, clock in
-        model.startChallenge(on: clock.now.addingTimeInterval(-86_400))
+        let today = clock.now, yesterday = today.addingTimeInterval(-86_400)
+        model.startChallenge(on: yesterday)
+        clock.now = yesterday
         #expect(model.addExtra("Stretch") == nil)
+        clock.now = today
+        model.showToday()
         let id = try #require(model.activeExtras.first?.id)
+        // Left open yesterday, it carries over to today as late.
+        let carried = try #require(model.summary?.extras.first)
+        #expect(carried.id == id && model.summary?.isLate(carried) == true)
         model.toggleExtra(id)
         #expect(model.summary?.completedExtras == [id])
         #expect(model.summary?.allExtrasDone == true)
         #expect(model.summary?.isComplete == false)
+        #expect(model.activeExtras.isEmpty, "Ticked, it leaves Manage extras and the cap")
         model.toggleExtra(id)
         #expect(model.summary?.completedExtras.isEmpty == true)
 
-        // Yesterday shows today's extra (definitions are not day-bound), locked until Edit this day.
-        let yesterday = clock.now.addingTimeInterval(-86_400)
+        // Yesterday, its first day, shows it locked until Edit this day.
         model.selectHistoryDay(yesterday)
         #expect(model.summary?.extrasTotal == 1)
         model.toggleExtra(id)
@@ -72,8 +79,11 @@ private func date(_ string: String) -> Date { ISO8601DateFormatter().date(from: 
         #expect(model.addExtra("Read") == nil)
         #expect(model.challenge?.history(on: clock.now).filter {
             if case .defineExtra = $0.action { true } else { false }
-        }.count == 2)
+        }.count == 1)
+        #expect(model.summary?.extras.map(\.id) == [id], "A new extra never appears on earlier days")
+        // Completed yesterday, Stretch is gone from today.
         model.showToday()
+        #expect(model.summary?.extras.map(\.title) == ["Read"])
         #expect(model.summary?.completedExtras.isEmpty == true)
     }
 }

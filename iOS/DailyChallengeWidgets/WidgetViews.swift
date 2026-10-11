@@ -449,7 +449,8 @@ struct ExtrasWidgetView: View {
                 .accessibilityElement(children: .combine)
             } else {
                 ForEach(extras.prefix(limit)) { extra in
-                    row(extra, done: summary?.completedExtras.contains(extra.id) == true, large: large)
+                    row(extra, done: summary?.completedExtras.contains(extra.id) == true,
+                        late: summary?.isLate(extra) == true, large: large)
                 }
                 Spacer(minLength: 0)
                 if extras.count > limit {
@@ -467,8 +468,9 @@ struct ExtrasWidgetView: View {
         }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    /// The app's checklist row: filled green check or empty circle, title dimmed when done.
-    private func row(_ extra: Challenge.Extra, done: Bool, large: Bool) -> some View {
+    /// The app's checklist row: filled green check or empty circle, title dimmed when done,
+    /// "Late" once it has carried over.
+    private func row(_ extra: Challenge.Extra, done: Bool, late: Bool, large: Bool) -> some View {
         WidgetControl(request: entry.binding.map { WidgetActionRequest(.toggleExtra(extra.id), binding: $0) }) {
             HStack(spacing: 10) {
                 Image(systemName: done ? "checkmark.circle.fill" : "circle")
@@ -477,11 +479,12 @@ struct ExtrasWidgetView: View {
                 Text(extra.title).font(WidgetFont.row)
                     .foregroundStyle(done ? Theme.textSecondary : Theme.textPrimary)
                     .lineLimit(1).truncationMode(.tail)
+                if late { LateMarker(font: WidgetFont.caption) }
             }
             .frame(maxWidth: .infinity, minHeight: large ? 28 : 27, alignment: .leading)
             .contentShape(Rectangle())
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(extra.title + (done ? ", done" : ", pending"))
+            .accessibilityLabel(extra.title + (late ? ", late" : "") + (done ? ", done" : ", pending"))
         }
     }
 }

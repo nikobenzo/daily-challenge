@@ -16,7 +16,9 @@ final class WidgetRenderTests: XCTestCase {
 
     /// The same synthetic variants as the `-widget-fixture` launch (`PhoneFixtures.widgetApp`).
     static func fixture(_ variant: String, at now: Date) throws -> Challenge {
-        var challenge = Challenge(ownerID: UUID(), startDate: now, timeZone: Challenge.legacyTimeZone)
+        let twoDaysAgo = now.addingTimeInterval(-2 * 86_400)
+        var challenge = Challenge(ownerID: UUID(), startDate: variant == "carry-over" ? twoDaysAgo : now,
+                                  timeZone: Challenge.legacyTimeZone)
         let amount = ["full", "complete"].contains(variant) ? 4000 : variant == "overflow" ? 4500
             : ["empty", "pending", "extras-empty"].contains(variant) ? 0 : 2250
         if amount > 0 { _ = try challenge.record(.pour(amount), on: now, at: now) }
@@ -27,7 +29,19 @@ final class WidgetRenderTests: XCTestCase {
         if variant == "complete" {
             for habit in [Challenge.Habit.walk, .bibleReading] { _ = try challenge.record(.setHabit(habit, completed: true), on: now, at: now) }
         }
-        if !["empty", "extras-empty"].contains(variant) {
+        if variant == "carry-over" {
+            // Stretch and Read a chapter carried over (late), Call family done two days ago
+            // (gone), Prepare tomorrow’s healthy lunch added and done today.
+            var ids: [String: UUID] = [:]
+            for title in ["Stretch", "Read a chapter", "Call family", "Prepare tomorrow’s healthy lunch"] { ids[title] = UUID() }
+            for title in ["Stretch", "Read a chapter", "Call family"] {
+                _ = try challenge.record(.defineExtra(id: ids[title]!, title: title), on: twoDaysAgo, at: twoDaysAgo)
+            }
+            _ = try challenge.record(.setExtra(id: ids["Call family"]!, completed: true), on: twoDaysAgo, at: twoDaysAgo)
+            let lunch = ids["Prepare tomorrow’s healthy lunch"]!
+            _ = try challenge.record(.defineExtra(id: lunch, title: "Prepare tomorrow’s healthy lunch"), on: now, at: now)
+            _ = try challenge.record(.setExtra(id: lunch, completed: true), on: now, at: now)
+        } else if !["empty", "extras-empty"].contains(variant) {
             let count = ["extras-ten", "long-names", "overflow"].contains(variant) ? 10 : 3
             for (index, title) in PhoneFixtures.widgetExtraTitles(longNames: variant == "long-names").prefix(count).enumerated() {
                 let id = UUID()
@@ -44,6 +58,13 @@ final class WidgetRenderTests: XCTestCase {
         for title in titles { XCTAssertEqual(Challenge.extraTitle(title), title); XCTAssertEqual(title.count, 40) }
     }
 
+    @MainActor func testCarryOverShowsLateExtrasAndDropsCompletedOnes() throws {
+        let summary = try XCTUnwrap(ChallengeWidgetEntry.derive(try Self.fixture("carry-over", at: now), at: now).summary)
+        XCTAssertEqual(summary.extras.map(\.title), ["Stretch", "Read a chapter", "Prepare tomorrow’s healthy lunch"])
+        XCTAssertEqual(summary.extras.map(summary.isLate), [true, true, false])
+        XCTAssertEqual(summary.extrasDone, 1)
+    }
+
     @MainActor func testExtrasRowBudget() {
         XCTAssertEqual(ExtrasWidgetView.visibleRows(large: true, accessibility: false), 10)
         XCTAssertEqual(ExtrasWidgetView.visibleRows(large: false, accessibility: false), 3)
@@ -53,7 +74,8 @@ final class WidgetRenderTests: XCTestCase {
 
     @MainActor func testWidgetSnapshotMatrix() throws {
         for appearance in [ColorScheme.light, .dark] {
-            for variant in ["empty", "partial", "full", "overflow", "pending", "complete", "missed", "extras-empty", "extras-ten", "long-names"] {
+            for variant in ["empty", "partial", "full", "overflow", "pending", "complete", "missed", "extras-empty", "extras-ten", "long-names",
+                            "carry-over"] {
                 let entry = ChallengeWidgetEntry.derive(try Self.fixture(variant, at: now), at: now)
                 if ["empty", "partial", "full", "overflow"].contains(variant) {
                     render(WaterWidgetView(entry: entry, familyOverride: .systemSmall), size: Self.small, appearance: appearance, name: "water-small-\(variant)")
@@ -62,7 +84,7 @@ final class WidgetRenderTests: XCTestCase {
                 if ["pending", "complete", "missed"].contains(variant) {
                     render(RequirementsWidgetView(entry: entry), size: Self.medium, appearance: appearance, name: "requirements-medium-\(variant)")
                 }
-                if ["extras-empty", "partial", "extras-ten", "long-names", "overflow"].contains(variant) {
+                if ["extras-empty", "partial", "extras-ten", "long-names", "overflow", "carry-over"].contains(variant) {
                     render(ExtrasWidgetView(entry: entry, familyOverride: .systemMedium), size: Self.medium, appearance: appearance, name: "extras-medium-\(variant)")
                     render(ExtrasWidgetView(entry: entry, familyOverride: .systemLarge), size: Self.large, appearance: appearance, name: "extras-large-\(variant)")
                 }

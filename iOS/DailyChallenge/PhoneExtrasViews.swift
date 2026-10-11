@@ -2,7 +2,7 @@ import ChallengeCore
 import ChallengeSyncKit
 import SwiftUI
 
-/// Optional daily to-dos; their count comes from the selected day's summary.
+/// Optional to-dos that carry over until done; their count comes from the selected day's summary.
 struct PhoneExtrasSection: View {
     @Bindable var tracker: TrackerModel
     @State private var managing = false
@@ -51,7 +51,8 @@ struct PhoneExtrasHeading: View {
     }
 }
 
-/// Uses historical extras, including extras archived after the selected day.
+/// The selected day's extras: carried-over ones marked "Late", completed ones gone from
+/// later days, and extras archived after that day.
 struct PhoneExtrasChecklist: View {
     @Bindable var tracker: TrackerModel
 
@@ -59,6 +60,7 @@ struct PhoneExtrasChecklist: View {
         VStack(alignment: .leading, spacing: 0) {
             ForEach(tracker.summary?.extras ?? []) { extra in
                 let done = tracker.summary?.completedExtras.contains(extra.id) == true
+                let late = tracker.summary?.isLate(extra) == true
                 Button { tracker.toggleExtra(extra.id) } label: {
                     HStack(spacing: 12) {
                         Image(systemName: done ? "checkmark.circle.fill" : "circle")
@@ -67,13 +69,14 @@ struct PhoneExtrasChecklist: View {
                         Text(extra.title).font(Theme.Fonts.field)
                             .foregroundStyle(done ? Theme.textSecondary : Theme.textPrimary)
                             .fixedSize(horizontal: false, vertical: true)
+                        if late { LateMarker() }
                         Spacer(minLength: 0)
                     }
                     .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                     .padding(.vertical, 4).contentShape(Rectangle())
                 }
                 .buttonStyle(.plain).disabled(!tracker.canEdit)
-                .accessibilityLabel(extra.title).accessibilityValue(done ? "Done" : "Not done")
+                .accessibilityLabel(late ? "\(extra.title), late" : extra.title).accessibilityValue(done ? "Done" : "Not done")
                 .accessibilityHint(tracker.canEdit ? "Double-tap to \(done ? "undo" : "mark done")" : "Select Edit this day to correct this tick")
                 .accessibilityIdentifier("extra-\(extra.id.uuidString)")
             }
@@ -101,7 +104,7 @@ struct PhoneManageExtrasView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("\(tracker.activeExtras.count)/\(Challenge.maximumActiveExtras) extras")
                             .font(Theme.Fonts.rowLabel).accessibilityIdentifier("extras-active-count")
-                        Text("Daily to-dos of your own. They never count toward the five or your streak.")
+                        Text("To-dos of your own that carry over until done. They never count toward the five or your streak.")
                             .font(Theme.Fonts.caption).foregroundStyle(Theme.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                         if tracker.canAddExtra {

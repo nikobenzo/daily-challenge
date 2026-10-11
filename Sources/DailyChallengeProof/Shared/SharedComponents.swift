@@ -209,6 +209,18 @@ struct Eyebrow: View {
     }
 }
 
+/// "Late" beside a carried-over extra's title: small amber text, never a pill. Hidden
+/// from VoiceOver; the row adds ", late" to its spoken label instead.
+struct LateMarker: View {
+    var font: Font = Theme.Fonts.caption
+
+    var body: some View {
+        Text("Late").font(font).foregroundStyle(Theme.amberText)
+            .lineLimit(1).fixedSize()
+            .accessibilityHidden(true)
+    }
+}
+
 // MARK: Fields
 
 /// Error text below a field, in the danger colour with the field's exclamation icon.

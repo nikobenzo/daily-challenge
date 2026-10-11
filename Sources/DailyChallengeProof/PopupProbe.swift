@@ -20,12 +20,14 @@ import SwiftUI
 /// row while it expands.
 ///
 ///     DAILY_CHALLENGE_POPUP_PROBE=<directory>                                  required
-///     DAILY_CHALLENGE_POPUP_PROBE_SCREEN=sign-in|setup|today|today-extras|history|account   (today)
+///     DAILY_CHALLENGE_POPUP_PROBE_SCREEN=sign-in|setup|today|today-extras|today-carryover|history|account   (today)
 ///     DAILY_CHALLENGE_POPUP_PROBE_APPEARANCE=light|dark                        (light)
 ///     DAILY_CHALLENGE_POPUP_PROBE_STEPS=history,account,today|extras           (none)
 @MainActor
 struct PopupProbe {
-    enum Screen: String { case signIn = "sign-in", setup, today, todayExtras = "today-extras", history, account }
+    enum Screen: String {
+        case signIn = "sign-in", setup, today, todayExtras = "today-extras", todayCarryOver = "today-carryover", history, account
+    }
     enum Step: Equatable {
         case section(TrackerSection)
         /// Clicks Today's Extras row (the empty-state one drops its add field down).
@@ -70,21 +72,24 @@ struct PopupProbe {
     }
 
     /// The same offline fixtures as the committed renders: 8 October 2026 at noon,
-    /// Day 1 with 900 ml, in a fresh data folder inside the probe directory.
+    /// Day 1 with 900 ml (Day 3 for the carry-over), in a fresh data folder inside the
+    /// probe directory.
     func models() -> (auth: ProofModel, tracker: TrackerModel, appearance: AppAppearance) {
         let data = directory.appendingPathComponent("data-\(name)", isDirectory: true)
         try? FileManager.default.removeItem(at: data)
-        let now = ISO8601DateFormatter().date(from: "2026-10-08T12:00:00Z")!
+        let clock = Clock(ISO8601DateFormatter().date(from: "2026-10-08T12:00:00Z")!)
         let owner = UUID(uuidString: "0F1C5000-0000-4000-8000-000000000001")!
         let auth = ProofModel(fixtureOwnerID: screen == .signIn ? nil : owner, directory: data)
-        let tracker = TrackerModel(directory: data, clock: { now })
+        let tracker = TrackerModel(directory: data, clock: { clock.now })
         tracker.activate(ownerID: auth.ownerID)
         if screen != .signIn, screen != .setup {
-            tracker.startChallenge(on: now, timeZone: Challenge.legacyTimeZone)
+            let start = screen == .todayCarryOver ? Self.carryOverStart(clock.now) : clock.now
+            tracker.startChallenge(on: start, timeZone: Challenge.legacyTimeZone)
             tracker.addWater()
             tracker.addWater()
         }
         if screen == .todayExtras { Self.seedExtras(tracker) }
+        if screen == .todayCarryOver { Self.seedCarryOver(tracker, clock: clock) }
         let defaults = UserDefaults(suiteName: Self.defaultsSuite)!
         defaults.removePersistentDomain(forName: Self.defaultsSuite)
         let appearance = AppAppearance(defaults: defaults)
@@ -96,6 +101,27 @@ struct PopupProbe {
     static func seedExtras(_ tracker: TrackerModel) {
         for title in ["Stretch for ten minutes", "No phone after 10 pm", "Journal one page"] { _ = tracker.addExtra(title) }
         if let first = tracker.activeExtras.first { tracker.toggleExtra(first.id) }
+    }
+
+    /// A settable fixture clock, so the carry-over seed can record on earlier days.
+    final class Clock {
+        var now: Date
+        init(_ now: Date) { self.now = now }
+    }
+
+    static func carryOverStart(_ now: Date) -> Date { now.addingTimeInterval(-2 * 86_400) }
+
+    /// Carry-over: two extras added two days earlier and still open, so Today marks them
+    /// late; one done that day, so it shows only then; one added and done today.
+    static func seedCarryOver(_ tracker: TrackerModel, clock: Clock) {
+        let today = clock.now
+        func id(_ title: String) -> UUID { tracker.challenge!.allExtras.first { $0.title == title }!.id }
+        clock.now = carryOverStart(today); tracker.showToday()
+        for title in ["Stretch for ten minutes", "Journal one page", "Call the dentist"] { _ = tracker.addExtra(title) }
+        tracker.toggleExtra(id("Call the dentist"))
+        clock.now = today; tracker.showToday()
+        _ = tracker.addExtra("No phone after 10 pm")
+        tracker.toggleExtra(id("No phone after 10 pm"))
     }
 
     // MARK: Run

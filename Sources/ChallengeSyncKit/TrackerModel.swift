@@ -406,13 +406,14 @@ public final class TrackerModel {
 
 // MARK: Extras
 
-/// Personal daily to-dos beside the five requirements; they never make a day complete.
-/// Ticks follow the selected day like habit marks. Adding, renaming and archiving
-/// belong to the challenge rather than a day, so they are recorded on today without
-/// the History correction lock.
+/// Personal to-dos beside the five requirements that carry over until done; they never
+/// make a day complete. Ticks follow the selected day like habit marks. Adding, renaming
+/// and archiving belong to the challenge rather than a day, so they are recorded on
+/// today without the History correction lock.
 extension TrackerModel {
-    /// Not archived, in creation order: what Manage extras lists and the cap counts.
-    public var activeExtras: [Challenge.Extra] { challenge?.allExtras.filter { !$0.isArchived } ?? [] }
+    /// Still to do today (neither archived nor completed), in creation order: what Manage
+    /// extras lists and the cap counts.
+    public var activeExtras: [Challenge.Extra] { challenge?.openExtras(asOf: now) ?? [] }
     public var canAddExtra: Bool { challenge != nil && activeExtras.count < Challenge.maximumActiveExtras }
 
     public func toggleExtra(_ id: UUID) {

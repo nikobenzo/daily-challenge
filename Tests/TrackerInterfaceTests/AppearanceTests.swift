@@ -175,9 +175,53 @@ struct AppearanceTests {
             model.showToday()
             while model.canAddExtra { #expect(model.addExtra("Extra \(model.activeExtras.count + 1)") == nil) }
             try renderLiveModes(ManageExtrasView(model: model), name: "manage-extras-full", appearance: appearance, surface: .opaque)
-            // Archiving every extra brings the slim row back.
-            for extra in model.activeExtras { #expect(model.archiveExtra(extra.id) == nil) }
+            // Archiving every extra brings the slim row back (one ticked today is not open, so
+            // it is not in activeExtras, but Today still shows it until midnight).
+            for extra in model.summary?.extras ?? [] { #expect(model.archiveExtra(extra.id) == nil) }
             #expect(todayHeight() == without)
+        }
+    }
+
+    /// Carry-over on the production root in Light and Dark (the probe's `today-carryover`
+    /// fixture): Today with two late extras and one done today, History's pill and its day
+    /// popover the day after (still late, the one done earlier gone) and on the first day.
+    @Test func carriedOverExtrasShowLateAndCompletedOnesLeaveLaterDays() throws {
+        try withPreferences { appearance, _ in
+            let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+            defer { try? FileManager.default.removeItem(at: directory) }
+            let owner = UUID()
+            let clock = PopupProbe.Clock(ISO8601DateFormatter().date(from: "2026-10-08T12:00:00Z")!)
+            let today = clock.now
+            let model = TrackerModel(directory: directory, clock: { clock.now })
+            model.activate(ownerID: owner)
+            model.startChallenge(on: PopupProbe.carryOverStart(today))
+            model.addWater()
+            model.addWater()
+            PopupProbe.seedCarryOver(model, clock: clock)
+            let auth = ProofModel(fixtureOwnerID: owner, directory: directory)
+            // Whole-point height, so the opaque surface reaches the host's top pixel row.
+            @MainActor func dayPopover() -> some View {
+                let height = ceil(NSHostingView(rootView: ExtrasDayPopover(model: model)).fittingSize.height)
+                return ExtrasDayPopover(model: model).frame(height: height).trackerSurface()
+            }
+            @MainActor func rows() -> [String] {
+                let summary = try! #require(model.summary)
+                return summary.extras.map { $0.title + (summary.completedExtras.contains($0.id) ? " ✓" : "") + (summary.isLate($0) ? " late" : "") }
+            }
+            #expect(rows() == ["Stretch for ten minutes late", "Journal one page late", "No phone after 10 pm ✓"])
+            #expect(model.activeExtras.map(\.title) == ["Stretch for ten minutes", "Journal one page"])
+            try renderLiveModes(TrackerPopup(model: model, auth: auth, appearance: appearance), name: "today-extras-carryover",
+                                appearance: appearance)
+            model.selectHistoryDay(today.addingTimeInterval(-86_400))
+            #expect(rows() == ["Stretch for ten minutes late", "Journal one page late"])
+            try renderLiveModes(TrackerPopup(model: model, auth: auth, appearance: appearance, section: .history),
+                                name: "history-extras-carryover", appearance: appearance)
+            try renderLiveModes(dayPopover(), name: "history-extras-day-carryover", appearance: appearance,
+                                surface: .opaque)
+            model.selectHistoryDay(PopupProbe.carryOverStart(today))
+            #expect(rows() == ["Stretch for ten minutes", "Journal one page", "Call the dentist ✓"])
+            try renderLiveModes(dayPopover(), name: "history-extras-day-first", appearance: appearance,
+                                surface: .opaque)
         }
     }
 

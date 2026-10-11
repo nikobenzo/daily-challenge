@@ -328,6 +328,7 @@ final class WidgetPlacementUITests: XCTestCase {
             var labels = ["Water, \(water) of 4,000 millilitres"]
             let extras: [String: String?] = ["extras-ten": "1 of 10", "long-names": "1 of 10", "overflow": "1 of 10", "extras-empty": nil, "empty": nil]
             if let count = extras[variant] ?? "1 of 3" { labels.append("Extras, \(count) done") }
+            if variant == "carry-over" { labels.append("Stretch, late, pending") }
             if layout == "a" {
                 labels.append(["pending", "empty"].contains(variant) ? "Workout, 45 min · home / gym, pending" : "Workout, 45 min · home / gym, done")
                 if variant == "missed" { labels.append("Clean diet, missed") }

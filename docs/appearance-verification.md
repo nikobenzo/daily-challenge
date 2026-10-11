@@ -29,7 +29,7 @@ the copy once per screen and appearance through a developer-only launch path (`P
 | Environment variable | Meaning |
 | --- | --- |
 | `DAILY_CHALLENGE_POPUP_PROBE` | Directory for fixture data and output. Required: unset, the app behaves normally; the production bundle (`app.daily-challenge.proof`) ignores it. |
-| `DAILY_CHALLENGE_POPUP_PROBE_SCREEN` | `sign-in`, `setup`, `today` (default), `today-extras` (Today with three extras, one ticked), `history` or `account` |
+| `DAILY_CHALLENGE_POPUP_PROBE_SCREEN` | `sign-in`, `setup`, `today` (default), `today-extras` (Today with three extras, one ticked), `today-carryover` (Day 3: two extras carried over as Late, one done today), `history` or `account` |
 | `DAILY_CHALLENGE_POPUP_PROBE_APPEARANCE` | `light` (default) or `dark` |
 | `DAILY_CHALLENGE_POPUP_PROBE_STEPS` | Steps after the first capture: sections to switch to, such as `history,account,today`, or `extras` to click Today's empty Extras row so its add field drops down (`today-<appearance>-extras-expanded.*`) |
 

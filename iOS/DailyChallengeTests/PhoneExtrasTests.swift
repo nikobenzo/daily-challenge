@@ -20,17 +20,20 @@ import Testing
     #expect(first.title == "Stretch")
     tracker.toggleExtra(first.id)
     #expect(tracker.summary?.extrasDone == 1)
+    #expect(tracker.activeExtras.isEmpty, "Ticked today, it is no longer open")
     #expect(tracker.renameExtra(first.id, to: "Stretch gently") == nil)
-    #expect(tracker.activeExtras.first?.id == first.id)
+    #expect(tracker.summary?.extras.first?.title == "Stretch gently")
     #expect(tracker.summary?.completedExtras.contains(first.id) == true)
-    for index in 2...10 { #expect(tracker.addExtra("Extra \(index)") == nil) }
+    for index in 2...11 { #expect(tracker.addExtra("Extra \(index)") == nil) }
     #expect(tracker.activeExtras.count == 10)
+    #expect(tracker.summary?.extrasTotal == 11)
     #expect(!tracker.canAddExtra)
-    #expect(tracker.addExtra("Eleventh") != nil)
-    #expect(tracker.renameExtra(first.id, to: "Renamed at cap") == nil)
-    #expect(tracker.archiveExtra(first.id) == nil)
+    #expect(tracker.addExtra("Twelfth") != nil)
+    let open = try #require(tracker.activeExtras.first)
+    #expect(tracker.renameExtra(open.id, to: "Renamed at cap") == nil)
+    #expect(tracker.archiveExtra(open.id) == nil)
     #expect(tracker.canAddExtra)
-    #expect(tracker.summary?.extrasTotal == 9)
+    #expect(tracker.summary?.extrasTotal == 10)
     #expect(tracker.addExtra("Replacement") == nil)
     #expect(tracker.summary?.isComplete == true)
     #expect(tracker.streaks?.current == before?.current)
@@ -59,7 +62,9 @@ import Testing
     defer { try? FileManager.default.removeItem(at: directory) }
     let summary = try #require(tracker.summary)
     #expect(summary.extrasTotal == 3)
-    #expect(tracker.activeExtras.count == 2) // Archived today remains visible on older days.
+    // Read a chapter, done that day, is archived today but remains visible on that day.
+    #expect(summary.extras.map(\.title) == ["Stretch", "Read a chapter", "Call family"])
+    #expect(tracker.activeExtras.map(\.title) == ["Stretch"])
     let extra = try #require(summary.extras.first)
     let before = tracker.streaks
     #expect(!tracker.canEdit)
@@ -81,4 +86,22 @@ import Testing
     tracker.selectHistoryDay(previous)
     #expect(!tracker.canEdit)
     #expect(!tracker.isEditingHistory)
+}
+
+@Test @MainActor func phoneCarryOverMarksOpenExtrasLateAndDropsCompletedOnes() throws {
+    let directory = FileManager.default.temporaryDirectory.appendingPathComponent("phone-extras-\(UUID())")
+    let tracker = extrasFixture(.todayExtras, directory: directory).tracker
+    defer { try? FileManager.default.removeItem(at: directory) }
+    func rows() -> [String] {
+        let summary = tracker.summary!
+        return summary.extras.map { $0.title + (summary.completedExtras.contains($0.id) ? " ✓" : "") + (summary.isLate($0) ? " late" : "") }
+    }
+    #expect(rows() == ["Stretch late", "Read a chapter late", "Prepare tomorrow’s healthy lunch ✓"])
+    #expect(tracker.activeExtras.map(\.title) == ["Stretch", "Read a chapter"])
+    let calendar = tracker.dates.calendar
+    tracker.selectHistoryDay(calendar.date(byAdding: .day, value: -2, to: tracker.today)!)
+    #expect(rows() == ["Stretch", "Read a chapter", "Call family ✓"])
+    tracker.selectHistoryDay(calendar.date(byAdding: .day, value: -1, to: tracker.today)!)
+    #expect(rows() == ["Stretch late", "Read a chapter late"])
+    #expect(tracker.summary?.isComplete == true, "Extras never change a complete day")
 }

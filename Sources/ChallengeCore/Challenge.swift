@@ -48,17 +48,30 @@ public struct Challenge: Codable, Sendable {
         case defineExtra(id: UUID, title: String)
         /// Hides an extra from its archive day on, permanently; earlier days keep their ticks.
         case archiveExtra(id: UUID)
-        /// Ticks or unticks an extra for the event's day.
+        /// Ticks or unticks an extra for the event's day. The earliest ticked day completes
+        /// it: shown ticked that day and on no later day.
         case setExtra(id: UUID, completed: Bool)
     }
 
-    /// A personal daily to-do beside the five requirements. Never part of `isComplete`.
+    /// A personal to-do beside the five requirements that carries over, day by day, until
+    /// it is done or archived. Never part of `isComplete`. All three days are derived
+    /// from the extras events (see `allExtras`), so nothing is written at midnight.
     public struct Extra: Identifiable, Equatable, Sendable {
         public let id: UUID
         public let title: String
+        /// The first challenge day it is shown on; later days mark it late.
+        public let firstDay: Date
+        /// The earliest day it is ticked on, before any archive, or nil while it is open.
+        /// It is shown ticked that day and on no later day.
+        public let completedOn: Date?
         /// The first challenge day it is hidden from, or nil while it is active.
         public let archivedFrom: Date?
         public var isArchived: Bool { archivedFrom != nil }
+
+        /// Whether the challenge day starting at `day` shows it.
+        func isShown(on day: Date) -> Bool {
+            firstDay <= day && (completedOn.map { day <= $0 } ?? true) && (archivedFrom.map { day < $0 } ?? true)
+        }
     }
 
     public static let maximumActiveExtras = 10
@@ -133,6 +146,8 @@ public struct Challenge: Codable, Sendable {
         public var extrasDone: Int { completedExtras.count }
         public var extrasTotal: Int { extras.count }
         public var allExtrasDone: Bool { extrasTotal > 0 && extrasDone == extrasTotal }
+        /// Carried over: shown on a day after the first day it appeared, ticked or not.
+        public func isLate(_ extra: Extra) -> Bool { extra.firstDay < interval.start }
     }
 
     public struct StreakSummary: Sendable {
@@ -252,7 +267,7 @@ public struct Challenge: Codable, Sendable {
             if let existing = catalog.first(where: { $0.id == extraID }) {
                 guard !existing.isArchived else { throw ChallengeError.archivedExtra }
             } else {
-                guard catalog.filter({ !$0.isArchived }).count < Self.maximumActiveExtras else {
+                guard openExtras(asOf: now).count < Self.maximumActiveExtras else {
                     throw ChallengeError.tooManyExtras
                 }
             }
@@ -369,29 +384,54 @@ public struct Challenge: Codable, Sendable {
     }
 
     /// Every extra ever defined, archived ones included, in creation order (the first
-    /// definition's place in event order). A definition's own `day` is ignored.
+    /// definition's place in event order). Order-independent like `merge`: the earliest
+    /// definition day, the earliest archive day and each day's last tick in event order.
+    /// `firstDay` is the earliest definition day, or the completion day when that is
+    /// earlier (a tick synced from a device with a slower clock, or made on an earlier
+    /// day while every extra still showed on every day).
     public var allExtras: [Extra] {
         var order: [UUID] = []
         var titles: [UUID: String] = [:]
+        var defined: [UUID: Date] = [:]
         var archived: [UUID: Date] = [:]
+        var ticks: [UUID: [Date: Bool]] = [:]
         for activity in activities {
             switch activity.action {
             case .defineExtra(let id, let title):
                 if titles[id] == nil { order.append(id) }
                 titles[id] = title
+                defined[id] = min(defined[id] ?? activity.day, activity.day)
             case .archiveExtra(let id):
                 archived[id] = min(archived[id] ?? activity.day, activity.day)
+            case .setExtra(let id, let value):
+                ticks[id, default: [:]][activity.day] = value
             default: break
             }
         }
-        return order.compactMap { id in titles[id].map { Extra(id: id, title: $0, archivedFrom: archived[id]) } }
+        return order.compactMap { id in
+            guard let title = titles[id], let definedOn = defined[id] else { return nil }
+            // A tick from its archive day on is kept as history but never completes it.
+            let completedOn = ticks[id]?.filter { tick in
+                tick.value && (archived[id].map { tick.key < $0 } ?? true)
+            }.keys.min()
+            return Extra(id: id, title: title, firstDay: min(definedOn, completedOn ?? definedOn),
+                         completedOn: completedOn, archivedFrom: archived[id])
+        }
     }
 
-    /// The extras shown for the day of `date`, in creation order: every defined extra
-    /// except those archived on or before that day. Asked for today, the active list.
+    /// The extras shown for the day of `date`, in creation order: each from its first day
+    /// through its completion day, carried over while open, until the day it is archived.
     public func extras(asOf date: Date) -> [Extra] {
         let selected = day(date)
-        return allExtras.filter { $0.archivedFrom.map { $0 > selected } ?? true }
+        return allExtras.filter { $0.isShown(on: selected) }
+    }
+
+    /// The extras still to do as of `date`, in creation order: neither archived nor
+    /// completed on or before that day. Manage extras lists them and the cap counts them,
+    /// so ticking one frees its place at once.
+    public func openExtras(asOf date: Date) -> [Extra] {
+        let selected = day(date)
+        return allExtras.filter { !$0.isArchived && ($0.completedOn.map { $0 > selected } ?? true) }
     }
 
     public func streaks(asOf now: Date) -> StreakSummary {

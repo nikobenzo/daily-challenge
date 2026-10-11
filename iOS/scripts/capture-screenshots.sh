@@ -6,6 +6,7 @@
 #   CAPTURE_WAIT   settling seconds after each launch (default 3)
 #   CAPTURE_PHASE2_ONLY=1   capture shared Today + recovery only
 #   CAPTURE_PHASE5_ONLY=1   capture the Manage extras screens only (design field fill)
+#   CAPTURE_EXTRAS_ONLY=1   capture the extras screens only (carry-over fixtures)
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
@@ -73,24 +74,28 @@ if [[ "${CAPTURE_PHASE5_ONLY:-0}" == 1 ]]; then
 fi
 
 for appearance in light dark; do
-  for screen in sharedToday storageRecovery signIn createAccount confirmCode forgotPassword resetPassword checking setup today todayComplete history account; do
-    capture "$screen" "$screen" "$appearance"
-  done
+  if [[ "${CAPTURE_EXTRAS_ONLY:-0}" != 1 ]]; then
+    for screen in sharedToday storageRecovery signIn createAccount confirmCode forgotPassword resetPassword checking setup today todayComplete history account; do
+      capture "$screen" "$screen" "$appearance"
+    done
+  fi
   for screen in todayExtras extrasCap accountExtras; do
     capture "$screen" "$screen" "$appearance"
   done
   capture today-extras-detail todayExtras "$appearance" -fixture-scroll-to fixture-extras
   capture historyExtras historyExtras "$appearance" -fixture-scroll-to fixture-history-day
   capture historyExtrasEditing historyExtrasEditing "$appearance" -fixture-scroll-to fixture-history-day
+  capture historyCarryOver historyCarryOver "$appearance" -fixture-scroll-to fixture-history-day
   capture manage-extras todayExtras "$appearance" -manage-extras
-  capture manage-extras-empty today "$appearance" -manage-extras
+  [[ "${CAPTURE_EXTRAS_ONLY:-0}" == 1 ]] || capture manage-extras-empty today "$appearance" -manage-extras
   capture manage-extras-cap extrasCap "$appearance" -manage-extras
   capture manage-extras-large-text todayExtras "$appearance" -manage-extras -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityL
   capture manage-extras-actions-large-text todayExtras "$appearance" -manage-extras -fixture-scroll-to fixture-extra-actions -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityL
   capture history-extras-large-text historyExtras "$appearance" -fixture-scroll-to fixture-extras -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityL
   capture today-extras-large-text todayExtras "$appearance" -fixture-scroll-to fixture-extras -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityL
   capture account-extras-large-text accountExtras "$appearance" -fixture-scroll-to fixture-account-extras -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityL
-  capture today-large-text today "$appearance" -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityL
+  capture history-carryover-large-text historyCarryOver "$appearance" -fixture-scroll-to fixture-extras -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityL
+  [[ "${CAPTURE_EXTRAS_ONLY:-0}" == 1 ]] || capture today-large-text today "$appearance" -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityL
 done
 xcrun simctl status_bar "$udid" clear
 xcrun simctl terminate "$udid" "$BUNDLE_ID" 2>/dev/null || true

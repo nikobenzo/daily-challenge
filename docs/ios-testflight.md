@@ -222,11 +222,14 @@ transports. On a real iPhone, after installing from TestFlight:
 8. Before real extras sync acceptance, confirm the existing [extras action-kind migration](production-sync.md#extras-update-owner-only-once)
    is deployed; no new migration accompanies the phone UI. From Today’s empty Extras row and
    Account → Extras, open Manage extras; add, rename, cancel an archive, then confirm an archive.
-   At 10 active extras the inline cap explains how to add another. Blank, multiline and >40-character
+   At 10 open extras the inline cap explains how to add another. Blank, multiline and >40-character
    titles cannot save. Ticks and management leave complete days and streaks unchanged.
 9. History shows extras archived after the selected day. Its ticks remain disabled until
    Edit this day; choosing a different day exits correction mode. Check explicit extras activity
    wording, Light/Dark, VoiceOver and accessibility text sizes on the real phone.
+10. Carry-over ([day rules](tracker-interface.md#which-days-an-extra-shows)): the day after adding two
+   extras and ticking one, Today, History and the Extras widget show only the open one, with a small
+   "Late" caption that VoiceOver reads as "late"; the Mac shows the same.
 
 ## Read-only widgets (Phase 3)
 

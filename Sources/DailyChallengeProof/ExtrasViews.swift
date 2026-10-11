@@ -57,12 +57,12 @@ struct ExtrasSection: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(hasExtras ? "Extras, \(done) of \(total) done" : "Add extras, your own daily to-dos")
+                .accessibilityLabel(hasExtras ? "Extras, \(done) of \(total) done" : "Add extras, your own to-dos")
                 .accessibilityValue(expanded ? "Expanded" : "Collapsed")
                 .accessibilityHint(hasExtras ? "Press to \(expanded ? "collapse" : "expand") the checklist"
                                    : "Press to \(expanded ? "hide" : "show") the add field")
                 .help(hasExtras ? "Your own daily extras. They never count toward the five or your streak."
-                      : "Add extras: your own daily to-dos. They never count toward the five or your streak.")
+                      : "Add extras: your own to-dos. They never count toward the five or your streak.")
                 if hasExtras {
                     Button { managing = true } label: { Image(systemName: "square.and.pencil") }
                         .buttonStyle(RoundIconStyle(size: 30))
@@ -101,7 +101,7 @@ struct ExtrasSection: View {
     /// Caption, the "New extra" field and its plus button, as in Manage extras.
     private var editor: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Daily to-dos of your own. They never count toward the five or your streak.")
+            Text("To-dos of your own that carry over until done. They never count toward the five or your streak.")
                 .font(Theme.Fonts.caption).foregroundStyle(Theme.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
             ExtrasAddRow(title: $newTitle, focus: $focus, equals: true, add: add)
@@ -133,8 +133,9 @@ struct ExtrasSection: View {
     }
 }
 
-/// One checkbox row per extra shown on the selected day. Ticks obey the same edit
-/// rules as habit marks: today, or a past day after Edit this day.
+/// One checkbox row per extra shown on the selected day, with "Late" once it has
+/// carried over. Ticks obey the same edit rules as habit marks: today, or a past day
+/// after Edit this day.
 struct ExtrasChecklist: View {
     @Bindable var model: TrackerModel
 
@@ -143,12 +144,14 @@ struct ExtrasChecklist: View {
         VStack(spacing: 0) {
             ForEach(summary?.extras ?? []) { extra in
                 let done = summary?.completedExtras.contains(extra.id) ?? false
+                let late = summary?.isLate(extra) ?? false
                 Button { model.toggleExtra(extra.id) } label: {
                     HStack(spacing: 12) {
                         ExtraCheckbox(done: done)
                         Text(extra.title).font(Theme.Fonts.field)
                             .foregroundStyle(done ? Theme.textSecondary : Theme.textPrimary)
                             .lineLimit(1).truncationMode(.tail)
+                        if late { LateMarker() }
                         Spacer(minLength: 0)
                     }
                     .frame(height: 32)
@@ -156,8 +159,8 @@ struct ExtrasChecklist: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(!model.canEdit)
-                .help(extra.title)
-                .accessibilityLabel(extra.title)
+                .help(late ? "\(extra.title), late" : extra.title)
+                .accessibilityLabel(late ? "\(extra.title), late" : extra.title)
                 .accessibilityValue(done ? "Done" : "Not done")
                 .accessibilityHint("Press to \(done ? "undo" : "mark done")")
             }
@@ -208,18 +211,25 @@ struct ExtrasDayPill: View {
         .buttonStyle(.plain)
         .accessibilityLabel("Extras, \(done) of \(total) done")
         .help("Extras: \(done) of \(total) done. They never count toward the five.")
-        .popover(isPresented: $showing, arrowEdge: .bottom) {
-            VStack(alignment: .leading, spacing: 8) {
-                Label("Extras · \(model.dates.label(model.selectedDay, format: "EEE d MMM"))", systemImage: "checklist")
-                    .font(Theme.Fonts.appName).foregroundStyle(Theme.textPrimary)
-                ExtrasChecklist(model: model)
-                if !model.canEdit {
-                    Text("Select Edit this day to correct these ticks.")
-                        .font(Theme.Fonts.caption).foregroundStyle(Theme.textTertiary)
-                }
+        .popover(isPresented: $showing, arrowEdge: .bottom) { ExtrasDayPopover(model: model) }
+    }
+}
+
+/// The History pill's popover: the selected day's checklist.
+struct ExtrasDayPopover: View {
+    @Bindable var model: TrackerModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label("Extras · \(model.dates.label(model.selectedDay, format: "EEE d MMM"))", systemImage: "checklist")
+                .font(Theme.Fonts.appName).foregroundStyle(Theme.textPrimary)
+            ExtrasChecklist(model: model)
+            if !model.canEdit {
+                Text("Select Edit this day to correct these ticks.")
+                    .font(Theme.Fonts.caption).foregroundStyle(Theme.textTertiary)
             }
-            .padding(16).frame(width: 300).trackerSurface().focusEffectDisabled()
         }
+        .padding(16).frame(width: 300).trackerSurface().focusEffectDisabled()
     }
 }
 
@@ -241,7 +251,7 @@ struct ExtrasSettingRow: View {
         .buttonStyle(.plain)
         .disabled(model.challenge == nil)
         .accessibilityLabel("Manage extras, \(model.activeExtras.count) of \(Challenge.maximumActiveExtras)")
-        .help("Manage extras: your own daily to-dos. They never count toward the five or your streak.")
+        .help("Manage extras: your own to-dos. They never count toward the five or your streak.")
         .popover(isPresented: $managing, arrowEdge: .trailing) { ManageExtrasView(model: model) }
     }
 }
@@ -284,7 +294,7 @@ struct ManageExtrasView: View {
                 Badge(text: "\(extras.count)/\(Challenge.maximumActiveExtras)", height: 24)
                     .accessibilityLabel("\(extras.count) of \(Challenge.maximumActiveExtras) extras")
             }
-            Text("Daily to-dos of your own. They never count toward the five or your streak.")
+            Text("To-dos of your own that carry over until done. They never count toward the five or your streak.")
                 .font(Theme.Fonts.caption).foregroundStyle(Theme.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
             if !extras.isEmpty {

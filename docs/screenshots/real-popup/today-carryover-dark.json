@@ -1,0 +1,66 @@
+{
+  "capture" : "window-server",
+  "clearBackground" : true,
+  "footer" : [
+    60,
+    60,
+    420,
+    56
+  ],
+  "foreignMaterials" : [
+
+  ],
+  "frame" : [
+    967,
+    256,
+    540,
+    693
+  ],
+  "isKey" : true,
+  "isOpaque" : false,
+  "macOS" : "Version 27.0.1 (Build 26A434)",
+  "pixels" : {
+    "cornerAlpha" : [
+      0,
+      0,
+      0,
+      0
+    ],
+    "coveredBox" : [
+      16,
+      0,
+      523.5,
+      679.5
+    ],
+    "sizePoints" : [
+      540,
+      693
+    ]
+  },
+  "screen" : [
+    0,
+    0,
+    1512,
+    982
+  ],
+  "sheet" : [
+    60,
+    128,
+    420,
+    557
+  ],
+  "statusItem" : [
+    1027,
+    949,
+    32,
+    33
+  ],
+  "visibleFrame" : [
+    0,
+    87,
+    1512,
+    862
+  ],
+  "windowClass" : "DailyChallengeProof.PopupPanel",
+  "windowShadow" : false
+}

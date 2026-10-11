@@ -179,10 +179,14 @@ final class PhoneExtrasUITests: XCTestCase {
         app.buttons["history-edit"].tap()
         XCTAssertTrue(stretch.isEnabled)
         stretch.tap(); XCTAssertEqual(stretch.value as? String, "Done")
+        stretch.tap(); XCTAssertEqual(stretch.value as? String, "Not done")
         app.swipeDown()
-        let otherDay = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "6 October 2026")).firstMatch
+        let otherDay = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "8 October 2026")).firstMatch
         reveal(otherDay, in: app); otherDay.tap()
-        XCTAssertFalse(stretch.isEnabled)
+        // Still open, it carried over to the next day, marked late and locked again.
+        let late = app.buttons.matching(NSPredicate(format: "label == %@", "Stretch, late")).firstMatch
+        XCTAssertTrue(late.waitForExistence(timeout: 5)); reveal(late, in: app)
+        XCTAssertFalse(late.isEnabled)
         XCTAssertTrue(app.buttons["history-edit"].exists)
     }
 

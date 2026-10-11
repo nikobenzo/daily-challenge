@@ -64,7 +64,7 @@ run() { # screen appearance [steps]
   fi
 }
 for appearance in light dark; do
-  for screen in setup today today-extras history account sign-in; do run "$screen" "$appearance"; done
+  for screen in setup today today-extras today-carryover history account sign-in; do run "$screen" "$appearance"; done
   run today "$appearance" history,account,today
   # Today with no extras: the slim Extras row, then its add field dropped down.
   run today "$appearance" extras
@@ -87,7 +87,7 @@ if (( DOCS )); then
   DEST=docs/screenshots/real-popup
   mkdir -p "$DEST"
   for appearance in light dark; do
-    for screen in setup today today-extras history account sign-in; do
+    for screen in setup today today-extras today-carryover history account sign-in; do
       cp "$OUT/$screen-$appearance.png" "$OUT/$screen-$appearance.json" "$DEST/"
     done
     for step in "$OUT"/today-"$appearance"-*-to-*.json "$OUT"/today-"$appearance"-extras-expanded.json; do
