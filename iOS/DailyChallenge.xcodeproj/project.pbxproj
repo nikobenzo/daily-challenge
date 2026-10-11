@@ -36,6 +36,7 @@
 		949581B4C183D9FA008FE263 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61FDF9718370A45B2B02D0E5 /* RootView.swift */; };
 		9A1FAD48B6E9F96E60509C79 /* WidgetActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CDF630F289537D9F5F48348 /* WidgetActions.swift */; };
 		9F74BA37A0D068BE917FC841 /* ChallengeCore in Frameworks */ = {isa = PBXBuildFile; productRef = 66B6D9C46C8FE7173171C5E0 /* ChallengeCore */; };
+		ACB5E9C620470943A76FB6BE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 234F50550B85E87E01438D6F /* PrivacyInfo.xcprivacy */; };
 		ACCE9864D897195309CEF459 /* WidgetActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CDF630F289537D9F5F48348 /* WidgetActions.swift */; };
 		B9846E5B2D15F13CEA0B16A8 /* WidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0466DACCDCF6749B1610F568 /* WidgetViews.swift */; };
 		BBDD3F15B6B638223CC8418E /* HistoryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2ADC44F1D8FEAD95697FB1BC /* HistoryScreen.swift */; };
@@ -43,6 +44,7 @@
 		C7B157EA60573C9319ED0E14 /* JugDrawing.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0A95B1601E3F2C45AC45420 /* JugDrawing.swift */; };
 		D0745E75260518924130896F /* JugDrawing.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0A95B1601E3F2C45AC45420 /* JugDrawing.swift */; };
 		D37F5D217DA619BF906540AD /* ChallengeCore in Frameworks */ = {isa = PBXBuildFile; productRef = 957BE63CB6A9EB0CF0698729 /* ChallengeCore */; };
+		D3EE7E6E67CEFF32333D34FE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E447F3DFBA6DC39838282822 /* PrivacyInfo.xcprivacy */; };
 		D63365EFFE0A3FAE99FE3AC6 /* PhoneSharedStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3789CD5BBCA369DA87A3BBD3 /* PhoneSharedStoreTests.swift */; };
 		E535F74B303E67499A7CF58E /* WidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0466DACCDCF6749B1610F568 /* WidgetViews.swift */; };
 		E56B490F52CB35FB52E36021 /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62D3FBAE0645D9A0B21E47D9 /* SharedComponents.swift */; };
@@ -102,6 +104,7 @@
 		0BB8EA1BE55351A5ADA6FF79 /* TodayScreenUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayScreenUITests.swift; sourceTree = "<group>"; };
 		0E72EADE2BE24A1AF75D3B58 /* AuthScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthScreen.swift; sourceTree = "<group>"; };
 		1F2787F38AE405DAEF50D673 /* PhoneSharedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneSharedStore.swift; sourceTree = "<group>"; };
+		234F50550B85E87E01438D6F /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		2ADC44F1D8FEAD95697FB1BC /* HistoryScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryScreen.swift; sourceTree = "<group>"; };
 		373579F4BEE8A1A6AC237E83 /* ChallengeWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChallengeWidgets.swift; sourceTree = "<group>"; };
 		3789CD5BBCA369DA87A3BBD3 /* PhoneSharedStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneSharedStoreTests.swift; sourceTree = "<group>"; };
@@ -136,6 +139,7 @@
 		D3888D73E71C2F5D574A1540 /* WidgetPlacementUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetPlacementUITests.swift; sourceTree = "<group>"; };
 		D769357A25FF9D76119BD2B2 /* AccountScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountScreen.swift; sourceTree = "<group>"; };
 		E0A95B1601E3F2C45AC45420 /* JugDrawing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JugDrawing.swift; sourceTree = "<group>"; };
+		E447F3DFBA6DC39838282822 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		E9DF86F06D26F5D13406D62C /* TrackerEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackerEnvironment.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -184,6 +188,7 @@
 				D21C3753FE4E3D2CC52A5F5D /* PhoneComponents.swift */,
 				5F1304E7C9C7EACDB3CCF4A8 /* PhoneExtrasViews.swift */,
 				068B1E20A6AEA7251526B69D /* PhoneFixtures.swift */,
+				E447F3DFBA6DC39838282822 /* PrivacyInfo.xcprivacy */,
 				61FDF9718370A45B2B02D0E5 /* RootView.swift */,
 				557F2F1170B82026D783FA04 /* SetupScreen.swift */,
 				5B1B9630EEC07846CBAA2EDB /* TodayScreen.swift */,
@@ -214,6 +219,7 @@
 				373579F4BEE8A1A6AC237E83 /* ChallengeWidgets.swift */,
 				80F85D956A148C59E6486533 /* DailyChallengeWidgets.entitlements */,
 				95B529FC1A009392189CF8CA /* Info.plist */,
+				234F50550B85E87E01438D6F /* PrivacyInfo.xcprivacy */,
 				6348898CD05F1EAC8EE43407 /* WidgetIntents.swift */,
 				7294939D231DA52CC101476D /* WidgetTimeline.swift */,
 				0466DACCDCF6749B1610F568 /* WidgetViews.swift */,
@@ -378,6 +384,7 @@
 			buildConfigurationList = A7EFDA45CF8599E742FEA674 /* Build configuration list for PBXNativeTarget "DailyChallengeWidgets" */;
 			buildPhases = (
 				B5E4547A0487A10B241A5386 /* Sources */,
+				A3EEFCBF3EC20965872FAC14 /* Resources */,
 				EC385C130B2073E2C72BC236 /* Frameworks */,
 				571534B5F9348D937CAF6CDB /* Bundle version only */,
 			);
@@ -448,11 +455,20 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		A3EEFCBF3EC20965872FAC14 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ACB5E9C620470943A76FB6BE /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D5EA83975BA157C232102299 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				17A3D909DAEA3EC7A4B2455C /* Assets.xcassets in Resources */,
+				D3EE7E6E67CEFF32333D34FE /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -13,7 +13,7 @@
 #                         xcrun altool --store-password-in-keychain-item <item> -u <email> -p <app-specific password>
 #
 #   --check      archive and ad-hoc sign to prove the Release build compiles and carries its
-#                entitlements; needs no credentials, contacts nothing and uploads nothing.
+#                entitlements and privacy manifests; needs no credentials, contacts nothing and uploads nothing.
 #   --app-store  export a build that can be submitted for App Review. Without it the export is
 #                marked TestFlight internal testing only and can never be submitted.
 set -euo pipefail
@@ -125,6 +125,25 @@ assert e['NSExtension']['NSExtensionPointIdentifier'] == 'com.apple.widgetkit-ex
 for key in ('CFBundleVersion', 'CFBundleShortVersionString'):
     assert a[key] == e[key], f'Mismatched {key}'
 assert not (extension / 'Configuration.json').exists(), 'Extension must not contain server configuration'
+# Privacy manifests: each archived bundle carries one that declares no tracking and the
+# UserDefaults reason; the app also declares its collected data (docs/ios-testflight.md).
+manifests = {}
+for label, bundle in (('app', app), ('extension', extension)):
+    assert (bundle / 'PrivacyInfo.xcprivacy').is_file(), f'PrivacyInfo.xcprivacy missing from the {label}'
+    manifests[label] = plistlib.loads((bundle / 'PrivacyInfo.xcprivacy').read_bytes())
+    assert manifests[label]['NSPrivacyTracking'] is False, f'{label} manifest must declare no tracking'
+    assert manifests[label]['NSPrivacyTrackingDomains'] == [], f'{label} manifest must list no tracking domains'
+# The extension links ChallengeSyncKit, whose reminder controller reads UserDefaults, so it declares the same reason.
+for label in manifests:
+    apis = {api['NSPrivacyAccessedAPIType']: api['NSPrivacyAccessedAPITypeReasons'] for api in manifests[label]['NSPrivacyAccessedAPITypes']}
+    assert apis == {'NSPrivacyAccessedAPICategoryUserDefaults': ['CA92.1']}, (label, apis)
+collected = manifests['app']['NSPrivacyCollectedDataTypes']
+assert sorted(item['NSPrivacyCollectedDataType'] for item in collected) == sorted(
+    f'NSPrivacyCollectedDataType{name}' for name in ('EmailAddress', 'Fitness', 'OtherUserContent', 'UserID', 'DeviceID')), collected
+assert all(item['NSPrivacyCollectedDataTypeLinked'] is True and item['NSPrivacyCollectedDataTypeTracking'] is False
+           and item['NSPrivacyCollectedDataTypePurposes'] == ['NSPrivacyCollectedDataTypePurposeAppFunctionality']
+           for item in collected), 'Collected data must be linked, untracked and for app functionality'
+assert manifests['extension']['NSPrivacyCollectedDataTypes'] == [], 'The extension collects nothing'
 # Widget App Intents run in the extension only; the app target ships none.
 import json
 actions = json.loads((extension / 'Metadata.appintents' / 'extract.actionsdata').read_text())['actions']
@@ -150,6 +169,7 @@ for item in extension.rglob('*'):
         found += [f'shape {index}' for index, shape in enumerate(shapes) if shape.search(data)]
         assert not found, f'{item.relative_to(extension)} contains configuration or credential text (marker {found})'
 print(f'Extension resources scanned: no configuration, credentials or {len(secrets)} configured values')
+print('Privacy manifests present in the app and extension: no tracking, UserDefaults CA92.1, 5 collected (app only) data types')
 print('Embedded WidgetKit extension ID, extension point, matching versions and extension-only widget intents verified')
 PY
   echo "Ad-hoc signed Release archive OK (not uploadable): $ARCHIVE"

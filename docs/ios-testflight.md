@@ -6,6 +6,17 @@ events. Family members get it through **TestFlight internal testing**, not the A
 
 - Bundle identifier `app.daily-challenge.ios`, team `L644Y3WX5T`, automatic signing.
 - Deployment target iOS 26. Sparkle is not linked (the Mac target alone depends on it).
+- **Privacy manifests:** `iOS/DailyChallenge/PrivacyInfo.xcprivacy` and `iOS/DailyChallengeWidgets/PrivacyInfo.xcprivacy`
+  are bundle resources of the app and the widget extension. Neither tracks or lists tracking domains. Both declare the
+  `UserDefaults` required-reason API with reason `CA92.1` (the app's own settings; the extension links the reminder
+  code that reads them). No other required-reason category is used by the app, the extension, `ChallengeCore`,
+  `ChallengeSyncKit` or `supabase-swift`; swift-crypto ships its own manifests. The app manifest declares the
+  collected data of the App Privacy answers in [app-store-listing.md](app-store-listing.md): email address, fitness,
+  other user content, user ID and device ID, all linked to the user, for app functionality, not used for tracking. The
+  extension collects nothing. Fitness stands for the self-logged water, workout, walk, diet and reading marks; if the
+  owner answers "Health" in App Store Connect instead, change that one type to match. `bash scripts/ios-archive.sh
+  --check` fails if either archived bundle lacks its manifest or the contents drift. Re-audit when a dependency or
+  an API such as file timestamps or disk space is added.
 - Its own Keychain items (`app.daily-challenge.ios.auth`, no shared access group), coordinated history in App Group
   `group.app.daily-challenge.ios`, and device-local reminder and appearance settings. The same account works on the
   Mac; an iPhone signing in to an account whose Mac already has a challenge adopts it after a
