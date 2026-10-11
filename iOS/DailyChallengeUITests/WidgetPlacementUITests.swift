@@ -203,6 +203,44 @@ final class WidgetPlacementUITests: XCTestCase {
         }
     }
 
+    /// Widget animations on the placed layout a (`WIDGET_PLACE=1` places it first): reseed
+    /// `partial`, then tap + and − , the walk ring and the "Read a chapter" extra on and off,
+    /// pausing after each so the simulator recording that `capture-widgets.sh` mode
+    /// `animations` runs around this test shows every entry change.
+    @MainActor func testWidgetAnimations() throws {
+        guard ProcessInfo.processInfo.arguments.contains("-capture-widgets") else {
+            throw XCTSkip("Use the WidgetCapture scheme on an isolated simulator")
+        }
+        continueAfterFailure = false
+        let app = XCUIApplication(bundleIdentifier: "app.daily-challenge.ios")
+        let board = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        app.launchArguments = ["-widget-fixture", "partial"]
+        app.launch()
+        XCTAssertTrue(app.buttons["water-add"].waitForExistence(timeout: 10))
+        XCUIDevice.shared.press(.home)
+        if ProcessInfo.processInfo.environment["WIDGET_PLACE"] == "1" {
+            board.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.75)).press(forDuration: 1.5)
+            for (page, name, title, family) in [(3, "extras-medium", "Extras", "Medium"),
+                                                (2, "requirements-medium", "Daily requirements", "Medium"),
+                                                (1, "water-medium", "Water", "Medium")] {
+                addWidget(board, page: page, name: name, title: title, family: family)
+            }
+            let done = board.buttons["Done"]
+            if done.waitForExistence(timeout: 5) { done.tap() }
+        }
+        app.terminate()
+        showWidgetPage(board)
+        sleep(4)
+        for label in ["Add 450 ml", "Add 450 ml", "Undo latest pour", "Walk, 45 minutes, pending", "Walk, 45 minutes, done",
+                      "Read a chapter, pending", "Read a chapter, done"] {
+            let control = board.buttons[label].firstMatch
+            XCTAssertTrue(control.waitForExistence(timeout: 10), board.debugDescription)
+            control.tap()
+            sleep(4) // the intent commits, WidgetKit reloads and animates the new entry
+        }
+        capture(board, "home-placed-animations-after")
+    }
+
     /// D-W2 Lock Screen ring on the simulator's Cover Sheet: pull it down, long-press,
     /// Customise → Lock Screen → add the Daily Challenge water ring, then relaunch each
     /// `WIDGET_VARIANTS` fixture and capture the Cover Sheet. A simulator has no passcode,

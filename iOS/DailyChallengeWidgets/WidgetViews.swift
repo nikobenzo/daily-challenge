@@ -1,4 +1,5 @@
 import ChallengeCore
+import ChallengeSyncKit
 import SwiftUI
 import WidgetKit
 
@@ -8,6 +9,20 @@ import WidgetKit
 // has a glyph as well as a colour (check, dash, ×). Tinted and clear Home Screens render
 // in WidgetKit's accented mode, where only opacity survives: filled controls switch to a
 // translucent fill under full-opacity text, and the data marks are accentable.
+//
+// Motion: no clocks or loops in the extension. After a tap the intent's timeline reload
+// replaces the entry, and WidgetKit animates the difference with the animations below:
+// the jug fills or drains, totals roll, rings fade green and checks scale in. Reduce Motion
+// swaps each for a short dissolve.
+
+enum WidgetMotion {
+    /// The app's pour/undo level curve (`WaterMotion`): cubic ease-out over the first 55 %
+    /// of its 1.2 s, without the settling slosh.
+    static let fill = Animation.timingCurve(0.33, 1, 0.68, 1, duration: WaterMotion.duration * 0.55)
+    /// The extras tick, close to the app ring's done pop.
+    static let tick = Animation.spring(response: 0.3, dampingFraction: 0.6)
+    static let dissolve = Theme.Motion.crossFade
+}
 
 extension EnvironmentValues {
     /// In-process renders cannot set WidgetKit's rendering mode; they set this instead.
@@ -156,18 +171,24 @@ struct WidgetDateLabel: View {
 
 // MARK: Water
 
-/// The app's jug, still: no slosh, pour or celebration clocks in the extension.
+/// The app's jug: the level rises or falls to the new entry's total on the app's curve;
+/// no slosh, pour or celebration clocks in the extension. Reduce Motion dissolves.
 struct WidgetJugView: View {
     let millilitres: Int
     let height: CGFloat
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
         let canonical = CGSize(width: Theme.Size.jug.width + 8, height: Theme.Size.jug.height + 14)
         let scale = height / canonical.height
-        JugDrawing(millilitres: millilitres, level: min(1, max(0, Double(millilitres) / 4_000)))
-            .scaleEffect(scale, anchor: .topLeading)
-            .frame(width: canonical.width * scale, height: height, alignment: .topLeading)
-            .widgetAccentable()
-            .accessibilityHidden(true)
+        let jug = JugDrawing(millilitres: millilitres, level: min(1, max(0, Double(millilitres) / 4_000)), framedWater: true)
+        Group {
+            if reduceMotion { jug.id(millilitres).transition(.opacity) } else { jug }
+        }
+        .animation(reduceMotion ? WidgetMotion.dissolve : WidgetMotion.fill, value: millilitres)
+        .scaleEffect(scale, anchor: .topLeading)
+        .frame(width: canonical.width * scale, height: height, alignment: .topLeading)
+        .widgetAccentable()
+        .accessibilityHidden(true)
     }
 }
 
@@ -178,6 +199,9 @@ struct WaterWidgetView: View {
     private var family: WidgetFamily { familyOverride ?? widgetFamily }
     private var amount: Int { entry.summary?.waterMillilitres ?? 0 }
     private var goalMet: Bool { amount >= 4_000 }
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Totals roll to the new value in step with the jug.
+    private var rolling: ContentTransition { reduceMotion ? .opacity : .numericText(value: Double(amount)) }
 
     var body: some View {
         // Fixed widget sizes: the jug, total and controls stop growing at the largest
@@ -196,12 +220,13 @@ struct WaterWidgetView: View {
                 WidgetJugView(millilitres: amount, height: 68)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(amount.formatted()).font(WidgetFont.smallTotal).monospacedDigit()
-                        .lineLimit(1).minimumScaleFactor(0.6)
+                        .lineLimit(1).minimumScaleFactor(0.6).contentTransition(rolling)
                     Text("ml / 4,000").font(WidgetFont.caption)
                         .foregroundStyle(goalMet ? Theme.doneText : Theme.textSecondary)
                         .lineLimit(1).minimumScaleFactor(0.7)
                 }
                 .modifier(WaterValue(amount: amount))
+                .animation(reduceMotion ? WidgetMotion.dissolve : WidgetMotion.fill, value: amount)
             }
             Spacer(minLength: 0)
             HStack(spacing: 8) { minus(size: 36); plus(height: 36) }
@@ -217,15 +242,16 @@ struct WaterWidgetView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(alignment: .firstTextBaseline, spacing: 5) {
                         Text("\(amount.formatted()) ml").font(WidgetFont.total).tracking(-0.6).monospacedDigit()
-                            .lineLimit(1).minimumScaleFactor(0.6).layoutPriority(1)
+                            .lineLimit(1).minimumScaleFactor(0.6).layoutPriority(1).contentTransition(rolling)
                         Text("/ 4,000").font(WidgetFont.caption)
                             .foregroundStyle(goalMet ? Theme.doneText : Theme.textSecondary).lineLimit(1)
                     }
                     Text(goalMet ? "Goal met · 4 L" : "\((4_000 - amount).formatted()) ml to go · 4 L goal")
                         .font(WidgetFont.caption).foregroundStyle(goalMet ? Theme.doneText : Theme.textSecondary)
-                        .lineLimit(1).minimumScaleFactor(0.8)
+                        .lineLimit(1).minimumScaleFactor(0.8).contentTransition(rolling)
                 }
                 .modifier(WaterValue(amount: amount))
+                .animation(reduceMotion ? WidgetMotion.dissolve : WidgetMotion.fill, value: amount)
                 Spacer(minLength: 6)
                 HStack(spacing: 10) { minus(size: 40); plus(height: 40) }
             }
@@ -393,13 +419,35 @@ struct RequirementsWidgetView: View {
         }
     }
 
+    /// No accentable flag here flips with the entry: when one does, WidgetKit swaps the whole
+    /// button in one frame or cross-fades it with a ghosted icon. Only the done stroke is.
     private func ring(_ icon: String, _ title: String, _ state: RingGauge.State, spoken: String) -> some View {
-        RingGauge(symbol: icon, label: title, state: state, labelFont: WidgetFont.ringLabel)
-            .widgetAccentable(state != .pending)
-            .frame(maxWidth: .infinity)
-            .contentShape(Rectangle())
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(spoken)
+        ZStack(alignment: .top) {
+            RingGauge(symbol: icon, label: title, state: state, labelFont: WidgetFont.ringLabel, fillsDone: true)
+            WidgetRingFill(done: state == .done)
+        }
+        .frame(maxWidth: .infinity)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(spoken)
+    }
+}
+
+/// A done ring's green stroke over `RingGauge`'s track (same size and inset), fading in on the
+/// jug's curve as the icon darkens and the check scales in. A fade, not a sweep: on placed
+/// widgets (iOS 26.4 simulator) WidgetKit cross-fades a stroke whose trim, rotating or
+/// scaled mask, or insertion scale changes, inside or over the button.
+struct WidgetRingFill: View {
+    let done: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    var body: some View {
+        Circle().stroke(Theme.done, lineWidth: Theme.Size.ringStroke)
+            .opacity(done ? 1 : 0)
+            .animation(reduceMotion ? WidgetMotion.dissolve : WidgetMotion.fill, value: done)
+            .padding(Theme.Size.ringStroke / 2)
+            .frame(width: Theme.Size.ring, height: Theme.Size.ring)
+            .widgetAccentable()
+            .accessibilityHidden(true)
     }
 }
 
@@ -411,6 +459,7 @@ struct ExtrasWidgetView: View {
     @Environment(\.widgetFamily) private var widgetFamily
     private var family: WidgetFamily { familyOverride ?? widgetFamily }
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// No scrolling in a widget: medium shows three rows, large all ten at standard
     /// sizes. Accessibility sizes show fewer rows; the overflow link stays.
@@ -469,18 +518,27 @@ struct ExtrasWidgetView: View {
     }
 
     /// The app's checklist row: filled green check or empty circle, title dimmed when done,
-    /// "Late" once it has carried over.
+    /// "Late" once it has carried over. The check springs in over the circle (Reduce Motion:
+    /// fades) when the entry changes.
     private func row(_ extra: Challenge.Extra, done: Bool, late: Bool, large: Bool) -> some View {
         WidgetControl(request: entry.binding.map { WidgetActionRequest(.toggleExtra(extra.id), binding: $0) }) {
             HStack(spacing: 10) {
-                Image(systemName: done ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 21)).foregroundStyle(done ? Theme.done : Theme.textTertiary)
-                    .widgetAccentable(done)
+                ZStack {
+                    Image(systemName: "circle").foregroundStyle(Theme.textTertiary)
+                        .opacity(done ? 0 : 1)
+                    if done {
+                        Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.done)
+                            .widgetAccentable()
+                            .transition(reduceMotion ? .opacity : .scale(scale: 0.3).combined(with: .opacity))
+                    }
+                }
+                .font(.system(size: 21))
                 Text(extra.title).font(WidgetFont.row)
                     .foregroundStyle(done ? Theme.textSecondary : Theme.textPrimary)
                     .lineLimit(1).truncationMode(.tail)
                 if late { LateMarker(font: WidgetFont.caption) }
             }
+            .animation(reduceMotion ? WidgetMotion.dissolve : WidgetMotion.tick, value: done)
             .frame(maxWidth: .infinity, minHeight: large ? 28 : 27, alignment: .leading)
             .contentShape(Rectangle())
             .accessibilityElement(children: .ignore)

@@ -251,6 +251,9 @@ struct RingGauge: View {
     /// Widgets pass a text-style font: `Theme.Fonts` scales with the process's text size,
     /// which a widget's Dynamic Type limit cannot cap.
     var labelFont: Font = Theme.Fonts.ringLabel
+    /// Widgets have no `onChange` pop: they draw the done stroke themselves (`WidgetRingFill`)
+    /// and the check scales in as WidgetKit animates the new entry (Reduce Motion fades).
+    var fillsDone = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @SwiftUI.State private var pop = false
 
@@ -262,13 +265,13 @@ struct RingGauge: View {
                 switch state {
                 case .missed:
                     Circle().stroke(Theme.dangerRing, style: StrokeStyle(lineWidth: Theme.Size.ringStroke, lineCap: .round, dash: [3, 6]))
-                case .done:
+                case .done where !fillsDone:
                     Circle().stroke(Theme.done, lineWidth: Theme.Size.ringStroke)
                 case .progress(let value):
                     Circle().trim(from: 0, to: max(0.001, min(1, value)))
                         .stroke(Theme.water, style: StrokeStyle(lineWidth: Theme.Size.ringStroke, lineCap: .round))
                         .rotationEffect(.degrees(-90))
-                case .pending:
+                case .pending, .done:
                     EmptyView()
                 }
                 VStack(spacing: 3) {
@@ -280,7 +283,7 @@ struct RingGauge: View {
             .padding(Theme.Size.ringStroke / 2)
             .frame(width: Theme.Size.ring, height: Theme.Size.ring)
             .scaleEffect(pop ? 1.06 : 1)
-            .animation(reduceMotion ? nil : Theme.Motion.ring, value: state)
+            .animation(reduceMotion ? (fillsDone ? Theme.Motion.crossFade : nil) : Theme.Motion.ring, value: state)
             Eyebrow(text: label, color: labelColor, font: labelFont, tracking: Theme.Tracking.ringLabel)
                 .lineLimit(1).fixedSize()
         }
@@ -298,6 +301,7 @@ struct RingGauge: View {
         switch state {
         case .done:
             Image(systemName: "checkmark").font(.system(size: 10, weight: .heavy)).foregroundStyle(Theme.done)
+                .transition(fillsDone && !reduceMotion ? .scale(scale: 0.3).combined(with: .opacity) : .opacity)
         case .missed:
             Image(systemName: "xmark").font(.system(size: 10, weight: .heavy)).foregroundStyle(Theme.dangerRing)
         case .progress(let value) where showsPercent:

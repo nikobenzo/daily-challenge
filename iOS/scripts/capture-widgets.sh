@@ -27,17 +27,33 @@ case "$MODE" in
   # Phase 5 Lock Screen: add the water ring to the Cover Sheet and capture WIDGET_VARIANTS.
   lock) SCHEME=WidgetCapture; METHOD=testPhase5LockScreen
     export TEST_RUNNER_WIDGET_VARIANTS="${WIDGET_VARIANTS:-partial}" ;;
-  *) echo "Expected WIDGET_CAPTURE_MODE=placement|actions|gallery|phase5|lock" >&2; exit 2 ;;
+  # Widget animations: optionally place layout a (WIDGET_PLACE=1), then tap the controls
+  # while the simulator screen is recorded to .build/widget-animations-*.mov. REDUCE_MOTION
+  # (enabled|disabled) writes the simulator's accessibility preference; SpringBoard is
+  # restarted so the extension reads it.
+  animations) SCHEME=WidgetCapture; METHOD=testWidgetAnimations
+    export TEST_RUNNER_WIDGET_PLACE="${WIDGET_PLACE:-0}"
+    xcrun simctl spawn "$WIDGET_SIMULATOR_ID" defaults write com.apple.Accessibility ReduceMotionEnabled -bool \
+      "$([[ "${REDUCE_MOTION:-disabled}" == enabled ]] && echo YES || echo NO)"
+    xcrun simctl spawn "$WIDGET_SIMULATOR_ID" launchctl kickstart -k system/com.apple.SpringBoard >/dev/null 2>&1 || true
+    sleep 5 ;;
+  *) echo "Expected WIDGET_CAPTURE_MODE=placement|actions|gallery|phase5|lock|animations" >&2; exit 2 ;;
 esac
 RESULT="$ROOT/.build/widget-$MODE-$APPEARANCE-$(date +%s).xcresult"
 mkdir -p "$OUT"
 xcrun simctl ui "$WIDGET_SIMULATOR_ID" appearance "$APPEARANCE"
+RECORDER=
+if [[ "$MODE" == animations ]]; then
+  xcrun simctl io "$WIDGET_SIMULATOR_ID" recordVideo --codec h264 --force "${RESULT%.xcresult}.mov" &
+  RECORDER=$!
+fi
 # Failure is retained as evidence; do not automatically retry placement indefinitely.
 xcodebuild test -project iOS/DailyChallenge.xcodeproj -scheme "$SCHEME" \
   -destination "platform=iOS Simulator,id=$WIDGET_SIMULATOR_ID" \
   -derivedDataPath "$ROOT/.build/widget-capture-derived" \
   -only-testing:"DailyChallengeUITests/WidgetPlacementUITests/$METHOD" \
   -collect-test-diagnostics never -resultBundlePath "$RESULT" || result=$?
+if [[ -n "$RECORDER" ]]; then kill -INT "$RECORDER"; wait "$RECORDER" || true; echo "Recording: ${RESULT%.xcresult}.mov"; fi
 xcrun xcresulttool export attachments --path "$RESULT" --output-path "$RESULT-attachments" >/dev/null
 python3 iOS/scripts/export-widget-attachments.py "$RESULT-attachments" "$OUT" "$APPEARANCE"
 exit "${result:-0}"

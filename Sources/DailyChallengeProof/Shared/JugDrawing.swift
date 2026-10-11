@@ -2,13 +2,16 @@ import SwiftUI
 
 /// 88 × 112 jug (board viewBox 124 × 158): glass vessel, gradient water, handle and cap.
 /// Over the goal the water stays at the rim and droplets sit under the jug.
-/// Static: `WaterJugView` animates it on the Mac and the phone; the iPhone widgets
-/// draw it still (no motion clocks in the extension).
+/// Static: `WaterJugView` animates it on the Mac and the phone; the iPhone widgets have no
+/// motion clocks and let WidgetKit animate the level between timeline entries instead.
 struct JugDrawing: View {
     let millilitres: Int
     let level: Double
     var slosh: Double = 0
     var spill: Double = 0
+    /// Widgets: a flat surface drawn as the gradient under a scaled mask, a transform that
+    /// WidgetKit interpolates between timeline entries.
+    var framedWater = false
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.colorSchemeContrast) private var contrast
 
@@ -21,9 +24,15 @@ struct JugDrawing: View {
                 .offset(x: 56, y: 42)
             ZStack {
                 JugVessel().fill(reduceTransparency ? Theme.solidGlass : Theme.jugGlass)
-                JugWater(level: level, slosh: slosh)
-                    .fill(Theme.jugGradient)
-                    .clipShape(JugVessel())
+                Group {
+                    if framedWater {
+                        Rectangle().fill(Theme.jugGradient)
+                            .mask { Rectangle().scaleEffect(x: 1, y: min(1, max(0, level)), anchor: .bottom) }
+                    } else {
+                        JugWater(level: level, slosh: slosh).fill(Theme.jugGradient)
+                    }
+                }
+                .clipShape(JugVessel())
                 JugVessel().stroke(outline, lineWidth: 2.5)
                 Capsule(style: .circular).fill(.white.opacity(0.35)).frame(width: 4, height: 54).offset(x: -21, y: 14)
             }
