@@ -1,6 +1,6 @@
 # Contributing
 
-Daily Challenge is a personal project by Mykola Yakovetskyi. The code is public so people can see how it works, but the project is **not seeking outside contributions**, and pull requests will usually be closed without review.
+Daily Challenge is a personal project made by me. The code is public so people can see how it works, but the project is **not seeking outside contributions**, and pull requests will usually be closed without review.
 
 You are still very welcome to help in these ways:
 
