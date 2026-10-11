@@ -47,7 +47,8 @@ root when it is built, the same file the Mac and iPhone builds use (see `.env.ex
 compiled into `BuildConfig`; nothing is committed. The publishable key is public by design;
 row-level security protects the data. Never put a secret or service-role key in `.env.local`.
 
-- A Debug build without `.env.local` still builds and opens on "Configuration unavailable".
+- A Debug build without usable values (missing, or still the `.env.example` placeholder
+  `your-project`) still builds, prints a Gradle warning, and opens on "Configuration unavailable".
 - A Release build refuses to build without both values.
 
 ## Build
@@ -73,6 +74,20 @@ keystore, `*.jks` and `*.keystore` are gitignored).
 3. `adb install -r android/app/build/outputs/apk/debug/app-debug.apk`, then open Daily Challenge.
    MIUI may show its own install confirmation on the phone; accept it.
 
+**MIUI without a SIM card.** MIUI will only turn on **Install via USB** and **USB debugging
+(Security settings)** with a SIM in the phone. Without them, `adb install` fails at once with
+`INSTALL_FAILED_USER_RESTRICTED` (logcat shows MIUI's `AdbInstallActivity` cancelling it), and
+MIUI also blocks `adb shell input` taps and scrcpy control. `adb push`, `adb shell am start`,
+`adb exec-out screencap` and `adb logcat` still work, so install by hand:
+
+1. `adb push android/app/build/outputs/apk/debug/app-debug.apk /sdcard/Download/DailyChallenge-debug.apk`
+2. On the phone, open Files (File Manager) > Download and tap `DailyChallenge-debug.apk`.
+3. The first time, MIUI asks to allow File Manager to install unknown apps; allow it, go back,
+   then tap **Install**.
+
+Updating works the same way: push the new APK and install it over the old one, which keeps
+the app's data. Debug fixtures and screenshots then need no taps (see below).
+
 A Debug build signs with the local debug key, so installing a Play build later needs the Debug
 build uninstalled first (Settings > Apps > Daily Challenge > Uninstall). That deletes this phone's
 local copy, so sync first.
@@ -95,9 +110,10 @@ Screens: `signIn`, `createAccount`, `forgotPassword`, `confirmCode`, `resetPassw
 `adb exec-out screencap -p > docs/screenshots/android/<name>.png`. Launching without a fixture
 opens the real app again.
 
-Screenshots: `docs/screenshots/android/`. Those in `emulator/` come from an Android 10 (API 29)
-emulator at 1080 by 2280, close to the Redmi Note 7's screen; captures from a real phone go
-directly in `docs/screenshots/android/`.
+Screenshots: `docs/screenshots/android/` holds captures from the Redmi Note 7 (Android 10,
+MIUI 12.5, 1080 by 2340) taken with these fixture launches, plus `launch-signed-out.png`, the
+real configured app opened with no account. Those in `emulator/` come from an Android 10
+(API 29) emulator at 1080 by 2280.
 
 ## How it matches the other apps
 
