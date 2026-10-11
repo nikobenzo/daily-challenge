@@ -12,8 +12,8 @@
 #     ASC_KEYCHAIN_ITEM   keychain item created with
 #                         xcrun altool --store-password-in-keychain-item <item> -u <email> -p <app-specific password>
 #
-#   --check   archive unsigned to prove the Release build compiles; needs no credentials,
-#             contacts nothing and uploads nothing.
+#   --check   archive and ad-hoc sign to prove the Release build compiles and carries its
+#             entitlements; needs no credentials, contacts nothing and uploads nothing.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT="$PWD"
@@ -22,6 +22,7 @@ ARCHIVE="$OUT/DailyChallenge.xcarchive"
 EXPORT="$OUT/export"
 PROJECT=iOS/DailyChallenge.xcodeproj
 TEAM_ID=L644Y3WX5T
+APP_GROUP=group.app.daily-challenge.ios
 
 check=0
 for arg in "$@"; do
@@ -52,6 +53,44 @@ Owner steps (once; full guide in docs/ios-testflight.md):
 STEPS
 }
 
+# Builds the Release archive without a development profile, then ad-hoc signs the widget extension
+# and the app with their entitlements files. Signing at archive time would need a development
+# profile, and a development profile needs at least one registered device, which an upload-only
+# team has no reason to have; Xcode also refuses its own ad-hoc signing for App Group entitlements
+# ("requires a provisioning profile"). The export signs the app for App Store Connect with the
+# distribution profiles that -allowProvisioningUpdates obtains, and it keeps only the entitlements
+# the archived code already carries, so an unsigned archive would ship without the App Group.
+archive() {
+  rm -rf "$ARCHIVE"
+  xcodebuild archive -project "$PROJECT" -scheme DailyChallenge -configuration Release \
+    -destination 'generic/platform=iOS' -archivePath "$ARCHIVE" \
+    CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO "$@"
+  local app="$ARCHIVE/Products/Applications/Daily Challenge.app"
+  codesign --force --sign - --timestamp=none --generate-entitlement-der \
+    --entitlements iOS/DailyChallengeWidgets/DailyChallengeWidgets.entitlements \
+    "$app/PlugIns/DailyChallengeWidgets.appex"
+  codesign --force --sign - --timestamp=none --generate-entitlement-der \
+    --entitlements iOS/DailyChallenge/DailyChallenge.entitlements "$app"
+  require_app_group "$app"
+}
+
+# Refuses unless the signed app and its embedded widget extension both carry the App Group.
+require_app_group() {
+  local bundle groups entitlements="$OUT/entitlements.plist"
+  for bundle in "$1" "$1/PlugIns/DailyChallengeWidgets.appex"; do
+    rm -f "$entitlements"
+    # PlistBuddy, not plutil: plutil key paths split the dotted entitlement name.
+    groups="$(codesign -d --entitlements "$entitlements" --xml "$bundle" 2>/dev/null &&
+      /usr/libexec/PlistBuddy -c 'Print :com.apple.security.application-groups' "$entitlements" 2>/dev/null)" ||
+      groups=none
+    if ! grep -qxF "    $APP_GROUP" <<<"$groups"; then
+      echo "Refusing: $bundle is not signed with App Group $APP_GROUP (application groups: $groups)." >&2
+      return 1
+    fi
+    echo "${bundle##*/}: signed with App Group $APP_GROUP"
+  done
+}
+
 if [[ ! -f .env.local ]]; then
   echo 'Missing .env.local. Copy .env.example and supply the public URL/publishable key.' >&2
   exit 1
@@ -59,10 +98,7 @@ fi
 
 mkdir -p "$OUT"
 if [[ "$check" == 1 ]]; then
-  rm -rf "$ARCHIVE"
-  xcodebuild archive -project "$PROJECT" -scheme DailyChallenge -configuration Release \
-    -destination 'generic/platform=iOS' -archivePath "$ARCHIVE" \
-    CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO -quiet
+  archive -quiet
   app="$ARCHIVE/Products/Applications/Daily Challenge.app"
   /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' -c 'Print :CFBundleShortVersionString' \
     -c 'Print :CFBundleVersion' "$app/Info.plist"
@@ -108,7 +144,7 @@ for item in extension.rglob('*'):
 print(f'Extension resources scanned: no configuration, credentials or {len(secrets)} configured values')
 print('Embedded WidgetKit extension ID, extension point, matching versions and extension-only widget intents verified')
 PY
-  echo "Unsigned Release archive OK (not uploadable): $ARCHIVE"
+  echo "Ad-hoc signed Release archive OK (not uploadable): $ARCHIVE"
   exit 0
 fi
 
@@ -121,9 +157,9 @@ if [[ -n "${ASC_KEY_PATH:-}" && -n "${ASC_KEY_ID:-}" && -n "${ASC_ISSUER_ID:-}" 
   esac
   auth=(-authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "$ASC_KEY_ID"
         -authenticationKeyIssuerID "$ASC_ISSUER_ID")
-  upload=xcodebuild
+  upload=key
 elif [[ -n "${ASC_APPLE_ID:-}" && -n "${ASC_KEYCHAIN_ITEM:-}" ]]; then
-  upload=altool
+  upload=password
 else
   owner_steps
   exit 1
@@ -133,14 +169,8 @@ fi
 version="$(sed -n 's/^CFBundleShortVersionString=//p' VERSION) ($(sed -n 's/^CFBundleVersion=//p' VERSION))"
 echo "Archiving Daily Challenge for iPhone $version"
 
-rm -rf "$ARCHIVE" "$EXPORT"
-xcodebuild archive -project "$PROJECT" -scheme DailyChallenge -configuration Release \
-  -destination 'generic/platform=iOS' -archivePath "$ARCHIVE" \
-  CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
-# The archive is left unsigned on purpose: signing it at archive time would need a development
-# profile, and a development profile needs at least one registered device, which an upload-only
-# team has no reason to have. The export step below signs the app for App Store Connect with the
-# distribution profile that -allowProvisioningUpdates obtains.
+rm -rf "$EXPORT"
+archive
 
 options="$OUT/ExportOptions.plist"
 cat > "$options" <<PLIST
@@ -149,7 +179,7 @@ cat > "$options" <<PLIST
 <plist version="1.0">
 <dict>
   <key>method</key><string>app-store-connect</string>
-  <key>destination</key><string>$([[ "$upload" == xcodebuild ]] && echo upload || echo export)</string>
+  <key>destination</key><string>export</string>
   <key>signingStyle</key><string>automatic</string>
   <key>teamID</key><string>$TEAM_ID</string>
   <key>uploadSymbols</key><true/>
@@ -162,9 +192,18 @@ PLIST
 xcodebuild -exportArchive -archivePath "$ARCHIVE" -exportPath "$EXPORT" -exportOptionsPlist "$options" \
   -allowProvisioningUpdates "${auth[@]}"
 
-if [[ "$upload" == altool ]]; then
-  ipa="$(find "$EXPORT" -name '*.ipa' -maxdepth 1 | head -n 1)"
-  [[ -n "$ipa" ]] || { echo "No .ipa was exported to $EXPORT" >&2; exit 1; }
+# Export to disk first so the exact distribution-signed IPA is inspected before it is uploaded.
+ipa="$(find "$EXPORT" -name '*.ipa' -maxdepth 1 | head -n 1)"
+[[ -n "$ipa" ]] || { echo "No .ipa was exported to $EXPORT" >&2; exit 1; }
+unpacked="$OUT/ipa-check"
+rm -rf "$unpacked"
+ditto -x -k "$ipa" "$unpacked"
+require_app_group "$unpacked/Payload/Daily Challenge.app" || { echo "Not uploading $ipa." >&2; exit 1; }
+
+if [[ "$upload" == key ]]; then
+  xcrun altool --upload-app -f "$ipa" -t ios --api-key "$ASC_KEY_ID" --api-issuer "$ASC_ISSUER_ID" \
+    --p8-file-path "$ASC_KEY_PATH"
+else
   xcrun altool --upload-app -f "$ipa" -t ios -u "$ASC_APPLE_ID" -p "@keychain:$ASC_KEYCHAIN_ITEM"
 fi
 echo "Uploaded $version. In App Store Connect > TestFlight, add it to the internal group once processing finishes."

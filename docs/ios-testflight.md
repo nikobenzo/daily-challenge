@@ -164,18 +164,23 @@ step; the remaining items below describe the existing distribution workflow.
 1. Raise `CFBundleVersion` in `VERSION` (every upload needs a new build number; the Mac and
    iPhone builds share the file) and `CFBundleShortVersionString` when the version changes.
 2. Optional check, no credentials and no upload: `bash scripts/ios-archive.sh --check`
-   (unsigned Release archive; confirms the configuration is bundled and Sparkle is absent).
+   (ad-hoc signed Release archive; confirms the app and widget extension carry the App Group,
+   the configuration is bundled and Sparkle is absent).
 3. In a terminal with the credential from step 4 above:
    ```bash
    export ASC_KEY_PATH=~/.appstoreconnect/private_keys/AuthKey_<KEYID>.p8 ASC_KEY_ID=<KEYID> ASC_ISSUER_ID=<issuer>
    # or: export ASC_APPLE_ID=<apple id> ASC_KEYCHAIN_ITEM=dc-asc
    bash scripts/ios-archive.sh
    ```
-   It archives with automatic signing, exports with an `app-store-connect` export options plist
-   (`testFlightInternalTestingOnly`, build number managed by `VERSION`) and uploads, through
-   `xcodebuild -exportArchive`'s upload destination with the API key or `xcrun altool
-   --upload-app` with the keychain item. It refuses to run without one of the two credentials
-   and prints these steps.
+   It archives without a development profile (the team has no registered devices) and ad-hoc
+   signs the widget extension and the app with their `.entitlements` files, because the export
+   keeps only the entitlements the archived code carries. It then exports to disk with automatic
+   signing and an `app-store-connect` export options plist (`testFlightInternalTestingOnly`,
+   build number managed by `VERSION`), checks with `codesign -d --entitlements` that the signed
+   app and `DailyChallengeWidgets.appex` in the IPA both carry `group.app.daily-challenge.ios`,
+   and refuses to upload otherwise. It uploads that IPA with `xcrun altool --upload-app`, using
+   the API key or the keychain item. It refuses to run without one of the two credentials and
+   prints these steps.
 4. Wait for App Store Connect's "ready to test" email (usually minutes). With Automatic
    Distribution the "Family" group gets the build; otherwise TestFlight › the build › Groups ›
    add "Family". Add a short "What to Test" note.
@@ -314,12 +319,15 @@ these checks, not the captain's.
 1. App Group: `group.app.daily-challenge.ios` is registered on team `L644Y3WX5T` and enabled on
    **both** App IDs, `app.daily-challenge.ios` and `app.daily-challenge.ios.widgets` (Xcode
    automatic signing, or the portal fallback linked in owner step 2).
-2. Archive, then review the signed entitlements of the app and the embedded
-   `DailyChallengeWidgets.appex` (`codesign -d --entitlements - <bundle>`): both carry the same
-   group; neither carries a Keychain access group.
-3. `bash scripts/ios-archive.sh --check` passes: embedded extension, bundle ID, WidgetKit
-   extension point, matching app/extension versions, the five non-discoverable intents in the
-   extension only, no server configuration or credentials in the extension, no Sparkle.
+2. `scripts/ios-archive.sh` checks the signed entitlements of the app and the embedded
+   `DailyChallengeWidgets.appex` in the exported IPA before uploading and refuses unless both
+   carry the group. To review them yourself (neither should carry a Keychain access group), run
+   `codesign -d --entitlements - <bundle>` on `build/ios/ipa-check/Payload/Daily Challenge.app`
+   and its extension.
+3. `bash scripts/ios-archive.sh --check` passes: App Group on the archived app and extension,
+   embedded extension, bundle ID, WidgetKit extension point, matching app/extension versions, the
+   five non-discoverable intents in the extension only, no server configuration or credentials
+   in the extension, no Sparkle.
 4. Raise `CFBundleVersion` in `VERSION` (TestFlight 0.3.0 (3) is already out). The app and the
    extension both take their versions from `VERSION`, so they always match.
 5. Upload with `bash scripts/ios-archive.sh` and write the TestFlight **What to Test**: widgets
