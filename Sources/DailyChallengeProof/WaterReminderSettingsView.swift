@@ -40,7 +40,7 @@ struct WaterReminderSettingsView: View {
                     .help("How often to remind you")
                 Spacer()
                 Button { choosingWindow = true } label: {
-                    Label("\(Self.clock(model.settings.startMinute)) – \(Self.clock(model.settings.endMinute))", systemImage: "clock")
+                    Label("\(Self.clock(model.settings.startMinute)) to \(Self.clock(model.settings.endMinute))", systemImage: "clock")
                         .monospacedDigit()
                 }
                 .buttonStyle(TintedPillStyle(height: Theme.Size.segmentTrack))

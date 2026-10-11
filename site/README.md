@@ -5,7 +5,7 @@ No build step, scripts, cookies or third-party requests.
 
 ## Before publishing
 
-Replace the placeholders in `privacy.html` and `support.html`: `[CONTACT EMAIL]`,
+Replace the placeholders in `privacy.html` and `support.html`: the contact address (set to yakovetskyi@icloud.com; change it if the owner prefers another),
 `[OWNER NAME OR BUSINESS NAME]`, `[DATE, filled in when published]`, and the bracketed `[OWNER: …]`
 notes (check the account-deletion menu path against the released build and add any regulator wording you need).
 `grep -rn '\[' site/*.html` must show none.

@@ -168,7 +168,7 @@ final class PhoneExtrasUITests: XCTestCase {
         let field = emptyApp.textFields["extras-new-title"]
         field.tap(); field.typeText(String(repeating: "a", count: 41))
         XCTAssertFalse(emptyApp.buttons["extras-add"].isEnabled)
-        XCTAssertTrue(emptyApp.staticTexts["Use a name of 1–40 characters on one line."].exists)
+        XCTAssertTrue(emptyApp.staticTexts["Use a name of 1 to 40 characters on one line."].exists)
     }
 
     @MainActor func testHistoricalExtrasAreLockedUntilEditAndRelockOnSelection() {

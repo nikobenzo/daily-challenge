@@ -228,7 +228,7 @@ struct AuthView: View {
                        valid: ProofModel.isCompleteCode(model.code), monospaced: true, contentType: .oneTimeCode,
                        focus: $focus, equals: .code) { focus = .newPassword }
                 .accessibilityLabel("Code from the email")
-                .help("Code sent to \(address). \(ProofModel.codeLengths.lowerBound)–\(ProofModel.codeLengths.upperBound) digits.")
+                .help("Code sent to \(address). \(ProofModel.codeLengths.lowerBound) to \(ProofModel.codeLengths.upperBound) digits.")
                 .onChange(of: model.code) { _, value in filterCode(value) }
             GlassField(symbol: "lock", placeholder: "New password", text: $model.newPassword, secure: true,
                        contentType: .newPassword, focus: $focus, equals: .newPassword) { focus = .confirmation }
@@ -273,7 +273,7 @@ struct AuthView: View {
     }
 
     private var codeRule: some View {
-        Label("\(ProofModel.codeLengths.lowerBound)–\(ProofModel.codeLengths.upperBound) digits", systemImage: "clock")
+        Label("\(ProofModel.codeLengths.lowerBound) to \(ProofModel.codeLengths.upperBound) digits", systemImage: "clock")
             .font(Theme.Fonts.caption).foregroundStyle(Theme.textSecondary)
             .help(model.authStep.subtitle)
     }
@@ -451,7 +451,7 @@ struct RuleChips: View {
         let rules: [(String, String, Bool)] = [
             ("10+", "at least \(ProofModel.minimumPasswordLength) characters", password.count >= ProofModel.minimumPasswordLength),
             ("Aa", "a letter", password.contains { $0.isASCII && $0.isLetter }),
-            ("0–9", "a number", password.contains { $0.isASCII && $0.isNumber }),
+            ("0-9", "a number", password.contains { $0.isASCII && $0.isNumber }),
             ("Match", "both passwords match", !confirmation.isEmpty && password == confirmation)
         ]
         HStack(spacing: 8) {

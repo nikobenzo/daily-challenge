@@ -130,7 +130,7 @@ No data is shared with a third party for its own purposes: Supabase and Resend p
 water reminders are local notifications and send nothing off the device.
 
 Owner checks before answering: (1) whether to list the per-install device ID (listed here to be safe; it is
-app-generated and not an advertising or hardware identifier); (2) the Health & Fitness choice between "Health" and
+created by the app and not an advertising or hardware identifier); (2) the Health & Fitness choice between "Health" and
 "Fitness"; the data is self-logged habit data, not HealthKit, so pick the closest and keep it consistent with the
 policy; (3) that no SDK has been added since this draft. The app declares no `PrivacyInfo.xcprivacy`
 privacy manifest in `iOS/`; see [Open items](#open-items).
@@ -155,7 +155,7 @@ they read the same data and need no extra sign-in.
 Account deletion: Account > Delete account (permanently deletes the account and its data).
 Notifications are optional local water reminders, requested only when the user turns them on.
 No ads, tracking, purchases or third-party analytics. Backend: Supabase (account and challenge sync).
-Contact: [CONTACT EMAIL]
+Contact: yakovetskyi@icloud.com
 ```
 
 Create the demo account on the production server before submitting, seed a few days of entries, and keep it
@@ -200,7 +200,7 @@ cannot be submitted.
 
 ## Open items
 
-- **Account deletion** must be present in the submitted build (guideline 5.1.1(v)); it is being built separately. The privacy policy and review notes describe it as Account > Delete account; confirm the wording.
+- **Account deletion** is in the iPhone app (Account > Delete account, landed in 184a0f1), matching the privacy policy and review notes. Re-check the wording against the released build.
 - **Privacy manifest:** `iOS/` has no `PrivacyInfo.xcprivacy`. The app uses `UserDefaults`, a required-reason API Apple expects a declared reason for. Add one before submitting.
 - **Contact email, owner name, published URLs and demo account** are placeholders.
 - The GitHub repository description still says "75 Hard"; the public repository text is not part of the app but is visible next to the Pages site. Change it in the repository settings.

@@ -296,7 +296,7 @@ struct PasswordRules: View {
         let rules: [(String, String, Bool)] = [
             ("10+", "at least \(AuthModel.minimumPasswordLength) characters", password.count >= AuthModel.minimumPasswordLength),
             ("Aa", "a letter", password.contains { $0.isASCII && $0.isLetter }),
-            ("0–9", "a number", password.contains { $0.isASCII && $0.isNumber }),
+            ("0-9", "a number", password.contains { $0.isASCII && $0.isNumber }),
             ("Match", "both passwords match", !confirmation.isEmpty && password == confirmation)
         ]
         HStack(spacing: 8) {

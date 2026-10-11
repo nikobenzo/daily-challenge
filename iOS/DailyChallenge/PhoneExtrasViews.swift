@@ -198,7 +198,7 @@ struct PhoneManageExtrasView: View {
 
     private func titleHelp(_ title: String) -> some View {
         Text(title.isEmpty || Challenge.extraTitle(title) != nil
-             ? "One line, 1–40 characters." : "Use a name of 1–40 characters on one line.")
+             ? "One line, 1 to 40 characters." : "Use a name of 1 to 40 characters on one line.")
             .font(Theme.Fonts.caption)
             .foregroundStyle(!title.isEmpty && Challenge.extraTitle(title) == nil ? Theme.danger : Theme.textTertiary)
             .fixedSize(horizontal: false, vertical: true)
