@@ -160,7 +160,8 @@ Three resizable home-screen widgets, the iPhone set drawn in the Android app's d
 (Jetpack Glance, `android/app/src/main/java/app/dailychallenge/android/widget/`):
 
 - **Water** (2 by 2, wider sizes put the jug beside the total): the Today jug and today's total
-  out of 4,000 ml. **+ 450 ml** records a 450 ml pour, also past the goal. **−** undoes today's
+  out of that day's water goal (4,000 ml unless changed). **+** shows and records that day's glass
+  size (450 ml unless changed), also past the goal. **−** undoes today's
   latest pour, whatever its amount or the device it came from; with no pour today it is drawn
   disabled and a stale tap records nothing.
 - **Daily requirements** (4 by 2): the day badge, the streak and Today's ring gauges for workout,
@@ -180,7 +181,7 @@ Daily Challenge". They never show another account's data.
 **How a tap is recorded.** A tap runs in the app's own process without opening the app, the
 session or the network. Inside the store lock it reads the published widget account and today's
 stored state at the tap's own time in the challenge's zone, decides the action from that (never
-from what the widget last drew), and records one of the existing actions (`pour(450)`,
+from what the widget last drew, so + pours that day's stored glass size), and records one of the existing actions (`pour`,
 `undoLatestPour`, `setHabit`, `setDiet`, `setExtra`) into the normal history and pending queue,
 exactly as an in-app edit would. The app's own edits, setup and sync merge load the store fresh
 inside the same lock (`StoreLock`, a JVM lock plus an advisory file lock), so a widget tap and an
@@ -207,11 +208,11 @@ switch at their next redraw (a tap, opening the app, a sync or midnight).
 
 **Accessibility.** Every control has a spoken label with its state ("Workout, 45 min, home or gym,
 done", "Undo latest pour, no pour today", "Stretch, late, pending"); the water total is spoken as
-"Water, 1,350 of 4,000 millilitres". Text follows the system font size; at large sizes the pour
+"Water, 1,350 of 4,000 millilitres" (the day's own goal). Text follows the system font size; at large sizes the pour
 label shortens, extra titles truncate (and are still spoken in full) and fewer extras rows are
 shown, with the "Open all" link kept.
 
-**Limits.** A pour from a widget that reaches 4,000 ml stops water reminders when the app next runs
+**Limits.** A pour from a widget that reaches the day's goal stops water reminders when the app next runs
 (the reload after a tap does it when the app is in memory). Undo after midnight acts on the new day.
 
 ### Widget fixtures (Debug builds)
