@@ -118,16 +118,63 @@ adb shell am start -S -n app.dailychallenge.android/.MainActivity --es fixture t
 
 Screens: `signIn`, `createAccount`, `forgotPassword`, `confirmCode`, `resetPassword`, `checking`,
 `setup`, `today`, `todayComplete`, `history`, `account`, `todayExtras`, `extrasCap`,
-`historyExtras`, `historyExtrasEditing`, `accountExtras`, `historyCarryOver`. Options:
+`historyExtras`, `historyExtrasEditing`, `accountExtras`, `historyCarryOver`, and for
+[daily goals](#daily-goals-and-repeating-extras) `todayGoals`, `historyGoals`, `historyBeforeGoals`,
+`accountGoals`, `goalsServerUpdate` and `todayRepeating`. Options:
 `--es appearance light|dark|system`, `--ez manageExtras true`, `--ez deleteAccount true`,
-`--ez deleteAccountConfirm true`, `--ez deletionFails true`. Capture with
+`--ez deleteAccountConfirm true`, `--ez deletionFails true`, `--ez dailyGoals true` (opens
+Account > Daily goals), `--es editGoal water|workout|walk|diet|bibleReading` (opens that editor,
+in setup or in Daily goals) and `--es editExtra <title>` (with `manageExtras`, edits that extra). Capture with
 `adb exec-out screencap -p > docs/screenshots/android/<name>.png`. Launching without a fixture
 opens the real app again.
 
 Screenshots: `docs/screenshots/android/` holds captures from the Redmi Note 7 (Android 10,
 MIUI 12.5, 1080 by 2340) taken with these fixture launches, plus `launch-signed-out.png`, the
 real configured app opened with no account. Those in `emulator/` come from an Android 10
-(API 29) emulator at 1080 by 2280.
+(API 29) emulator at 1080 by 2280. Daily goals and repeating extras are in `goals/` (Android 10
+emulator in Light, Dark and large text, `android16-*` from an Android 16 emulator, and the
+placed widgets as `widgets-goals-*`).
+
+## Daily goals and repeating extras
+
+Phases P2, P4 and P5 of the custom goals plan on Android (the shared rules are in
+[tracker interface](tracker-interface.md#custom-daily-targets-and-recurring-extras-shared-rules)).
+
+- **Setup** lists the daily five as rows with the standard targets filled in ("Water 4,000 ml ·
+  450 ml glass", "Workout 45 min · home or gym", "Walk 45 min", "Diet Your own rules", "Bible 10
+  pages"). Accepting them is still one tap, **Start challenge**, which writes nothing new. Tapping a
+  row opens its editor sheet; chosen goals are recorded on the start day with the challenge.
+- **Editors.** Water: the daily goal in 250 ml steps from 1,000 to 5,000 ml, and the glass (250,
+  330, 450, 500, 750 ml or Other, 50 to 1,000 ml and no more than the goal), with "The + button
+  adds 330 ml. About 10 glasses a day." Activities and reading: the plan's presets (Yoga, Pilates,
+  Stretching, Run, Cycle, Audiobook and so on) or Custom, a name of 1 to 20 characters, an optional
+  amount with its unit (minutes 5 to 300, pages 1 to 500, chapters 1 to 50, km 1 to 100, miles 1 to
+  60, steps 1,000 to 50,000) typed or stepped, and one of 12 icons, with a "Shows as" preview. Diet
+  takes a name only (Diet, Clean eating, No sugar, No alcohol or Custom). Done stays off while a
+  value is outside its limits, and the field says why.
+- **Account > Daily goals** shows today's five; a change is recorded on today and the sheet says
+  "Changes apply from today, Fri 9 Oct. Earlier days keep the goals they had."
+- **Everywhere else** reads the selected day's own targets: Today's rings (a name too long for its ring
+  scales down, then truncates; TalkBack reads it in full), the jug and total ("/ 3,000"), the +
+  button (that day's glass, also when correcting a past day), History's day card and pills, the
+  widgets (names, icons, spoken text, + and the goal), and reminders, whose notification and
+  status no longer name 4,000 ml. The Activity list names each change: "Walk changed to Yoga ·
+  30 min", "Water goal changed to 3,000 ml, 330 ml glass", "Diet renamed to No sugar",
+  "“Stretch” repeats every day".
+- **Repeating extras.** Manage extras adds and edits an extra with Once, Every day, Weekdays,
+  Choose days (at least one) or Every N days (2 to 30); name and repeat save in one commit, from
+  today. Rows show the rule ("Every day", "Weekdays", "Fridays", "Mon, Wed, Fri"); Today and
+  History show it beside repeating items ("every day") and TalkBack reads it ("Stretch, every
+  day"); the Extras widget speaks it. A repeating item is never Late; one-offs keep carry-over.
+- **Server without the update.** Until the owner applies
+  `20261012000100_custom_targets_action_kinds.sql`, the first upload holding a goal or repeat
+  change is refused (`23514` on the old action-kind check). The app keeps it and everything after
+  it pending, applies the change on this phone, and says "The server needs the update for custom
+  goals and repeating extras before your changes can sync. Your entries are safe on this phone."
+  (Account, Sync), with a note in Daily goals. They upload once the migration is applied.
+- **Icon ids** (shared with the other apps): `dumbbell`, `walk`, `run`, `bike`, `swim`, `yoga`,
+  `pilates`, `stretch`, `bible`, `book`, `headphones`, `study`, `leaf` (diet's default). An id this
+  version does not know shows the slot's default icon.
 
 ## How it matches the other apps
 
@@ -164,8 +211,9 @@ Three resizable home-screen widgets, the iPhone set drawn in the Android app's d
   size (450 ml unless changed), also past the goal. **−** undoes today's
   latest pour, whatever its amount or the device it came from; with no pour today it is drawn
   disabled and a stale tap records nothing.
-- **Daily requirements** (4 by 2): the day badge, the streak and Today's ring gauges for workout,
-  walk, clean diet and Bible reading. Tapping workout, walk or Bible ticks or unticks it. Diet
+- **Daily requirements** (4 by 2): the day badge, the streak and Today's ring gauges for the two
+  activities, diet and reading, with that day's names and icons (workout, walk, clean diet and
+  Bible reading unless changed). Tapping workout, walk or Bible ticks or unticks it. Diet
   flips between pending and clean; a diet marked missed in the app shows a dashed red ring, and
   tapping it opens the app instead of changing it.
 - **Extras** (4 by 2, taller sizes show more rows, up to all ten): today's checklist with Late
@@ -206,8 +254,8 @@ themselves, even with the app closed. On Android 10 and 11 they draw the colours
 the app redraws them when the theme or font size changes while it is running, and otherwise they
 switch at their next redraw (a tap, opening the app, a sync or midnight).
 
-**Accessibility.** Every control has a spoken label with its state ("Workout, 45 min, home or gym,
-done", "Undo latest pour, no pour today", "Stretch, late, pending"); the water total is spoken as
+**Accessibility.** Every control has a spoken label with its state ("Workout, 45 minutes, home or gym,
+done", "Yoga, 30 minutes, pending", "Undo latest pour, no pour today", "Stretch, late, pending", "Morning stretch, every day, pending"); the water total is spoken as
 "Water, 1,350 of 4,000 millilitres" (the day's own goal). Text follows the system font size; at large sizes the pour
 label shortens, extra titles truncate (and are still spoken in full) and fewer extras rows are
 shown, with the "Open all" link kept.
@@ -226,7 +274,7 @@ adb shell am start -n app.dailychallenge.android/.MainActivity --es widgetFixtur
 A widget fixture writes synthetic history (day 12 in Jersey, relative to today) into the app's
 `WidgetFixtures` folder, points the widgets at it and redraws them; taps then record there.
 `off` points them back at the real history. Fixtures: `partial`, `empty`, `complete`, `over`,
-`missedDiet`, `extrasMany`, `signedOut`, `noChallenge`, `off`. `--es pinWidget
+`missedDiet`, `extrasMany`, `goals` (custom daily goals and a repeating extra), `signedOut`, `noChallenge`, `off`. `--es pinWidget
 water|requirements|extras` asks the launcher to place one (it shows "Add to home screen"). The
 real session and history are never read or changed. Release builds contain none of this.
 
@@ -245,14 +293,24 @@ refusal after sign-out, account switch and deletion, a binding for another chall
 the tap time in a New York challenge, an app edit after a widget tap, a tap during an in-flight
 sync, and threads racing app edits. `WidgetLayoutTest` (`./gradlew connectedDebugAndroidTest`)
 checks the Glance layouts: what each widget shows and speaks, which tap or app link each control
-carries, extras rows at small, tall and large-text sizes, and the signed-out state.
+carries, extras rows at small, tall and large-text sizes, the signed-out state, a day's custom
+goals (names, spoken text, + and goal) and a repeating extra's spoken rule.
+
+Daily goals: `GoalsEditingTest` (`:core:test`) covers + pouring the selected day's glass, goals
+changed from today with earlier days unchanged, only changed values written, an invalid goal
+refusing all of them, repeating extras added and rescheduled in one commit with the cap, and a
+server without the custom goals update keeping everything pending until it is applied;
+`SupabaseWireTest` maps that refusal. `FixtureScreensTest` (`connectedDebugAndroidTest`) runs
+setup with chosen goals, the editors' limits, Daily goals from today with History keeping earlier
+days, the audit, the unmigrated server notice, repeating extras on Today and the repeat editor.
 
 ## Owner acceptance checklist (real account, real phone)
 
-Workers verified signed-out screens, setup and tracker flows on fixtures only, with the 13 UI
-tests on an Android 10 emulator; no real account, sign-in, sync or deletion was used. Use a disposable account for these, never the family's
+Workers verified signed-out screens, setup, daily goals and tracker flows on fixtures only, with
+the 33 UI tests on an Android 10 emulator; no real account, sign-in, sync or deletion was used. Use a disposable account for these, never the family's
 real history, and confirm the hosted migrations are deployed first (`20261010000100_extras_action_kinds`
-for extras, `20261011000100_account_deletion` for deletion; see
+for extras, `20261011000100_account_deletion` for deletion, `20261012000100_custom_targets_action_kinds`
+for daily goals and repeating extras; see
 [production sync](production-sync.md)).
 
 1. Build with the real `.env.local`, install, open: the sign-in screen appears (not
@@ -271,7 +329,7 @@ for extras, `20261011000100_account_deletion` for deletion; see
 8. Extras: add, tick, rename and archive; check carry-over and "Late" on the next day, and that
    the other devices show the same.
 9. Water reminders: turn on, allow notifications, set a short interval; a "Water check-in"
-   notification arrives on time with the app closed, and stops once 4,000 ml is reached. On MIUI,
+   notification arrives on time with the app closed, and stops once the day's water goal is reached. On MIUI,
    also check Settings > Apps > Daily Challenge > Battery saver set to "No restrictions" and
    Autostart allowed, since MIUI can hold back alarms for restricted apps; reboot and confirm
    reminders continue.
@@ -279,6 +337,15 @@ for extras, `20261011000100_account_deletion` for deletion; see
 11. **Delete account** on the disposable account: both confirmations, then the sign-in screen
     says the account was deleted; signing in again fails, and the Mac/iPhone are signed out.
     Offline, deletion fails and changes nothing.
+12. Daily goals (after the custom goals migration): in Account > Daily goals set water to 3,000 ml
+    with a 330 ml glass and the walk to Yoga, 30 min. Today and the widgets show them at once, +
+    pours 330 ml, and yesterday in History still shows 4,000 ml and Walk. After a sync the Mac and
+    iPhone (on builds with daily goals) show the same; older builds show the standard labels and
+    say entries were skipped. In Manage extras make an extra repeat on weekdays: it shows on each
+    weekday, never Late. Before the migration is applied, the same change shows "The server needs
+    the update for custom goals and repeating extras" and keeps it pending, with nothing lost.
+13. Setup on a second disposable account: change a goal before **Start challenge**; the other
+    devices show it from the start day.
 
 ### Widgets (real account, real phones)
 
