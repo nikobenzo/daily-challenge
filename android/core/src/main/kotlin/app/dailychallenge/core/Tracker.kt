@@ -69,6 +69,10 @@ class Tracker(
     private var failures = 0
     private var generation = UUID.randomUUID()
     private var hasActivated = false
+    private val lock = StoreLock(directory)
+
+    /** After every committed change (edits, setup, sync merges): the app redraws its widgets. */
+    var onCommitted: (() -> Unit)? = null
 
     private fun setStore(value: ChallengeStore?) {
         store = value
@@ -326,11 +330,18 @@ class Tracker(
 
     fun setDiet(state: DietState) = record { Action.SetDiet(state) }
 
+    /**
+     * Loads the store fresh inside the [StoreLock]: a widget tap may have committed since this
+     * tracker last read it, and committing an older snapshot would drop that tap.
+     */
     private fun <T> transact(operation: (ChallengeStore) -> T): T {
-        if (ownerID == null) throw ChallengeStoreException(ChallengeStoreError.NOT_STARTED)
-        val candidate = store ?: throw ChallengeStoreException(ChallengeStoreError.NOT_STARTED)
-        val result = operation(candidate)
-        setStore(candidate)
+        val owner = ownerID ?: throw ChallengeStoreException(ChallengeStoreError.NOT_STARTED)
+        if (store == null) throw ChallengeStoreException(ChallengeStoreError.NOT_STARTED)
+        val result = lock.withLock {
+            val candidate = ChallengeStore(owner, directory)
+            operation(candidate).also { setStore(candidate) }
+        }
+        onCommitted?.invoke()
         return result
     }
 
