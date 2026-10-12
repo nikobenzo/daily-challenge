@@ -43,7 +43,7 @@ runs ([site/README.md](../site/README.md)); open both URLs before pasting them.
 A 75-day challenge tracker: water, workout, walk, diet and reading, every day.
 ```
 
-## Full description (1,378 / 4,000)
+## Full description (1,479 / 4,000)
 
 ```text
 Daily Challenge keeps a 75-day challenge simple. Every day you have five things to do. Log them in a few taps, and see your streak grow.
@@ -59,6 +59,9 @@ See your current streak out of 75, your best streak, and milestones along the wa
 
 EXTRAS
 Add up to ten personal to-dos of your own. They carry over, marked Late, until you finish them. Extras never count towards a complete day or your streak.
+
+HOME SCREEN WIDGETS
+Log water, tick your requirements and check off extras without opening the app.
 
 HISTORY
 Open the monthly calendar to see every day at a glance, and tap Edit this day to fix a missed tick or a pour you forgot.
@@ -78,8 +81,8 @@ No ads, no tracking and no analytics. You can delete your account and all of you
 Free, with no purchases.
 ```
 
-The lengths are checked by the snippet at the end of this file. Unlike the iPhone text, there is no
-widgets paragraph: the Android app has no widgets yet. Add one when they ship.
+The lengths are checked by the snippet at the end of this file. Unlike the iPhone text, the
+widgets paragraph has no Lock Screen line: Android has home-screen widgets only.
 
 ## Graphics
 
