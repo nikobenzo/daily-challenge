@@ -1,4 +1,5 @@
 import AppKit
+import ChallengeCore
 import ChallengeSyncKit
 import Observation
 import SwiftUI
@@ -11,6 +12,8 @@ final class WelcomeModel {
     var celebrating = false
     /// "Mon 12 Oct", the challenge's first day, once it starts.
     var startLabel = ""
+    /// The goals chosen in setup, once it starts; the standard five until then.
+    var targets = Challenge.Targets.standard
     /// Opens the popup at the sign-in screen (or setup once signed in).
     var openPopup: (AuthStep?) -> Void = { _ in }
     var close: () -> Void = {}
@@ -142,6 +145,7 @@ final class WelcomeController: NSObject, NSWindowDelegate {
 
     private func celebrate(in window: NSWindow) {
         model.startLabel = tracker.challenge.map { tracker.dates.label($0.startDate) } ?? ""
+        model.targets = tracker.challenge.map { $0.targets(on: $0.startDate) } ?? .standard
         model.celebrating = true
         // In front of other windows, without taking the keyboard from the popup.
         window.orderFront(nil)

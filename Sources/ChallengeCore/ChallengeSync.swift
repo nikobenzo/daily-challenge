@@ -1,9 +1,11 @@
 import Foundation
 
 public enum ChallengeSyncError: LocalizedError {
-    case conflictingChallenge, invalidRecord, wrongOwner, serverNeedsTimeZoneUpdate
+    case conflictingChallenge, invalidRecord, wrongOwner, serverNeedsTimeZoneUpdate, serverNeedsCustomGoalsUpdate
     public var errorDescription: String? {
         switch self {
+        case .serverNeedsCustomGoalsUpdate:
+            "The server needs the update for custom goals and repeating extras before these changes can sync (see docs/production-sync.md). Nothing is lost: they stay saved here and upload once it is applied."
         case .serverNeedsTimeZoneUpdate:
             "The server needs the timezone update before this challenge can sync (see docs/production-sync.md). Your entries are safe on this Mac."
         case .conflictingChallenge: "Different challenges were found for this account. Sync stopped; both histories are preserved."

@@ -12,6 +12,8 @@ struct TrackerView: View {
     @State private var setupDate = Date()
     /// Defaults to this Mac's zone; fixtures inject one for deterministic renders.
     @State var setupTimeZone = TimeZone.current
+    /// The standard five until changed in setup's rows.
+    @State var setupTargets = Challenge.Targets.standard
     @State private var isVisible = false
     @State private var choosingStart = false
     @State private var showingRules = false
@@ -240,7 +242,8 @@ struct TrackerView: View {
 
     private var setupRules: String {
         "Days follow \(setupTimeZone.identifier), midnight to midnight, including daylight saving. "
-            + "The start date and time zone can't be changed after you start.\n\n"
+            + "The start date and time zone can't be changed after you start. "
+            + "Your daily goals can change later in Account; earlier days keep the goals they had.\n\n"
             + "Closed unfinished days break the streak. Earlier days need explicit entries. Tracking continues beyond 75.\n\n"
             + "Use the same app account on both Macs. Activity saves locally first, then syncs. Appearance stays on this Mac."
     }
@@ -255,15 +258,16 @@ struct TrackerView: View {
                     .font(Theme.Fonts.link).foregroundStyle(Theme.textSecondary)
             }
             .padding(.top, Theme.Space.xl)
-            HStack(spacing: 0) {
-                requirement("drop.fill", "4,000 ml", detail: "4 litres of water", tint: Theme.water)
-                requirement("dumbbell", "45 min", detail: "45-minute workout · home or gym")
-                requirement("figure.walk", "45 min", detail: "45-minute walk")
-                requirement("leaf", "Clean diet", detail: "Clean diet · your own rules")
-                requirement("book", "10 pages", detail: "10 Bible pages")
+            VStack(alignment: .leading, spacing: 2) {
+                Eyebrow(text: "Your daily five", font: .system(size: 12, weight: .bold))
+                    .accessibilityAddTraits(.isHeader)
+                GoalRows(targets: setupTargets, save: { setupTargets = $0; return nil })
+                Text("Change any of these now, or later in Account.")
+                    .font(Theme.Fonts.caption).foregroundStyle(Theme.textSecondary)
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, Theme.Space.l)
+            .padding(.horizontal, Theme.Size.sectionHorizontal)
+            .padding(.top, Theme.Space.m)
+            .padding(.bottom, Theme.Space.s)
             HairlineDivider()
             VStack(spacing: 0) {
                 SettingRow(symbol: "calendar", title: "Start") {
@@ -291,7 +295,7 @@ struct TrackerView: View {
             }
             .padding(.horizontal, Theme.Size.sectionHorizontal)
             HairlineDivider()
-            Button { model.startChallenge(on: setupDate, timeZone: setupTimeZone) } label: {
+            Button { model.startChallenge(on: setupDate, timeZone: setupTimeZone, targets: setupTargets) } label: {
                 Label("Start challenge", systemImage: "play.fill")
             }
             .buttonStyle(PrimaryPillStyle(height: Theme.Size.largePill, font: Theme.Fonts.appName))
@@ -300,20 +304,6 @@ struct TrackerView: View {
         }
     }
 
-    private func requirement(_ symbol: String, _ label: String, detail: String, tint: Color = Theme.textPrimary) -> some View {
-        VStack(spacing: 8) {
-            Circle().stroke(Theme.ringTrack, lineWidth: Theme.Size.ringStroke)
-                .padding(Theme.Size.ringStroke / 2)
-                .frame(width: Theme.Size.ring, height: Theme.Size.ring)
-                .overlay { Image(systemName: symbol).font(.system(size: 18, weight: .semibold)).foregroundStyle(tint) }
-            Eyebrow(text: label, color: Theme.textSecondary, font: Theme.Fonts.ringLabel, tracking: Theme.Tracking.ringLabel)
-                .lineLimit(1).fixedSize()
-        }
-        .frame(maxWidth: .infinity)
-        .help(detail)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(detail)
-    }
 }
 
 /// "Thu 8 Oct ›" value chip used by setup rows.

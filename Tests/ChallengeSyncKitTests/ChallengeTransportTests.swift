@@ -25,6 +25,8 @@ private final class WireFixture: @unchecked Sendable {
         var pageSizes: [Int] = []
         /// A server the owner has not yet given the timezone migration.
         var unmigrated = false
+        /// A server with the extras update but not the custom goals one (v2 action kinds).
+        var withoutGoalKinds = false
         var challengeSelects: [String] = []
         /// Event IDs stored as rows this app can't read, like rows written before the server checks.
         var unreadableIDs: Set<String> = []
@@ -92,6 +94,14 @@ private final class ChallengeWireProtocol: URLProtocol {
                     if url.path == "/rest/v1/challenges" {
                         state.header = state.header ?? (json as? [String: Any])
                     } else if url.path == "/rest/v1/challenge_events", let events = json as? [[String: Any]] {
+                        let goalKinds: Set<String> = ["setTarget", "setWater", "scheduleExtra"]
+                        if state.withoutGoalKinds, events.contains(where: { event in
+                            ((event["activity"] as? [String: Any])?["action"] as? [String: Any])?.keys.contains(where: goalKinds.contains) == true
+                        }) {
+                            // PostgreSQL refuses the whole statement, so the batch stores nothing.
+                            return (400, ["code": "23514", "details": NSNull(), "hint": NSNull(),
+                                          "message": "new row for relation \"challenge_events\" violates check constraint \"challenge_events_action_kind_v2\""])
+                        }
                         for var event in events {
                             if event["received_at"] != nil { state.invalidWire = true }
                             guard let activity = event["activity"] as? [String: Any], activity["recordedAt"] is NSNumber,
@@ -306,4 +316,43 @@ private final class ChallengeWireProtocol: URLProtocol {
         #expect(state.pageSizes == [2, 2])
         #expect(!state.invalidWire)
     }
+}
+
+/// A Mac with the goals editor before the owner applies the custom goals migration: the
+/// upload is refused with a clear message, nothing local is lost, and once the server is
+/// updated the same pending changes upload.
+@Test @MainActor func serverWithoutTheGoalsUpdateRefusesGoalChangesClearlyAndKeepsThemPending() async throws {
+    let host = "\(UUID().uuidString.lowercased()).invalid"
+    let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    defer { WireFixture.shared.remove(host); try? FileManager.default.removeItem(at: directory) }
+    WireFixture.shared.change(host) { $0.withoutGoalKinds = true }
+    let client = wireClient(host: host)
+    let session = try await client.auth.signIn(email: "fixture@example.invalid", password: "synthetic-only")
+    let now = Date(timeIntervalSince1970: 1_791_460_800)
+    let transport = SupabaseChallengeTransport(client: client)
+    let model = TrackerModel(directory: directory, clock: { now })
+    model.configureSync(transport)
+    model.activate(ownerID: session.user.id)
+    await model.sync(force: true)
+    model.startChallenge(on: now, timeZone: TimeZone(identifier: "Europe/London")!)
+    await model.sync(force: true)
+    #expect(model.syncError == nil, "Settings and ordinary events still sync")
+    model.addWater()
+    var targets = model.todayTargets
+    targets.walk = Challenge.Target(name: "Yoga", amount: 30, unit: .minutes, icon: "yoga")
+    #expect(model.setTargets(targets) == nil, "The change saves locally")
+    await model.sync(force: true)
+    #expect(model.syncError == ChallengeSyncError.serverNeedsCustomGoalsUpdate.errorDescription)
+    #expect(model.syncError?.contains("docs/production-sync.md") == true)
+    #expect(model.store?.pendingCount == 2, "The pour and the goal wait together, intact")
+    #expect(model.todayTargets.walk.name == "Yoga")
+    #expect(model.summary?.waterMillilitres == 450)
+    WireFixture.shared.change(host) { state in
+        #expect(!state.events.contains { (($0["activity"] as? [String: Any])?["action"] as? [String: Any])?["setTarget"] != nil })
+        state.withoutGoalKinds = false
+    }
+    await model.sync(force: true)
+    #expect(model.syncError == nil)
+    #expect(model.store?.pendingCount == 0, "Everything uploads once the server is updated")
+    WireFixture.shared.change(host) { #expect(!$0.invalidWire) }
 }

@@ -1,3 +1,4 @@
+import ChallengeCore
 import SwiftUI
 
 /// The welcome window's content: where the app lives, then the four steps with the
@@ -64,7 +65,7 @@ struct WelcomeView: View {
             .padding(.horizontal, Theme.Size.sectionHorizontal)
             VStack(spacing: 2) {
                 ForEach(WelcomeStep.allCases, id: \.self) { step in
-                    WelcomeStepRow(step: step, current: model.step)
+                    WelcomeStepRow(step: step, current: model.step, targets: model.targets)
                 }
             }
             .padding(.horizontal, 14)
@@ -108,9 +109,7 @@ struct WelcomeView: View {
             Text("You're all set").font(Theme.Fonts.screenTitle).tracking(Theme.Tracking.screenTitle)
                 .foregroundStyle(Theme.textPrimary)
                 .accessibilityAddTraits(.isHeader)
-            Text(model.startLabel.isEmpty
-                 ? "Your challenge has started. Click the drop in the menu bar each day to log water and the four habits."
-                 : "Day 1 is \(model.startLabel). Click the drop in the menu bar each day to log water and the four habits.")
+            Text(WelcomeStepRow.started(startLabel: model.startLabel, targets: model.targets))
                 .font(Theme.Fonts.field).foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
@@ -129,6 +128,7 @@ struct WelcomeView: View {
 struct WelcomeStepRow: View {
     let step: WelcomeStep
     let current: WelcomeStep
+    var targets = Challenge.Targets.standard
 
     private var done: Bool { step < current }
     private var isCurrent: Bool { step == current }
@@ -139,7 +139,7 @@ struct WelcomeStepRow: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(Self.title(step)).font(Theme.Fonts.rowLabel)
                     .foregroundStyle(done ? Theme.textSecondary : Theme.textPrimary)
-                Text(Self.detail(step)).font(Theme.Fonts.caption).foregroundStyle(Theme.textSecondary)
+                Text(Self.detail(step, targets: targets)).font(Theme.Fonts.caption).foregroundStyle(Theme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                 if step == .logDay { habits.padding(.top, 4) }
             }
@@ -150,7 +150,7 @@ struct WelcomeStepRow: View {
             RoundedRectangle(cornerRadius: 16, style: .continuous).fill(isCurrent ? Theme.accentTint : .clear)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Step \(step.rawValue + 1) of \(WelcomeStep.allCases.count), \(done ? "done" : isCurrent ? "current" : "to do"): \(Self.title(step)). \(Self.detail(step))")
+        .accessibilityLabel("Step \(step.rawValue + 1) of \(WelcomeStep.allCases.count), \(done ? "done" : isCurrent ? "current" : "to do"): \(Self.title(step)). \(Self.detail(step, targets: targets))")
     }
 
     private var disc: some View {
@@ -169,12 +169,13 @@ struct WelcomeStepRow: View {
         .frame(width: 28, height: 28)
     }
 
-    /// The five daily requirements, as on the setup screen.
+    /// The daily five's icons: generic rings, then the chosen goals' icons once set.
     private var habits: some View {
-        HStack(spacing: 8) {
-            ForEach(["drop.fill", "dumbbell", "figure.walk", "leaf", "book"], id: \.self) { symbol in
+        let symbols = ["drop.fill"] + Challenge.TargetSlot.allCases.map { Goals.symbol($0, targets[$0]) }
+        return HStack(spacing: 8) {
+            ForEach(Array(symbols.enumerated()), id: \.offset) { index, symbol in
                 Image(systemName: symbol).font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(symbol == "drop.fill" ? Theme.water : Theme.textSecondary)
+                    .foregroundStyle(index == 0 ? Theme.water : Theme.textSecondary)
                     .frame(width: 26, height: 26)
                     .background(Circle().fill(Theme.controlFill))
             }
@@ -185,18 +186,27 @@ struct WelcomeStepRow: View {
         switch step {
         case .menuBar: "Find the drop in your menu bar"
         case .account: "Create an account or sign in"
-        case .startDate: "Pick your start date"
+        case .startDate: "Choose your daily five and a start date"
         case .logDay: "Log your day"
         }
     }
 
-    static func detail(_ step: WelcomeStep) -> String {
+    static func detail(_ step: WelcomeStep, targets: Challenge.Targets = .standard) -> String {
         switch step {
         case .menuBar: "Daily Challenge has no Dock icon. Click the drop near the clock to open it."
         case .account: "Your account keeps your challenge in sync on every device."
-        case .startDate: "Choose day 1 and your time zone. Both stay fixed once you start."
-        case .logDay: "4 litres of water, a 45-minute workout, a 45-minute walk, a clean diet and 10 Bible pages, every day."
+        case .startDate: "The standard five are filled in; change any of them. Day 1 and your time zone stay fixed once you start."
+        case .logDay:
+            targets == .standard
+                ? "Unless you choose your own: \(Goals.sentence(targets)), every day."
+                : "\(Goals.sentence(targets)), every day."
         }
+    }
+
+    /// The celebration: "Day 1 is Mon 12 Oct. Click the drop in the menu bar each day to log …".
+    static func started(startLabel: String, targets: Challenge.Targets) -> String {
+        let opening = startLabel.isEmpty ? "Your challenge has started." : "Day 1 is \(startLabel)."
+        return "\(opening) Click the drop in the menu bar each day to log \(Goals.sentence(targets))."
     }
 }
 

@@ -34,6 +34,7 @@ struct AccountView: View {
             .padding(.vertical, 10)
             HairlineDivider()
             VStack(spacing: 4) {
+                DailyGoalsSettings(model: tracker)
                 ExtrasSettingRow(model: tracker)
                 BackupSettingsView(model: tracker)
                 account

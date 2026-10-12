@@ -439,6 +439,46 @@ public final class TrackerModel {
     }
 }
 
+// MARK: Daily goals
+
+/// Changing the targets after the start. Like extras settings they belong to the challenge
+/// rather than a day, so they are recorded on today (in the challenge's zone) without the
+/// History correction lock, and apply from today on: earlier days keep theirs.
+extension TrackerModel {
+    /// The targets in force today: what Account › Daily goals shows and edits.
+    public var todayTargets: Challenge.Targets { challenge?.targets(on: now) ?? .standard }
+
+    /// Records one change per slot (and water) that differs from today's targets, all in one
+    /// commit. Nil once saved (or when nothing changed), otherwise why nothing was saved.
+    public func setTargets(_ targets: Challenge.Targets) -> String? {
+        refresh()
+        guard let challenge = store?.challenge else { return ChallengeStoreError.notStarted.localizedDescription }
+        let changes = targets.changes(from: challenge.targets(on: now))
+        guard !changes.isEmpty else { return nil }
+        return recordSettings(changes)
+    }
+
+    /// Sets how an extra repeats from today on. Nil once saved, otherwise the reason.
+    public func scheduleExtra(_ id: UUID, _ schedule: Challenge.ExtraSchedule) -> String? {
+        refresh()
+        guard store?.challenge != nil else { return ChallengeStoreError.notStarted.localizedDescription }
+        return recordSettings([schedule.action(for: id)])
+    }
+
+    /// Settings changes on today in one commit: all of them or none.
+    fileprivate func recordSettings(_ actions: [Challenge.Action]) -> String? {
+        do {
+            try transact { try $0.record(all: actions, on: now, at: now) }
+            requestSync()
+            return nil
+        } catch let error as ChallengeError {
+            return error.localizedDescription
+        } catch {
+            return "Could not save. Your previous history is intact. \(error.localizedDescription)"
+        }
+    }
+}
+
 // MARK: Extras
 
 /// Personal to-dos beside the five requirements that carry over until done; they never

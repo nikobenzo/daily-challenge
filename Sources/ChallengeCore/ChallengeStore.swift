@@ -119,6 +119,24 @@ public struct ChallengeStore {
         return result
     }
 
+    /// Several actions on one day in one commit: all of them are saved, or none (the
+    /// Daily goals editor changes water and a slot together). Returns the recorded IDs;
+    /// an action that changes nothing records nothing.
+    @discardableResult
+    public mutating func record(all actions: [Challenge.Action], on date: Date, at now: Date) throws -> [UUID] {
+        guard var next = snapshot else { throw ChallengeStoreError.notStarted }
+        var recorded: [UUID] = []
+        for action in actions {
+            let eventID = nextID(at: now, snapshot: next)
+            if let result = try next.challenge.record(action, on: date, at: now, id: eventID, deviceID: next.deviceID) {
+                next.pendingIDs!.insert(result)
+                recorded.append(result)
+            }
+        }
+        if !recorded.isEmpty { try commit(next) }
+        return recorded
+    }
+
     public mutating func merge(record remote: ChallengeRecord, events: [ChallengeEvent]) throws {
         guard remote.ownerID == ownerID else { throw ChallengeSyncError.wrongOwner }
         guard let adopted = remote.emptyChallenge else { throw ChallengeSyncError.invalidRecord }

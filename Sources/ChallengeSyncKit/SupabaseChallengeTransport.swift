@@ -46,10 +46,25 @@ import Supabase
             + events.filter { $0.activity.undonePourID != nil }
         for offset in stride(from: 0, to: ordered.count, by: 200) {
             try await validate(ownerID)
-            try await client.from("challenge_events")
-                .upsert(Array(ordered[offset..<min(offset + 200, ordered.count)]),
-                        onConflict: "owner_id,id", ignoreDuplicates: true).execute()
+            let batch = Array(ordered[offset..<min(offset + 200, ordered.count)])
+            do {
+                try await client.from("challenge_events").upsert(batch, onConflict: "owner_id,id", ignoreDuplicates: true).execute()
+            } catch let error as PostgrestError where Self.isMissingCustomGoalsKinds(error, batch: batch) {
+                throw ChallengeSyncError.serverNeedsCustomGoalsUpdate
+            }
         }
+    }
+
+    /// A server with the extras update but not the custom goals one refuses a target or
+    /// schedule with its v2 action-kind check (23514). The whole batch waits, intact.
+    public static func isMissingCustomGoalsKinds(_ error: PostgrestError, batch: [ChallengeEvent]) -> Bool {
+        error.code == "23514" && error.message.contains("challenge_events_action_kind_v2")
+            && batch.contains { event in
+                switch event.activity.action {
+                case .setTarget, .setWater, .scheduleExtra: true
+                default: false
+                }
+            }
     }
 
     public func fetchEvents(ownerID: UUID, challengeID: UUID) async throws -> RemoteEvents {

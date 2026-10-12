@@ -275,8 +275,9 @@ struct HistoryTrackerView: View {
         return (slotTarget, water)
     }
 
-    /// "Walk changed to Yoga · 30 min", "Water goal changed to 3,000 ml, 330 ml glass".
-    private func targetChange(_ activity: Challenge.Activity) -> String {
+    /// "Walk changed to Yoga · 30 min", "Water goal changed to 3,000 ml, 330 ml glass";
+    /// `short` fits a row: "Water now 3,000 ml · 330 ml glass".
+    private func targetChange(_ activity: Challenge.Activity, short: Bool = false) -> String {
         switch activity.action {
         case .setTarget(let slot, let name, let amount, let unit, let icon):
             let new = Challenge.Target(name: name, amount: amount, unit: unit, icon: icon)
@@ -287,7 +288,8 @@ struct HistoryTrackerView: View {
             let old = previous(activity).water ?? Challenge.Targets.standard.water
             if old.goal == goal { return "Glass changed to \(pour.formatted()) ml" }
             if old.glass == pour { return "Water goal changed to \(goal.formatted()) ml" }
-            return "Water goal changed to \(goal.formatted()) ml, \(pour.formatted()) ml glass"
+            return short ? "Water now \(goal.formatted()) ml · \(pour.formatted()) ml glass"
+                : "Water goal changed to \(goal.formatted()) ml, \(pour.formatted()) ml glass"
         default: return ""
         }
     }
@@ -322,6 +324,16 @@ struct HistoryTrackerView: View {
     private func changeMonth(_ offset: Int) {
         month = model.dates.calendar.date(byAdding: .month, value: offset, to: month)!
     }
+    /// An Activity row's words, as shown (the tests read them through this).
+    static func auditText(_ model: TrackerModel, _ activity: Challenge.Activity) -> String {
+        HistoryTrackerView(model: model).shortDescription(activity)
+    }
+
+    /// Its tooltip and VoiceOver words.
+    static func auditDescription(_ model: TrackerModel, _ activity: Challenge.Activity) -> String {
+        HistoryTrackerView(model: model).description(activity)
+    }
+
     private func shortDescription(_ activity: Challenge.Activity) -> String {
         switch activity.action {
         case .pour(let amount): "+\(amount.formatted()) ml"
@@ -331,7 +343,7 @@ struct HistoryTrackerView: View {
         case .defineExtra(let id, let title): addsExtra(activity, id: id) ? "Added “\(title)”" : "Renamed “\(title)”"
         case .archiveExtra(let id): "Archived \(extraTitle(id))"
         case .setExtra(let id, let completed): "\(extraTitle(id)) \(completed ? "done" : "not done")"
-        case .setTarget, .setWater: targetChange(activity)
+        case .setTarget, .setWater: targetChange(activity, short: true)
         case .scheduleExtra(let id, let weekdays, let every): repeatChange(id, weekdays: weekdays, every: every)
         }
     }
