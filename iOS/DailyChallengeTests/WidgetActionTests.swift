@@ -120,6 +120,26 @@ private let afternoon = instant("2026-10-09T14:00:00Z")
     #expect(try h.stored().challenge?.summary(on: yesterday, asOf: afternoon).waterMillilitres == 1_000)
 }
 
+@Test @MainActor func plusPoursTheExecutionDaysGlassSizeAndTheEntryCarriesThatDaysGoal() throws {
+    let h = Harness(); defer { h.cleanup() }
+    let yesterday = Challenge.calendar(for: jersey).date(byAdding: .day, value: -1, to: afternoon)!
+    let drawn = try h.request(.pour) // rendered before either change
+    // Dated yesterday, so it applies today too.
+    _ = try h.app.transaction(ownerID: h.owner) { try $0.record(.setWater(goal: 3_000, pour: 250), on: yesterday, at: afternoon) }
+    _ = try h.recorder().perform(drawn)
+    #expect(try h.today().waterMillilitres == 250)
+    // Changed again today: plus reads the glass under the lock, never the rendered amount.
+    h.clock.value = afternoon.addingTimeInterval(60)
+    _ = try h.app.transaction(ownerID: h.owner) { try $0.record(.setWater(goal: 3_000, pour: 330), on: h.clock.value, at: h.clock.value) }
+    for _ in 0..<9 { _ = try h.recorder().perform(drawn) }
+    #expect(try h.today().waterMillilitres == 250 + 9 * 330)
+    let entry = ChallengeWidgetProvider(store: PhoneSharedStore(root: h.root)).entries(now: h.clock.value)[0]
+    #expect(entry.summary?.targets.water == .init(goal: 3_000, glass: 330))
+    #expect(entry.summary?.waterComplete == true) // 3,220 ml meets today's 3,000 ml goal
+    // Yesterday keeps its own goal.
+    #expect(try h.stored().challenge?.summary(on: yesterday, asOf: h.clock.value).waterComplete == false)
+}
+
 @Test @MainActor func minusUndoesTodaysLatestSyncedCustomPourThenStops() throws {
     let h = Harness(); defer { h.cleanup() }
     h.tracker.addWater(450)

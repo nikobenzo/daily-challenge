@@ -79,10 +79,9 @@ enum WidgetActionError: LocalizedError {
 /// Durable widget writes without an app process or a SwiftUI binding. Every action is
 /// an existing `Challenge.Action` recorded through `ChallengeStore.record` in the
 /// shared store's locked fresh-load transaction, so the app's next foreground or
-/// refresh sync uploads it like any other pending event.
+/// refresh sync uploads it like any other pending event. Plus pours the execution day's
+/// glass size from the stored targets, never the amount the widget last drew.
 struct WidgetActionRecorder {
-    static let pourMillilitres = 450
-
     let store: PhoneSharedStore
     var clock: () -> Date = Date.init
     var onCommitted: () -> Void = {}
@@ -102,7 +101,7 @@ struct WidgetActionRecorder {
             let action: Challenge.Action
             switch request.action {
             case .pour:
-                action = .pour(Self.pourMillilitres)
+                action = .pour(today.targets.water.glass)
             case .undoPour:
                 guard !today.activePours.isEmpty else { return .unchanged }
                 action = .undoLatestPour

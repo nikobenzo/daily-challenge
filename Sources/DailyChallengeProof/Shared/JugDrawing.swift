@@ -7,6 +7,8 @@ import SwiftUI
 struct JugDrawing: View {
     let millilitres: Int
     let level: Double
+    /// The day's water goal: over it, droplets sit under the jug.
+    var goal = 4_000
     var slosh: Double = 0
     var spill: Double = 0
     /// Widgets: a flat surface drawn as the gradient under a scaled mask, a transform that
@@ -43,7 +45,7 @@ struct JugDrawing: View {
                 .overlay(RoundedRectangle(cornerRadius: 3).stroke(outline, lineWidth: 2))
                 .frame(width: 28, height: 8)
                 .offset(x: 19, y: 3)
-            if millilitres > 4_000 {
+            if millilitres > goal {
                 HStack(spacing: 34) {
                     ForEach(0..<2) { _ in Image(systemName: "drop.fill").font(.system(size: 8)) }
                 }

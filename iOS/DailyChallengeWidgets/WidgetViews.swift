@@ -175,12 +175,15 @@ struct WidgetDateLabel: View {
 /// no slosh, pour or celebration clocks in the extension. Reduce Motion dissolves.
 struct WidgetJugView: View {
     let millilitres: Int
+    /// The day's goal: the jug holds it, and droplets show past it.
+    var goal = Challenge.Targets.standard.water.goal
     let height: CGFloat
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
         let canonical = CGSize(width: Theme.Size.jug.width + 8, height: Theme.Size.jug.height + 14)
         let scale = height / canonical.height
-        let jug = JugDrawing(millilitres: millilitres, level: min(1, max(0, Double(millilitres) / 4_000)), framedWater: true)
+        let jug = JugDrawing(millilitres: millilitres, level: min(1, max(0, Double(millilitres) / Double(goal))), goal: goal,
+                             framedWater: true)
         Group {
             if reduceMotion { jug.id(millilitres).transition(.opacity) } else { jug }
         }
@@ -198,7 +201,9 @@ struct WaterWidgetView: View {
     @Environment(\.widgetFamily) private var widgetFamily
     private var family: WidgetFamily { familyOverride ?? widgetFamily }
     private var amount: Int { entry.summary?.waterMillilitres ?? 0 }
-    private var goalMet: Bool { amount >= 4_000 }
+    /// That day's own goal and glass size: 4,000 and 450 ml unless changed.
+    private var water: Challenge.WaterTarget { entry.summary?.targets.water ?? Challenge.Targets.standard.water }
+    private var goalMet: Bool { amount >= water.goal }
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// Totals roll to the new value in step with the jug.
     private var rolling: ContentTransition { reduceMotion ? .opacity : .numericText(value: Double(amount)) }
@@ -217,15 +222,15 @@ struct WaterWidgetView: View {
         VStack(alignment: .leading, spacing: 6) {
             WidgetHeading(title: "Water", entry: entry)
             HStack(alignment: .center, spacing: 8) {
-                WidgetJugView(millilitres: amount, height: 68)
+                WidgetJugView(millilitres: amount, goal: water.goal, height: 68)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(amount.formatted()).font(WidgetFont.smallTotal).monospacedDigit()
                         .lineLimit(1).minimumScaleFactor(0.6).contentTransition(rolling)
-                    Text("ml / 4,000").font(WidgetFont.caption)
+                    Text("ml / \(water.goal.formatted())").font(WidgetFont.caption)
                         .foregroundStyle(goalMet ? Theme.doneText : Theme.textSecondary)
                         .lineLimit(1).minimumScaleFactor(0.7)
                 }
-                .modifier(WaterValue(amount: amount))
+                .modifier(WaterValue(amount: amount, goal: water.goal))
                 .animation(reduceMotion ? WidgetMotion.dissolve : WidgetMotion.fill, value: amount)
             }
             Spacer(minLength: 0)
@@ -235,7 +240,7 @@ struct WaterWidgetView: View {
 
     private var medium: some View {
         HStack(spacing: 14) {
-            WidgetJugView(millilitres: amount, height: 124)
+            WidgetJugView(millilitres: amount, goal: water.goal, height: 124)
             VStack(alignment: .leading, spacing: 0) {
                 WidgetHeading(title: "Water", entry: entry)
                 Spacer(minLength: 2)
@@ -243,14 +248,14 @@ struct WaterWidgetView: View {
                     HStack(alignment: .firstTextBaseline, spacing: 5) {
                         Text("\(amount.formatted()) ml").font(WidgetFont.total).tracking(-0.6).monospacedDigit()
                             .lineLimit(1).minimumScaleFactor(0.6).layoutPriority(1).contentTransition(rolling)
-                        Text("/ 4,000").font(WidgetFont.caption)
+                        Text("/ \(water.goal.formatted())").font(WidgetFont.caption)
                             .foregroundStyle(goalMet ? Theme.doneText : Theme.textSecondary).lineLimit(1)
                     }
-                    Text(goalMet ? "Goal met · 4 L" : "\((4_000 - amount).formatted()) ml to go · 4 L goal")
+                    Text(goalMet ? "Goal met · \(litres(water.goal))" : "\((water.goal - amount).formatted()) ml to go · \(litres(water.goal)) goal")
                         .font(WidgetFont.caption).foregroundStyle(goalMet ? Theme.doneText : Theme.textSecondary)
                         .lineLimit(1).minimumScaleFactor(0.8).contentTransition(rolling)
                 }
-                .modifier(WaterValue(amount: amount))
+                .modifier(WaterValue(amount: amount, goal: water.goal))
                 .animation(reduceMotion ? WidgetMotion.dissolve : WidgetMotion.fill, value: amount)
                 Spacer(minLength: 6)
                 HStack(spacing: 10) { minus(size: 40); plus(height: 40) }
@@ -265,7 +270,7 @@ struct WaterWidgetView: View {
     /// Primary gradient pill until the goal is met, then the quieter tinted pill (as in Today).
     private func plus(height: CGFloat) -> some View {
         WidgetControl(request: entry.binding.map { WidgetActionRequest(.pour, binding: $0) }) {
-            PourPill(height: height, quiet: goalMet)
+            PourPill(height: height, quiet: goalMet, glass: water.glass)
         }
     }
 
@@ -284,25 +289,34 @@ struct WaterWidgetView: View {
     }
 }
 
-/// Water's spoken value: the actual millilitres (uncapped) against the 4,000 ml goal.
+/// Water's spoken value: the actual millilitres (uncapped) against that day's goal.
 private struct WaterValue: ViewModifier {
     let amount: Int
+    let goal: Int
     func body(content: Content) -> some View {
         content.accessibilityElement(children: .ignore)
-            .accessibilityLabel("Water, \(amount.formatted()) of 4,000 millilitres" + (amount > 4_000 ? ", goal exceeded" : amount == 4_000 ? ", goal met" : ""))
+            .accessibilityLabel("Water, \(amount.formatted()) of \(goal.formatted()) millilitres"
+                + (amount > goal ? ", goal exceeded" : amount == goal ? ", goal met" : ""))
     }
 }
 
+/// "4 L", "2.5 L", "3.25 L": a goal in whole 250 ml steps as litres.
+private func litres(_ goal: Int) -> String {
+    (Double(goal) / 1_000).formatted(.number.precision(.fractionLength(0...2))) + " L"
+}
+
+/// + the day's glass size (450 ml unless changed).
 struct PourPill: View {
     let height: CGFloat
     let quiet: Bool
+    var glass = Challenge.Targets.standard.water.glass
     @Environment(\.widgetRenderingMode) private var mode
     @Environment(\.widgetAccentedOverride) private var override
     var body: some View {
         let accented = override ?? (mode == .accented)
         HStack(spacing: 5) {
             Image(systemName: "plus").font(.system(size: 13, weight: .heavy))
-            Text("450 ml").font(WidgetFont.pill).lineLimit(1).minimumScaleFactor(0.7)
+            Text("\(glass.formatted()) ml").font(WidgetFont.pill).lineLimit(1).minimumScaleFactor(0.7)
         }
         .dynamicTypeSize(...DynamicTypeSize.xLarge)
         .foregroundStyle(accented || quiet ? Theme.textPrimary : .white)
@@ -319,18 +333,19 @@ struct PourPill: View {
         }
         .contentShape(Capsule(style: .circular))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Add 450 ml")
+        .accessibilityLabel("Add \(glass.formatted()) ml")
     }
 }
 
 /// D-W2: Lock Screen water only, read-only, redacted while locked (privacy-sensitive
 /// surface). Litres to one decimal, rounded down so 3,990 ml never reads 4.0; the ring
-/// clamps at the goal while the number stays uncapped.
+/// clamps at that day's goal while the number stays uncapped.
 struct WaterAccessoryView: View {
     let entry: ChallengeWidgetEntry
     var body: some View {
         let amount = entry.summary?.waterMillilitres ?? 0
-        Gauge(value: Double(min(amount, 4_000)), in: 0...4_000) {
+        let goal = entry.summary?.targets.water.goal ?? Challenge.Targets.standard.water.goal
+        Gauge(value: Double(min(amount, goal)), in: 0...Double(goal)) {
             Image(systemName: "drop.fill")
         } currentValueLabel: {
             Text((Double(amount) / 1_000).formatted(.number.precision(.fractionLength(1)).rounded(rule: .down)))
@@ -338,7 +353,7 @@ struct WaterAccessoryView: View {
         .gaugeStyle(.accessoryCircular)
         .widgetAccentable()
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Water, \(amount.formatted()) of 4,000 millilitres")
+        .accessibilityLabel("Water, \(amount.formatted()) of \(goal.formatted()) millilitres")
     }
 }
 

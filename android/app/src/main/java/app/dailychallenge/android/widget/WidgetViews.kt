@@ -64,6 +64,7 @@ import app.dailychallenge.core.DayStatus
 import app.dailychallenge.core.DietState
 import app.dailychallenge.core.Extra
 import app.dailychallenge.core.Habit
+import app.dailychallenge.core.Targets
 import app.dailychallenge.core.WidgetState
 import app.dailychallenge.core.WidgetTap
 import java.text.NumberFormat
@@ -77,7 +78,7 @@ import kotlin.math.roundToInt
 // ring gauges with their icons and state glyphs, the extras checklist and the same words. Every
 // state has a glyph as well as a colour (check, dash, ×), and every control speaks its state.
 
-/** Water: the jug and today's total with + 450 ml and − (today's latest pour). */
+/** Water: the jug and today's total toward today's goal, with + (today's glass size) and − (today's latest pour). */
 class WaterWidget : GlanceAppWidget() {
     override val sizeMode: SizeMode = SizeMode.Exact
     override suspend fun provideGlance(context: Context, id: GlanceId) = provideContent {
@@ -250,16 +251,16 @@ private fun Heading(title: String, state: WidgetState.Ready) {
 // MARK: Water
 
 /**
- * The Today jug filled to the total, clamped at full; past 4,000 ml two drops show below it.
- * Android 12 and later draw the drawable on the home screen (colours follow the theme there);
- * earlier versions get a picture drawn now, in the current theme.
+ * The Today jug filled to the total, clamped at full: it holds that day's goal, and past the
+ * goal two drops show below it. Android 12 and later draw the drawable on the home screen
+ * (colours follow the theme there); earlier versions get a picture drawn now, in the current theme.
  */
 @Composable
-private fun WidgetJug(millilitres: Long, height: Dp) {
+private fun WidgetJug(millilitres: Long, goal: Long, height: Dp) {
     val context = LocalContext.current
     val width = height * (96f / 126f)
-    val res = if (millilitres > 4_000) R.drawable.widget_jug_over else R.drawable.widget_jug
-    val level = jugLevel(millilitres)
+    val res = if (millilitres > goal) R.drawable.widget_jug_over else R.drawable.widget_jug
+    val level = jugLevel(millilitres, goal)
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         val views = RemoteViews(context.packageName, R.layout.widget_jug).apply {
             setImageViewResource(R.id.widget_jug_image, res)
@@ -272,8 +273,8 @@ private fun WidgetJug(millilitres: Long, height: Dp) {
 }
 
 /** The water clips from the bottom of the 126-high frame; the vessel spans 10 to 110 in it. */
-fun jugLevel(millilitres: Long): Int {
-    val fill = (millilitres / 4_000.0).coerceIn(0.0, 1.0)
+fun jugLevel(millilitres: Long, goal: Long = Targets.STANDARD.water.goal): Int {
+    val fill = (millilitres / goal.toDouble()).coerceIn(0.0, 1.0)
     return if (fill <= 0.0) 0 else ((16 + 100 * fill) / 126 * 10_000).roundToInt()
 }
 
@@ -290,8 +291,12 @@ private fun picture(context: Context, @DrawableRes res: Int, level: Int, size: D
     return bitmap
 }
 
-private fun waterSpoken(ml: Long): String = "Water, ${number.format(ml)} of 4,000 millilitres" +
-    when { ml > 4_000 -> ", goal exceeded"; ml == 4_000L -> ", goal met"; else -> "" }
+private fun waterSpoken(ml: Long, goal: Long): String = "Water, ${number.format(ml)} of ${number.format(goal)} millilitres" +
+    when { ml > goal -> ", goal exceeded"; ml == goal -> ", goal met"; else -> "" }
+
+/** "4 L", "2.5 L", "3.25 L": a goal in whole 250 ml steps as litres. */
+private fun litres(goal: Long): String =
+    NumberFormat.getNumberInstance(Locale.getDefault()).apply { maximumFractionDigits = 2 }.format(goal / 1_000.0) + " L"
 
 @Composable
 internal fun WaterContent(state: WidgetState.Ready) {
@@ -303,6 +308,7 @@ private fun WaterSmall(state: WidgetState.Ready) {
     val p = paint()
     val size = LocalSize.current
     val ml = state.summary.waterMillilitres
+    val goal = state.summary.targets.water.goal
     val inner = DpSize(size.width - 24.dp, size.height - 24.dp)
     val showHeading = inner.height >= 118.dp
     val buttons = 36.dp
@@ -317,9 +323,10 @@ private fun WaterSmall(state: WidgetState.Ready) {
     val stacked = beside < 48f && above > beside
     val jug = if (stacked) above else beside
     val total: @Composable () -> Unit = {
-        Column(GlanceModifier.semantics { contentDescription = waterSpoken(ml) }) {
+        Column(GlanceModifier.semantics { contentDescription = waterSpoken(ml, goal) }) {
             Label(number.format(ml), Fonts.smallTotal, p.of(R.color.widget_text_primary), FontWeight.Bold)
-            Label("ml / 4,000", Fonts.caption, p.of(if (ml >= 4_000) R.color.widget_done_text else R.color.widget_text_secondary))
+            Label("ml / ${number.format(goal)}", Fonts.caption,
+                p.of(if (state.summary.waterComplete) R.color.widget_done_text else R.color.widget_text_secondary))
         }
     }
     Column(GlanceModifier.fillMaxSize()) {
@@ -330,7 +337,7 @@ private fun WaterSmall(state: WidgetState.Ready) {
         if (stacked) {
             Column(GlanceModifier.fillMaxWidth().defaultWeight(), verticalAlignment = Alignment.CenterVertically) {
                 if (jug >= 34f) {
-                    WidgetJug(ml, jug.dp)
+                    WidgetJug(ml, goal, jug.dp)
                     Spacer(GlanceModifier.height(6.dp))
                 }
                 total()
@@ -338,7 +345,7 @@ private fun WaterSmall(state: WidgetState.Ready) {
         } else {
             Row(GlanceModifier.fillMaxWidth().defaultWeight(), verticalAlignment = Alignment.CenterVertically) {
                 if (jug >= 34f) {
-                    WidgetJug(ml, jug.dp)
+                    WidgetJug(ml, goal, jug.dp)
                     Spacer(GlanceModifier.width(8.dp))
                 }
                 total()
@@ -358,23 +365,24 @@ private fun WaterMedium(state: WidgetState.Ready) {
     val p = paint()
     val size = LocalSize.current
     val ml = state.summary.waterMillilitres
+    val goal = state.summary.targets.water.goal
     val innerHeight = size.height - 24.dp
-    val goalMet = ml >= 4_000
+    val goalMet = state.summary.waterComplete
     Row(GlanceModifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
-        WidgetJug(ml, min(innerHeight.value, 124f).dp)
+        WidgetJug(ml, goal, min(innerHeight.value, 124f).dp)
         Spacer(GlanceModifier.width(14.dp))
         Column(GlanceModifier.defaultWeight().fillMaxSize()) {
             if (innerHeight >= 118.dp) Heading("Water", state)
             Spacer(GlanceModifier.defaultWeight())
-            Column(GlanceModifier.semantics { contentDescription = waterSpoken(ml) }) {
+            Column(GlanceModifier.semantics { contentDescription = waterSpoken(ml, goal) }) {
                 Row(verticalAlignment = Alignment.Bottom) {
                     Label("${number.format(ml)} ml", Fonts.total, p.of(R.color.widget_text_primary), FontWeight.Bold)
                     Spacer(GlanceModifier.width(5.dp))
-                    Label("/ 4,000", Fonts.caption, p.of(if (goalMet) R.color.widget_done_text else R.color.widget_text_secondary),
+                    Label("/ ${number.format(goal)}", Fonts.caption, p.of(if (goalMet) R.color.widget_done_text else R.color.widget_text_secondary),
                         modifier = GlanceModifier.padding(bottom = 4.dp))
                 }
                 if (innerHeight >= 100.dp) {
-                    Label(if (goalMet) "Goal met · 4 L" else "${number.format(4_000 - ml)} ml to go · 4 L goal", Fonts.caption,
+                    Label(if (goalMet) "Goal met · ${litres(goal)}" else "${number.format(goal - ml)} ml to go · ${litres(goal)} goal", Fonts.caption,
                         p.of(if (goalMet) R.color.widget_done_text else R.color.widget_text_secondary))
                 }
             }
@@ -388,22 +396,26 @@ private fun WaterMedium(state: WidgetState.Ready) {
     }
 }
 
-/** + 450 ml: the primary pill until the goal is met, then the quieter tinted one (as in Today). */
+/**
+ * + today's glass size (450 ml unless changed): the primary pill until the goal is met, then the
+ * quieter tinted one (as in Today). The tap pours the glass size stored for the tap's day.
+ */
 @Composable
 private fun PourPill(state: WidgetState.Ready, height: Dp, modifier: GlanceModifier, width: Dp = Dp.Infinity) {
     val p = paint()
+    val glass = number.format(state.summary.targets.water.glass)
     // Narrow widgets and large text: a smaller label, then the number alone (it still speaks "Add 450 ml").
     // "450 ml" in bold is about half an em per character, plus the icon, its gap and some air.
-    fun fits(size: TextUnit, icon: Float) = 6 * 0.52f * size.value * p.fontScale + icon + 8 <= width.value
+    fun fits(size: TextUnit, icon: Float) = (glass.length + 3) * 0.52f * size.value * p.fontScale + icon + 8 <= width.value
     val compact = !fits(Fonts.pill, icon = 20f)
-    val label = if (fits(13.sp, icon = 15f)) "450 ml" else "450"
+    val label = if (fits(13.sp, icon = 15f)) "$glass ml" else glass
     val quiet = state.summary.waterComplete
     val foreground = if (quiet) R.color.widget_text_primary else R.color.widget_on_primary
     Row(
         modifier.height(height)
             .background(ImageProvider(R.drawable.widget_shape_capsule), colorFilter = p.tint(if (quiet) R.color.widget_control_fill else R.color.widget_primary))
             .clickable(tap(WidgetTap.Pour, state))
-            .semantics { contentDescription = "Add 450 ml" },
+            .semantics { contentDescription = "Add $glass ml" },
         horizontalAlignment = Alignment.CenterHorizontally, verticalAlignment = Alignment.CenterVertically,
     ) {
         Image(ImageProvider(R.drawable.widget_ic_add), null, GlanceModifier.size(if (compact) 13.dp else 16.dp), colorFilter = p.tint(foreground))

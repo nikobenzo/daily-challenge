@@ -65,6 +65,27 @@ class WidgetActionsTest {
     }
 
     @Test
+    fun pourUsesTheTapDaysGlassSizeAndGoalFromTheStoredTargets() {
+        val (store, binding) = setUp()
+        val yesterday = ChallengeCalendar(jersey).addDays(now, -1) + 3_600
+        // A change dated yesterday applies today; the widget drew before it was made.
+        val drawn = WidgetState.load(directory, now) as WidgetState.Ready
+        assertEquals(WaterTarget(4_000, 450), drawn.summary.targets.water)
+        store.record(Action.SetWater(3_000, 250), yesterday, yesterday)
+        actions().perform(WidgetTap.Pour, binding)
+        assertEquals(250L, today().waterMillilitres)
+        // Changed again today: the tap reads today's glass inside the lock, never the drawn one.
+        reopened().record(Action.SetWater(3_000, 330), now - 60, now - 60)
+        repeat(9) { actions().perform(WidgetTap.Pour, binding) }
+        assertEquals(250L + 9 * 330L, today().waterMillilitres)
+        val ready = WidgetState.load(directory, now) as WidgetState.Ready
+        assertEquals(WaterTarget(3_000, 330), ready.summary.targets.water)
+        assertTrue(ready.summary.waterComplete) // 3,220 ml meets today's 3,000 ml goal
+        // Yesterday keeps its own goal: 250 ml there is far from 3,000.
+        assertFalse(reopened().challenge!!.summary(yesterday, now).waterComplete)
+    }
+
+    @Test
     fun undoWithoutAPourTodayRecordsNothing() {
         val (store, binding) = setUp()
         // Yesterday's pour is never touched from today's widget.

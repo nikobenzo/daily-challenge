@@ -176,7 +176,8 @@ sealed interface WidgetOutcome {
  * Widget taps without the app's screens or session: each is an existing [Action] recorded
  * through [ChallengeStore.record] inside the [StoreLock] transaction the app's own edits and
  * sync merge use, so a tap and an in-app edit never lose or duplicate each other. The day
- * comes from the tap time in the challenge's zone, never from what the widget last drew.
+ * comes from the tap time in the challenge's zone, never from what the widget last drew, and
+ * so does + : it pours that day's glass size from the stored targets.
  * No network: the app's sync uploads the pending queue later.
  */
 class WidgetActions(private val directory: File, private val clock: () -> Double = ChallengeTime::now) {
@@ -193,7 +194,7 @@ class WidgetActions(private val directory: File, private val clock: () -> Double
         val today = challenge.summary(now, now)
         if (today.status == DayStatus.OUTSIDE_CHALLENGE || today.status == DayStatus.FUTURE) return@withLock WidgetOutcome.Refused
         val action = when (tap) {
-            WidgetTap.Pour -> Action.Pour(POUR_MILLILITRES)
+            WidgetTap.Pour -> Action.Pour(today.targets.water.glass)
             WidgetTap.UndoPour -> if (today.activePours.isEmpty()) return@withLock WidgetOutcome.Unchanged else Action.UndoLatestPour
             is WidgetTap.ToggleHabit -> Action.SetHabit(tap.habit, tap.habit !in today.completedHabits)
             WidgetTap.ToggleDiet -> when (today.diet) {
@@ -207,9 +208,5 @@ class WidgetActions(private val directory: File, private val clock: () -> Double
             }
         }
         store.record(action, now, now)?.let { WidgetOutcome.Recorded(it) } ?: WidgetOutcome.Unchanged
-    }
-
-    companion object {
-        const val POUR_MILLILITRES = 450L
     }
 }
