@@ -1,6 +1,6 @@
 # Daily Challenge — Agent Handoff
 
-Updated: 11 October 2026. Project: the owner's clone of this repository.
+Updated: 12 October 2026. Project: the owner's clone of this repository.
 
 ## Start here: production sync implemented; owner deployment and two-Mac acceptance next
 
@@ -11,6 +11,10 @@ Updated: 11 October 2026. Project: the owner's clone of this repository.
 The owner must follow the [exact hosted migration/install steps](docs/production-sync.md#owner-only-hosted-deployment) and [two-Mac acceptance checklist](docs/production-sync.md#two-actual-macs-owner-acceptance-checklist). Deploy the new migration once, sync the Mac containing the real challenge first, then let the second Mac adopt it. Preserve the existing login, start date, 900 ml plus later entries, and identifiers below. Never reset history to resolve a conflict. No cloud CI is configured.
 
 Appearance backing and the device-local setting remain implemented; [appearance verification](docs/appearance-verification.md) still distinguishes in-process renders from real-popup acceptance. Automated testing must never quit or replace the running app.
+
+## Mac first launch and welcome window (12 October)
+
+The empty "Daily Challenge Settings" window that every launch showed since the popup moved to its own panel came from the SwiftUI `Settings { EmptyView() }` scene, the app's only scene. The app now starts from `main.swift` with no SwiftUI `App`, so nothing opens a window it did not create. A first-run welcome window (four steps, a menu-bar sketch, confetti when the challenge starts) shows until this Mac is signed in with a challenge, never for existing users or upgraded installs. Diagnosis, decision table, regression script and evidence: [first launch](docs/tracker-interface.md#first-launch). Not released: the owner bumps `VERSION` and publishes as in [releases](docs/releases.md).
 
 ## Android app, phase 1 (12 October)
 
@@ -111,7 +115,8 @@ Fixture tests cover validation, round trips, undo, derived recalculation, backup
 | `Sources/DailyChallengeProof/Shared/WaterJugView.swift`, `Shared/CompletionEffect.swift`, `PopupVisibility.swift`, `MacPlatform.swift` | Finite motion schedules, local celebration ledger, noninteractive effects and native visibility gating |
 | `Sources/DailyChallengeProof/HistoryTrackerView.swift` | Calendar, correction unlock, audit |
 | `Sources/DailyChallengeProof/ExtrasViews.swift` | Today's Extras section, History's extras pill, Manage extras popover and Account row |
-| `Sources/DailyChallengeProof/DailyChallengeProofApp.swift`, `AuthView.swift` | App entry (models, `PopupController`; drop.circle, filled while open); signed-out sheet (`ProofView`) and auth steps |
+| `Sources/DailyChallengeProof/main.swift`, `DailyChallengeProofApp.swift`, `AuthView.swift` | AppKit entry with no SwiftUI `App` or scene, `AppDelegate` (models, `PopupController`; drop.circle, filled while open) and the hidden `AppMenu`; signed-out sheet (`ProofView`) and auth steps |
+| `Sources/DailyChallengeProof/FirstRun.swift`, `WelcomeWindow.swift`, `WelcomeView.swift`, `Confetti.swift` | First-run decision, welcome window and its finite confetti ([first launch](docs/tracker-interface.md#first-launch)) |
 | `Sources/DailyChallengeProof/AccountView.swift`, `AdvancedDiagnosticsView.swift` | Signed-in Account tab as hairline-separated settings rows; sync line rephrases `TrackerModel.syncState` (same source as the footer); test-message diagnostics moved unchanged behind a collapsed Advanced disclosure |
 | `Sources/DailyChallengeProof/SoftwareUpdates.swift` | Sparkle updater, Dock-less window activation, About-group update row |
 | `Sources/DailyChallengeProof/ProofModel.swift` | The Mac's account object: `AuthModel` under the legacy Keychain names, plus the proof queue/polling diagnostics; not production challenge sync |
@@ -137,6 +142,7 @@ swift test
 bash scripts/test-sync-security.sh
 bash scripts/build-proof.sh
 bash scripts/capture-real-popup.sh   # after an --adhoc build; isolated copy, see docs/appearance-verification.md
+bash scripts/test-first-launch.sh    # after an --adhoc build; no empty window at launch, welcome window states
 bash scripts/test-update-fixture.sh --ed-key-file <throwaway key>  # isolated Sparkle probe, see docs/update-verification.md
 # Quit the running older app first, then:
 open "build/Daily Challenge.app"

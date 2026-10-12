@@ -130,7 +130,7 @@ The script downloads the [latest release](https://github.com/nikobenzo/daily-cha
 
 1. Download the zip from the [latest release](https://github.com/nikobenzo/daily-challenge/releases/latest).
 2. Unzip it and drag **Daily Challenge** to Applications.
-3. Open it, then click the drop icon in the menu bar.
+3. Open it. A welcome window shows the first steps; after that, click the drop icon in the menu bar.
 
 </details>
 

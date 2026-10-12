@@ -92,6 +92,18 @@ with an expanded-interface delegate), which:
 Owning the window removes all three. `TrackerPopup` still reports the sheet's 420 pt minimum
 width (`popupRootReportsTheSheetWidth`), so no host can squeeze it again.
 
+## Welcome window
+
+The first-run window (`WelcomeView.swift`, [first launch](tracker-interface.md#first-launch)) is
+the one ordinary window: 460 pt wide, titled with a transparent title bar, on the same glass
+(system blur under `Theme.glass`, `solidGlass` with Reduce Transparency). A menu-bar sketch with
+the real `drop.circle` glyph and a "lives here" callout comes first; three finite pulses mark the
+icon (none with Reduce Motion). The steps are 28 pt discs: green check (done), blue gradient
+numeral (current, on an `accentTint` row) or a ring (to come). One `PrimaryPillStyle` action and
+one `LinkStyle` link. Starting the challenge swaps in a green check disc and one seeded 3.2 s
+confetti burst in the meaning colours (`Confetti.swift`), only while the window is on screen and
+never under Reduce Motion. It sits under the menu bar, left of where the popup opens.
+
 ## Decisions where the boards were ambiguous
 
 - Selected segmented cell, Day badge, Today pill, best-streak badge, jug outline and the numerals on

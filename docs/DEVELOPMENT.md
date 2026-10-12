@@ -46,7 +46,7 @@ bash scripts/build-proof.sh
 open "build/Daily Challenge.app"
 ```
 
-Click the **drop-in-circle icon in the menu bar**. There is no Dock icon. The package's standalone `swift run` binary is not the supported launch path; the build script creates the app bundle and embeds public configuration.
+Click the **drop-in-circle icon in the menu bar**. There is no Dock icon. On a Mac with no challenge yet, a welcome window opens with the first steps ([first launch](tracker-interface.md#first-launch)). The package's standalone `swift run` binary is not the supported launch path; the build script creates the app bundle and embeds public configuration.
 
 The default build is the shareable one: Developer ID signed with the hardened runtime, notarized by Apple, stapled, and zipped to `build/DailyChallenge.zip`. It needs, in `.env.local` or the environment (see `.env.example`):
 

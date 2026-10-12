@@ -1,0 +1,78 @@
+{
+  "firstRun" : "finished",
+  "launchWindows" : [
+    {
+      "class" : "DailyChallengeProof.PopupPanel",
+      "frame" : [
+        0,
+        -305,
+        540,
+        705
+      ],
+      "level" : 3,
+      "title" : "",
+      "visible" : false
+    },
+    {
+      "class" : "NSStatusBarWindow",
+      "frame" : [
+        1023,
+        949,
+        32,
+        33
+      ],
+      "level" : 25,
+      "title" : "Item-0",
+      "visible" : true
+    },
+    {
+      "class" : "TUINSWindow",
+      "frame" : [
+        0,
+        0,
+        500,
+        500
+      ],
+      "level" : 0,
+      "title" : "",
+      "visible" : false
+    },
+    {
+      "class" : "NSStatusBarWindow",
+      "frame" : [
+        2527,
+        2389,
+        32,
+        33
+      ],
+      "level" : 25,
+      "title" : "",
+      "visible" : true
+    },
+    {
+      "class" : "NSStatusBarWindow",
+      "frame" : [
+        0,
+        -33,
+        32,
+        33
+      ],
+      "level" : 25,
+      "title" : "",
+      "visible" : true
+    },
+    {
+      "class" : "NSStatusBarWindow",
+      "frame" : [
+        0,
+        -33,
+        32,
+        33
+      ],
+      "level" : 25,
+      "title" : "",
+      "visible" : true
+    }
+  ],
+  "macOS" : "Version 27.0.1 (Build 26A434)"
+}

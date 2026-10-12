@@ -105,5 +105,6 @@ say "Installed to $DEST_DIR/$APP_NAME"
 
 if [ -z "${DC_INSTALL_DIR:-}" ]; then
   open "$DEST_DIR/$APP_NAME"
-  say "Opened Daily Challenge. Look for it in the menu bar."
+  say "Opened Daily Challenge. It lives in the menu bar: click the drop icon near the clock."
+  say "New here? The welcome window walks you through the first steps."
 fi

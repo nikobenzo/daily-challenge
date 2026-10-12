@@ -16,6 +16,38 @@ The user approved connecting the local foundation to the native menu-bar popup.
 
 No Dock icon or ordinary main window. The popup follows the [design system](design-system.md): a glass sheet and detached footer. See [motion usage](DEVELOPMENT.md#current-state-functional-tracker-with-production-sync) and the [bounded motion implementation](motion-verification.md#implementation) for jug effects, celebrations and accessibility fallback. History and Account share one fixed height; the History Activity list scrolls inside it.
 
+## First launch
+
+A launch opens no window of its own except, on a Mac that still needs setup, the welcome window. The popup only opens from the menu-bar drop (or from the welcome window's button).
+
+**The empty "Daily Challenge Settings" window (fixed 12 October 2026).** From the switch to the app's own status item and panel (ec8f705, 9 October) until this fix, every launch showed an empty 900 × 450 window titled "Daily Challenge Settings". Diagnosis on macOS 27.0.1 with an isolated copy (its own bundle ID, no configuration, no saved state):
+
+- **Trigger:** the app was a SwiftUI `App` whose only scene was `Settings { EmptyView() }`, kept because a SwiftUI `App` must declare a scene. SwiftUI presents that scene's window at launch when it is the app's only scene.
+- **Not the cause:** `open` versus running the binary directly (both showed it), an already-running instance (the installer quits it first; a fresh launch reproduced it) and window restoration (no saved state existed; the captain's own running copy had the window, closed, with its frame stored under `NSWindow Frame com_apple_SwiftUI_Settings_window`).
+- **Why it went unnoticed:** the real-popup probe captures only the popup window, renders never launch the app, and the window can open on another display or behind other windows.
+- **Fix:** the app no longer uses the SwiftUI `App` lifecycle. `main.swift` starts `NSApplication` with `AppDelegate`, so no scene exists that could open a window. `AppMenu` supplies the never-shown main menu whose key equivalents give text fields Cut, Copy, Paste, Select All and Undo (SwiftUI's default menu used to), Command-W and Command-Q. Opening the app again while it runs brings the welcome window forward, or else opens the popup.
+
+**Welcome window** (`WelcomeWindow.swift`, `WelcomeView.swift`, `FirstRun.swift`, `Confetti.swift`; styling in [design system](design-system.md#welcome-window)). A menu-bar sketch with the real drop glyph and a "Daily Challenge lives here" callout, then four steps with the current one highlighted: find the drop in the menu bar (ticked once the popup has opened), create an account or sign in, pick the start date, log the day (the five requirements). Its button leads into the popup: **Create an account** (or the **I already have an account** link) opens the popup at that auth screen; once signed in, **Choose your start date** opens setup. It follows the real auth and tracker state, so signing in or starting from the popup directly ticks the steps too. When the challenge starts (or is adopted from the server) while it is up, it shows "You're all set" with one confetti burst, then closes itself after 8 seconds (or **Done**). The window sits under the menu bar, left of where the popup opens, so the two never overlap. Escape, Command-W and the close button dismiss it for this launch.
+
+**When it shows** (`FirstRunState.decision`, unit-tested in `FirstRunTests`):
+
+| This Mac | Result |
+| --- | --- |
+| `firstRunFinished` stored in this Mac's defaults | never |
+| Any `challenge-*.json` in the challenge folder (upgraded install or an existing user, signed in or not) | never, and `firstRunFinished` is stored |
+| Saved session not read yet | waits, so a returning person is never shown it while the Keychain session restores (`AuthModel.sessionRestored`) |
+| Signed in with a challenge | never, and stored |
+| Signed in, no challenge | the start-date step |
+| Signed out | the menu-bar step, then the account step once the popup has opened |
+
+Dismissing it does not store anything: it returns at the next launch until setup is done. The decision is device-local and never synced. New steps (for example future customizable requirements) are new `WelcomeStep` cases with their title, detail and decision rule; the view lists `allCases` in order.
+
+**Motion.** The icon pulses three times when the window appears; the confetti is one seeded 3.2 s burst that ends by itself, starts only while the window is on screen, and is replaced by the static check under Reduce Motion. Nothing animates afterwards.
+
+**Regression check and evidence.** `bash scripts/test-first-launch.sh` (after `scripts/build-proof.sh --adhoc`) opens an isolated copy with `open`, as `site/install.sh` does, and fails on any Settings window, any empty 900 × 450 window or any window other than the expected one. It then runs the probe's welcome screens on offline fixtures in Light and Dark: new person and signed in without a challenge show only the welcome window; existing user and upgraded install show none; starting the challenge opens the popup from the welcome button, celebrates, stores that setup is done and closes the window by itself. Reverting to the `Settings` scene fails every one of these checks. `--docs` refreshes [`screenshots/onboarding/`](screenshots/onboarding/): WindowServer captures of the real welcome window (`welcome-*`, `welcome-signed-in-*`, `welcome-done-*-celebration` mid-confetti, `-settled` after it, and a Reduce Motion celebration) with each launch's window report (`.json`). The copy reads only the file names in the real challenge folder, to tell whether this Mac has an existing user; on the owner's Mac it therefore expects no window at all.
+
+Captain checks a capture cannot make: the first launch from the real installer on a Mac with no challenge (a second user account works), VoiceOver reading the steps, Return and Escape in the window, and the window's placement with the menu bar on another display.
+
 ## Daily checklist extras
 
 Personal to-dos beside the five requirements (roadmap phase 7, captain decision D7): **extras never count toward a complete day or the 75-day streak.** `DailySummary.isComplete`, streaks and milestones ignore them; `extrasDone`/`extrasTotal` are for display only. Since 11 October (captain) an extra is a to-do that **carries over until it is done**: ticked, it leaves the following days; left open, it reappears on each new day marked **Late** ([day rules](#which-days-an-extra-shows)). D7's first version showed every extra on every day.

@@ -16,11 +16,13 @@ In Downloads, double-click the zip. A **Daily Challenge** app appears. Drag it i
 
 Double-click **Daily Challenge** in Applications. Your Mac says it was downloaded from the internet and names the developer. Click **Open**. [Screenshot: the "downloaded from the internet" dialog]
 
-A small water-drop icon appears at the top right of your screen, next to the clock. There is no Dock icon; that is normal. [Screenshot: menu bar with the drop icon circled]
+A small water-drop icon appears at the top right of your screen, next to the clock. There is no Dock icon; that is normal. A **Welcome to Daily Challenge** window opens too: it shows where the drop is and the four steps below, and ticks each one off as you go. If you close it, it comes back the next time the app opens, until your challenge has started.
+
+![Welcome window](screenshots/onboarding/welcome-light.png)
 
 ## 4. Create your account
 
-1. Click the drop, then **Create an account**.
+1. In the welcome window, click **Create an account** (or click the drop, then **Create an account**). The app opens under the drop.
 2. Enter your email, choose a password (at least 10 characters, including a letter and a number) and type it again. Click **Create account**.
 3. Check your email for a message from Daily Challenge with a code. Type the code into the app and click **Confirm**. If it hasn't arrived after a minute, check your spam folder, then click **Resend code**.
 
@@ -31,11 +33,13 @@ You are now signed in. Use the same email and password if you install the app on
 
 ## 5. Start your challenge
 
-Pick your start date (today is fine). Check the **Time zone**: it starts as your Mac's, and each challenge day runs midnight to midnight there. To change it, click it and type your city. You can't change the start date or time zone later, so pick the place you'll mostly be. Then click **Start challenge**.
+If the welcome window is still open, it now says **Choose your start date**; click it, or click the drop. Pick your start date (today is fine). Check the **Time zone**: it starts as your Mac's, and each challenge day runs midnight to midnight there. To change it, click it and type your city. You can't change the start date or time zone later, so pick the place you'll mostly be. Then click **Start challenge**.
 
 ![Setup screen](screenshots/time-zone/setup-new-york-light.png)
 
-You will see the water jug and the five daily items. [Screenshot: Today tab]
+You will see the water jug and the five daily items. [Screenshot: Today tab] The welcome window celebrates with confetti, then closes by itself; it does not come back.
+
+![Welcome window after starting](screenshots/onboarding/welcome-done-light-celebration.png)
 
 ## 6. Optional, recommended
 
