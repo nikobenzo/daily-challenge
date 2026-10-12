@@ -110,9 +110,14 @@ enum GoalWords {
         return amount(target) ?? "Tick it when it's done"
     }
 
-    /// "Yoga, 30 minutes" or "Diet, your own rules": a slot as VoiceOver reads it.
+    /// The diet slot as VoiceOver names it: "Clean diet" for the standard target.
+    static func dietName(_ target: Challenge.Target) -> String {
+        target == Challenge.Targets.standard.diet ? "Clean diet" : target.name
+    }
+
+    /// "Yoga, 30 minutes" or "No sugar, your own rules": a slot as VoiceOver reads it.
     static func spoken(_ slot: Challenge.TargetSlot, _ target: Challenge.Target) -> String {
-        if slot == .diet { return "\(target.name), your own rules" }
+        if slot == .diet { return "\(dietName(target)), your own rules" }
         if slot == .workout, target == Challenge.Targets.standard.workout { return "Workout, 45 minutes, home or gym" }
         return [target.name, spokenAmount(target)].compactMap { $0 }.joined(separator: ", ")
     }

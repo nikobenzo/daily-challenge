@@ -8,6 +8,7 @@
 #   CAPTURE_PHASE5_ONLY=1   capture the Manage extras screens only (design field fill)
 #   CAPTURE_EXTRAS_ONLY=1   capture the extras screens only (carry-over fixtures)
 #   CAPTURE_DELETION_ONLY=1   capture Delete account (both confirmation steps) only
+#   CAPTURE_GOALS_ONLY=1   capture custom daily goals and repeating extras only
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
@@ -74,6 +75,36 @@ if [[ "${CAPTURE_PHASE5_ONLY:-0}" == 1 ]]; then
   exit 0
 fi
 
+# Custom daily goals (setup rows and editors, Today, History, Account) and repeating extras.
+capture_goals() {
+  capture goals-setup setup "$1"
+  capture goals-setup-water setup "$1" -edit-goal water
+  capture goals-setup-walk setup "$1" -edit-goal walk
+  capture goals-setup-diet setup "$1" -edit-goal diet
+  capture goals-setup-reading setup "$1" -edit-goal bibleReading
+  capture goals-today todayGoals "$1"
+  capture goals-history-today historyGoals "$1" -fixture-scroll-to fixture-history-day
+  capture goals-history-before historyGoalsBefore "$1" -fixture-scroll-to fixture-history-day
+  capture goals-account accountGoals "$1" -fixture-scroll-to fixture-account-goals
+  capture goals-daily accountGoals "$1" -daily-goals
+  capture goals-daily-walk accountGoals "$1" -daily-goals -edit-goal walk
+  capture goals-unmigrated goalsUnmigrated "$1" -daily-goals
+  capture goals-recurring-today todayRecurring "$1" -fixture-scroll-to fixture-extras
+  capture goals-manage-extras todayRecurring "$1" -manage-extras
+  capture goals-repeat todayRecurring "$1" -manage-extras -repeat-extra
+  capture goals-setup-large-text setup "$1" -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityL
+  capture goals-editor-large-text setup "$1" -edit-goal walk -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityL
+  capture goals-today-large-text todayGoals "$1" -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityL
+  capture goals-recurring-large-text todayRecurring "$1" -fixture-scroll-to fixture-extras -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityL
+}
+if [[ "${CAPTURE_GOALS_ONLY:-0}" == 1 ]]; then
+  for appearance in light dark; do capture_goals "$appearance"; done
+  xcrun simctl status_bar "$udid" clear
+  xcrun simctl terminate "$udid" "$BUNDLE_ID" 2>/dev/null || true
+  echo "Custom goals screenshots: $OUT"
+  exit 0
+fi
+
 # Delete account: step one (the sheet) and step two (the final alert).
 capture_deletion() {
   capture account-delete-row account "$1" -fixture-scroll-to fixture-account-delete
@@ -92,6 +123,7 @@ fi
 for appearance in light dark; do
   if [[ "${CAPTURE_EXTRAS_ONLY:-0}" != 1 ]]; then
     capture_deletion "$appearance"
+    capture_goals "$appearance"
     for screen in sharedToday storageRecovery signIn createAccount confirmCode forgotPassword resetPassword checking setup today todayComplete history account; do
       capture "$screen" "$screen" "$appearance"
     done

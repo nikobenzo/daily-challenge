@@ -192,7 +192,7 @@ import WidgetKit
     }
 
     /// Changed today: what the custom goals fixtures show.
-    static let customTargets = Challenge.Targets(
+    nonisolated static let customTargets = Challenge.Targets(
         water: Challenge.WaterTarget(goal: 3_000, glass: 330),
         workout: Challenge.Target(name: "Gym", amount: 45, unit: .minutes, icon: "dumbbell"),
         walk: Challenge.Target(name: "Yoga", amount: 30, unit: .minutes, icon: "yoga"),

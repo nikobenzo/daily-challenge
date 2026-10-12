@@ -21,6 +21,9 @@ final class WidgetRenderTests: XCTestCase {
                                   timeZone: Challenge.legacyTimeZone)
         let amount = ["full", "complete"].contains(variant) ? 4000 : variant == "overflow" ? 4500
             : ["empty", "pending", "extras-empty"].contains(variant) ? 0 : 2250
+        // Custom goals: Gym, Yoga, No sugar, Audiobook and 3,000 ml; long goals: 20-character names.
+        let targets = variant == "custom-goals" ? PhoneFixtures.customTargets : variant == "long-goals" ? longTargets : nil
+        for action in targets?.changes() ?? [] { _ = try challenge.record(action, on: now, at: now) }
         if amount > 0 { _ = try challenge.record(.pour(amount), on: now, at: now) }
         if !["empty", "pending"].contains(variant) {
             _ = try challenge.record(.setHabit(.workout, completed: true), on: now, at: now)
@@ -28,6 +31,18 @@ final class WidgetRenderTests: XCTestCase {
         }
         if variant == "complete" {
             for habit in [Challenge.Habit.walk, .bibleReading] { _ = try challenge.record(.setHabit(habit, completed: true), on: now, at: now) }
+        }
+        if variant == "recurring" {
+            // 10 October 2026 is a Saturday: every day, every 2 days, Saturdays, and a to-do.
+            let rules: [(String, Challenge.ExtraSchedule)] = [("Stretch", .every(1)), ("Water the plants", .every(2)),
+                                                              ("Call Mum", .weekdays([6])), ("Book dentist", .once)]
+            for (index, (title, rule)) in rules.enumerated() {
+                let id = UUID()
+                _ = try challenge.record(.defineExtra(id: id, title: title), on: now, at: now)
+                if rule != .once { _ = try challenge.record(rule.action(for: id), on: now, at: now) }
+                if index == 0 { _ = try challenge.record(.setExtra(id: id, completed: true), on: now, at: now) }
+            }
+            return challenge
         }
         if variant == "carry-over" {
             // Stretch and Read a chapter carried over (late), Call family done two days ago
@@ -50,6 +65,26 @@ final class WidgetRenderTests: XCTestCase {
             }
         }
         return challenge
+    }
+
+    static let longTargets = Challenge.Targets(
+        water: Challenge.WaterTarget(goal: 2_500, glass: 500),
+        workout: Challenge.Target(name: "Weight training club", amount: 60, unit: .minutes, icon: "dumbbell"),
+        walk: Challenge.Target(name: "Evening stretch time", amount: 20, unit: .minutes, icon: "stretch"),
+        diet: Challenge.Target(name: "No processed sugar"),
+        bibleReading: Challenge.Target(name: "Psalms and Proverbs", amount: 2, unit: .chapters, icon: "bible"))
+
+    @MainActor func testCustomGoalEntriesCarryTheDaysTargetsAndRepeats() throws {
+        let custom = try XCTUnwrap(ChallengeWidgetEntry.derive(try Self.fixture("custom-goals", at: now), at: now).summary)
+        XCTAssertEqual(custom.targets, PhoneFixtures.customTargets)
+        XCTAssertEqual(custom.waterMillilitres, 2_250)
+        XCTAssertFalse(custom.waterComplete)
+        XCTAssertEqual(Self.longTargets.changes().count, 5)
+        for slot in Challenge.TargetSlot.allCases { XCTAssertTrue(Self.longTargets[slot].isValid(for: slot)) }
+        let recurring = try XCTUnwrap(ChallengeWidgetEntry.derive(try Self.fixture("recurring", at: now), at: now).summary)
+        XCTAssertEqual(recurring.extras.map(\.title), ["Stretch", "Water the plants", "Call Mum", "Book dentist"])
+        XCTAssertEqual(recurring.extras.map { GoalWords.repeatCaption($0.schedule(on: recurring.interval.start)) },
+                       ["every day", "every 2 days", "Saturdays", nil])
     }
 
     @MainActor func testMaximumLengthTitlesAreValid() {
@@ -75,16 +110,16 @@ final class WidgetRenderTests: XCTestCase {
     @MainActor func testWidgetSnapshotMatrix() throws {
         for appearance in [ColorScheme.light, .dark] {
             for variant in ["empty", "partial", "full", "overflow", "pending", "complete", "missed", "extras-empty", "extras-ten", "long-names",
-                            "carry-over"] {
+                            "carry-over", "custom-goals", "long-goals", "recurring"] {
                 let entry = ChallengeWidgetEntry.derive(try Self.fixture(variant, at: now), at: now)
-                if ["empty", "partial", "full", "overflow"].contains(variant) {
+                if ["empty", "partial", "full", "overflow", "custom-goals"].contains(variant) {
                     render(WaterWidgetView(entry: entry, familyOverride: .systemSmall), size: Self.small, appearance: appearance, name: "water-small-\(variant)")
                     render(WaterWidgetView(entry: entry, familyOverride: .systemMedium), size: Self.medium, appearance: appearance, name: "water-medium-\(variant)")
                 }
-                if ["pending", "complete", "missed"].contains(variant) {
+                if ["pending", "complete", "missed", "custom-goals", "long-goals"].contains(variant) {
                     render(RequirementsWidgetView(entry: entry), size: Self.medium, appearance: appearance, name: "requirements-medium-\(variant)")
                 }
-                if ["extras-empty", "partial", "extras-ten", "long-names", "overflow", "carry-over"].contains(variant) {
+                if ["extras-empty", "partial", "extras-ten", "long-names", "overflow", "carry-over", "recurring"].contains(variant) {
                     render(ExtrasWidgetView(entry: entry, familyOverride: .systemMedium), size: Self.medium, appearance: appearance, name: "extras-medium-\(variant)")
                     render(ExtrasWidgetView(entry: entry, familyOverride: .systemLarge), size: Self.large, appearance: appearance, name: "extras-large-\(variant)")
                 }

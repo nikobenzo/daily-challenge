@@ -96,6 +96,8 @@ struct SetupScreen: View {
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { editing = nil } } }
             }
         }
+        // The start can't be after the tracker's today (a fixture clock can be behind the device's).
+        .onAppear { startDate = min(startDate, tracker.now) }
         #if DEBUG
         .onAppear { editing = PhoneFixtures.editingGoal }
         #endif

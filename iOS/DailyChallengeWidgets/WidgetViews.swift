@@ -428,7 +428,7 @@ struct RequirementsWidgetView: View {
         if entry.summary?.diet == .missed {
             Link(destination: URL(string: "daily-challenge://today")!) {
                 ring(GoalWords.symbol(.diet, targets.diet), targets.diet.name, .missed,
-                     spoken: "\(targets.diet.name), missed. Opens Daily Challenge to change it")
+                     spoken: "\(GoalWords.dietName(targets.diet)), missed. Opens Daily Challenge to change it")
             }
         } else {
             let clean = entry.summary?.diet == .clean

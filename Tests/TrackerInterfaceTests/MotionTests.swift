@@ -28,6 +28,12 @@ private func complete(_ challenge: inout Challenge, on day: Date, at now: Date) 
     #expect(motion.spills)
     #expect(motion.frameDates.count == 37)
     #expect(motion.frameDates.last == motionDate.addingTimeInterval(WaterMotion.duration))
+    // A custom goal fills and spills at that goal, not at 4,000 ml.
+    let custom = WaterMotion(from: 1_500, to: 3_150, started: motionDate, goal: 3_000)
+    #expect(custom.level(at: motionDate) == 0.5)
+    #expect(custom.level(at: motionDate.addingTimeInterval(2)) == 1)
+    #expect(custom.spills)
+    #expect(!WaterMotion(from: 1_500, to: 2_700, started: motionDate, goal: 3_000).spills)
     for kind in [CompletionCelebration.daily, .milestone] {
         let event = CelebrationEvent(kind: kind, started: motionDate)
         #expect(event.frameDates.last == motionDate.addingTimeInterval(event.duration))

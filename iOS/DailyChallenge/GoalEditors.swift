@@ -400,7 +400,7 @@ struct TargetEditor: View {
                     .buttonStyle(RoundIconStyle(size: 44, fill: selected ? Theme.accentTint : Theme.controlFill,
                                                 foreground: selected ? Theme.accentText : Theme.textPrimary,
                                                 border: selected ? Theme.focus : .clear))
-                    .accessibilityLabel(choice.name)
+                    .accessibilityLabel("\(choice.name) icon")
                     .accessibilityAddTraits(selected ? .isSelected : [])
                 }
             }

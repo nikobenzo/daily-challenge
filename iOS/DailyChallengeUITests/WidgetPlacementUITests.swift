@@ -517,7 +517,7 @@ final class WidgetPlacementUITests: XCTestCase {
             if let count = extras[variant] ?? "1 of 3" { labels.append("Extras, \(count) done") }
             if variant == "carry-over" { labels.append("Stretch, late, pending") }
             if layout == "a" {
-                labels.append(["pending", "empty"].contains(variant) ? "Workout, 45 min · home / gym, pending" : "Workout, 45 min · home / gym, done")
+                labels.append(["pending", "empty"].contains(variant) ? "Workout, 45 minutes, home or gym, pending" : "Workout, 45 minutes, home or gym, done")
                 if variant == "missed" { labels.append("Clean diet, missed") }
             }
             return labels
