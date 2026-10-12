@@ -13,7 +13,12 @@ import app.dailychallenge.core.ChallengeCalendar
 import app.dailychallenge.core.ChallengeStore
 import app.dailychallenge.core.ChallengeTime
 import app.dailychallenge.core.DietState
+import app.dailychallenge.core.ExtraSchedule
 import app.dailychallenge.core.Habit
+import app.dailychallenge.core.Target
+import app.dailychallenge.core.TargetUnit
+import app.dailychallenge.core.Targets
+import app.dailychallenge.core.WaterTarget
 import app.dailychallenge.core.WidgetAccountStore
 import java.io.File
 import java.util.UUID
@@ -27,7 +32,7 @@ import java.util.UUID
  *
  *     adb shell am start -n app.dailychallenge.android/.MainActivity --es widgetFixture partial
  *
- * Fixtures: partial, empty, complete, over, missedDiet, extrasMany, signedOut, noChallenge, off.
+ * Fixtures: partial, empty, complete, over, missedDiet, extrasMany, goals, signedOut, noChallenge, off.
  */
 object WidgetFixtures {
     private const val MARKER = "widget-fixture-enabled"
@@ -108,6 +113,16 @@ object WidgetFixtures {
                 repeat(3) { record(Action.Pour(450), today) }
                 record(Action.SetHabit(Habit.WORKOUT, true), today)
             }
+        }
+        if (name == "goals") {
+            // Daily goals changed from today, and a repeating extra beside the to-dos.
+            Targets(WaterTarget(3_000, 330), Target("Gym", 45, TargetUnit.MINUTES), Target("Yoga", 30, TargetUnit.MINUTES, "yoga"),
+                Target("No sugar"), Target("Audiobook", 20, TargetUnit.MINUTES, "headphones")).changes().forEach { record(it, today) }
+            record(Action.Pour(330), today)
+            record(Action.SetHabit(Habit.WALK, true), today)
+            val stretch = UUID.randomUUID()
+            record(Action.DefineExtra(stretch, "Morning stretch"), today)
+            record(ExtraSchedule.Every(1).action(stretch), today)
         }
         if (name == "extrasMany") {
             listOf("Practise gratitude", "Water the plants", "Tidy desk", "Journal", "Go outside", "Sleep on time",

@@ -2,6 +2,7 @@ package app.dailychallenge.android
 
 import android.content.Intent
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -232,7 +233,8 @@ class FixtureScreensTest {
         compose.onNodeWithTag("extras-save").assertIsNotEnabled()
         compose.onNodeWithTag("repeat-day-5").performClick()
         compose.onNodeWithTag("extras-save").performClick()
-        compose.onNode(hasContentDescription("Book dentist, Fridays")).assertExists()
+        // In the sheet and, behind it, on Today's checklist: no longer late, since it repeats from today.
+        compose.onAllNodes(hasContentDescription("Book dentist, Fridays")).assertCountEquals(2)
         // Added as a repeating extra from the start.
         compose.onNodeWithTag("extras-new-title").performTextInput("Floss")
         compose.onNodeWithTag("repeat-every").performClick()

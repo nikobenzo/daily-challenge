@@ -14,7 +14,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -40,7 +44,6 @@ import androidx.compose.material.icons.outlined.Pool
 import androidx.compose.material.icons.outlined.School
 import androidx.compose.material.icons.outlined.SelfImprovement
 import androidx.compose.material.icons.outlined.SportsGymnastics
-import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -103,6 +106,9 @@ object GoalIcons {
         Choice("study", "Study", Icons.Outlined.School, R.drawable.widget_ic_study),
         Choice("leaf", "Leaf", Icons.Outlined.Eco, R.drawable.widget_ic_diet),
     )
+
+    /** What an activity or reading slot offers: every icon except diet's leaf. */
+    val activities get() = all.filter { it.id != "leaf" }
 
     fun default(slot: TargetSlot): String = when (slot) {
         TargetSlot.WORKOUT -> "dumbbell"
@@ -270,7 +276,7 @@ fun GoalRow(icon: ImageVector, title: String, detail: String, spoken: String, on
     ) {
         Icon(icon, null, tint = tint, modifier = Modifier.size(22.dp))
         Text(title, style = Type.rowLabel, color = P.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f, fill = false).widthIn(max = 180.dp))
+            modifier = Modifier.widthIn(max = 150.dp))
         Text(detail, style = Type.field, color = P.textSecondary, textAlign = TextAlign.End, maxLines = 2,
             overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
         Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = P.textTertiary)
@@ -303,6 +309,27 @@ fun ChoiceChip(label: String, selected: Boolean, onClick: () -> Unit, modifier: 
         contentAlignment = Alignment.Center,
     ) {
         Text(label, style = Type.badge, color = if (selected) P.accentText else P.textPrimary, maxLines = 1)
+    }
+}
+
+/**
+ * − amount + where the amount can also be typed (whole numbers only); the buttons stop at the
+ * unit's limits and an out-of-range typed amount is reported by the caller.
+ */
+@Composable
+fun AmountStepper(text: String, spoken: String, onText: (String) -> Unit, onMinus: () -> Unit, onPlus: () -> Unit,
+                  canMinus: Boolean, canPlus: Boolean, tag: String) {
+    val palette = P
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        RoundIconButton(Icons.Filled.Remove, "Less", onMinus, enabled = canMinus, size = 40.dp, modifier = Modifier.testTag("$tag-minus"))
+        BasicTextField(text, { value -> onText(value.filter { it in '0'..'9' }.take(6)) }, singleLine = true,
+            textStyle = Type.appName.copy(color = palette.textPrimary, textAlign = TextAlign.Center, fontFeatureSettings = "tnum"),
+            cursorBrush = SolidColor(palette.focus),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+            modifier = Modifier.width(84.dp).heightIn(min = 40.dp).clip(CircleShape).background(palette.fieldFill)
+                .border(1.dp, palette.controlFill, CircleShape).padding(horizontal = 8.dp, vertical = 9.dp)
+                .semantics { contentDescription = spoken }.testTag("$tag-field"))
+        RoundIconButton(Icons.Filled.Add, "More", onPlus, enabled = canPlus, size = 40.dp, modifier = Modifier.testTag("$tag-plus"))
     }
 }
 
@@ -439,11 +466,10 @@ fun SlotGoalEditor(slot: TargetSlot, initial: Target, note: String?, error: Stri
                         if (chosenUnit != null) {
                             val step = GoalWords.step(chosenUnit)
                             val value = number ?: chosenUnit.amounts.first
-                            Stepper(number?.let(::formatNumber) ?: "–",
-                                "Daily target, ${GoalWords.amountSpoken(Target(name, value, chosenUnit)) ?: ""}",
+                            AmountStepper(amount ?: "", "Daily target in ${GoalWords.unitName(chosenUnit)}", { amount = it },
                                 { amount = (value - step).coerceIn(chosenUnit.amounts).toString() },
                                 { amount = (value + step).coerceIn(chosenUnit.amounts).toString() },
-                                value > chosenUnit.amounts.first, value < chosenUnit.amounts.last, "Less", "More", "goal-amount")
+                                value > chosenUnit.amounts.first, value < chosenUnit.amounts.last, "goal-amount")
                         }
                         Box {
                             TintedPill(chosenUnit?.let(GoalWords::unitName) ?: "No amount", { units = true },
@@ -462,16 +488,12 @@ fun SlotGoalEditor(slot: TargetSlot, initial: Target, note: String?, error: Stri
                             }
                         }
                     }
-                    if (chosenUnit != null) {
-                        DesignField(amount ?: "", { value -> amount = value.filter { it in '0'..'9' }.take(6) }, "Amount",
-                            Icons.Outlined.Straighten, keyboardType = KeyboardType.Number, imeAction = ImeAction.Done, testTag = "goal-amount-field")
-                    }
                     amountProblem?.let { FieldError(it, Modifier.testTag("goal-amount-error")) }
                     Hairline()
                     Eyebrow("Icon")
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         val selectedID = GoalIcons.of(slot, Target(name, icon = icon)).id
-                        GoalIcons.all.forEach { choice ->
+                        GoalIcons.activities.forEach { choice ->
                             val selected = choice.id == selectedID
                             Box(
                                 Modifier.size(44.dp).clip(CircleShape).background(if (selected) P.accentTint else P.controlFill)
