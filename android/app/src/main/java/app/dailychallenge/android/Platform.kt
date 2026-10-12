@@ -18,10 +18,13 @@ import androidx.core.content.ContextCompat
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import app.dailychallenge.android.widget.ChallengeWidgets
 import app.dailychallenge.core.ChallengeTime
 import app.dailychallenge.core.KeyValueStore
 import app.dailychallenge.core.NotificationPermission
@@ -187,6 +190,7 @@ class BootReceiver : BroadcastReceiver() {
         val graph = (context.applicationContext as DailyChallengeApp).graph
         graph.tracker.reload()
         graph.tracker.refreshReminders()
+        ChallengeWidgets.requestRefresh(context)
     }
 }
 
@@ -216,5 +220,19 @@ class SyncWorker(context: Context, parameters: WorkerParameters) : CoroutineWork
                 .build()
             work.enqueueUniquePeriodicWork(NAME, ExistingPeriodicWorkPolicy.KEEP, request)
         }
+
+        /**
+         * After a widget tap: one run of this same app sync once there is a network, a few
+         * seconds later so quick taps share it. The widget itself never networks.
+         */
+        fun requestSoon(context: Context) {
+            val request = OneTimeWorkRequestBuilder<SyncWorker>()
+                .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+                .setInitialDelay(5, TimeUnit.SECONDS)
+                .build()
+            WorkManager.getInstance(context).enqueueUniqueWork(SOON, ExistingWorkPolicy.REPLACE, request)
+        }
+
+        private const val SOON = "challenge-sync-soon"
     }
 }

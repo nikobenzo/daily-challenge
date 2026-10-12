@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A full jug past the goal, with the two drops below it. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/widget_jug" />
+    <item android:drawable="@drawable/widget_jug_drops" />
+</layer-list>

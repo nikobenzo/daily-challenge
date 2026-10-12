@@ -46,6 +46,11 @@ object Fixtures {
     val zone: ZoneId = ZoneId.of("Europe/Jersey")
     val owner: UUID = UUID.fromString("6F1C2A43-0B55-4B5E-9F3D-2C1A7E9B4D10")
 
+    /** The widgets' fixture history while a widget fixture is on, else null (the real history). */
+    fun widgetDirectory(context: Context): File? = WidgetFixtures.directory(context)
+
+    fun seedWidgets(context: Context, intent: Intent?): Boolean = WidgetFixtures.seed(context, intent)
+
     fun graph(context: Context, intent: Intent?): AppGraph? {
         val screen = intent?.getStringExtra("fixture") ?: return null
         return make(context, screen, intent.getStringExtra("appearance"), FixtureOptions(

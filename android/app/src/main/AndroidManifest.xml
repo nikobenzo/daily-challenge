@@ -45,6 +45,50 @@
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             tools:node="remove" />
 
+        <!-- Home-screen widgets. The system must reach these providers, so they are exported; a
+             stray update broadcast only redraws them. Taps arrive through Glance's own receiver,
+             which is not exported. -->
+        <receiver
+            android:name=".widget.WaterWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_water_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_water_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.RequirementsWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_requirements_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_requirements_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.ExtrasWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_extras_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_extras_info" />
+        </receiver>
+
+        <!-- Midnight in the challenge's zone: the widgets draw the new day. -->
+        <receiver
+            android:name=".widget.WidgetMidnightReceiver"
+            android:exported="false" />
+
         <receiver
             android:name=".BootReceiver"
             android:exported="true">

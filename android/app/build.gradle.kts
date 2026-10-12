@@ -127,6 +127,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.process)
     implementation(libs.androidx.work.runtime)
+    implementation(libs.androidx.glance.appwidget)
     implementation(libs.kotlinx.coroutines.android)
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
@@ -141,4 +142,5 @@ dependencies {
     androidTestImplementation(libs.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.test.junit)
     androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.glance.appwidget.testing)
 }

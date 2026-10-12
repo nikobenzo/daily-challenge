@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The water: the vessel filled with the jug gradient, clipped from the bottom by level. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="96dp"
+    android:height="126dp"
+    android:viewportWidth="96"
+    android:viewportHeight="126">
+    <path android:pathData="M21.78,10 L44.22,10 L44.22,22 Q62.04,26 62.04,41 L62.04,98 Q62.04,110 53.46,110 L12.54,110 Q3.96,110 3.96,98 L3.96,41 Q3.96,26 21.78,22 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="0"
+                android:startY="10"
+                android:endX="0"
+                android:endY="126"
+                android:startColor="@color/widget_jug_top"
+                android:endColor="@color/widget_jug_bottom" />
+        </aapt:attr>
+    </path>
+</vector>

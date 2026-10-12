@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Past 4,000 ml: two drops below the jug, as in Today. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="126dp"
+    android:viewportWidth="96"
+    android:viewportHeight="126">
+    <group android:translateX="13" android:translateY="113" android:scaleX="0.375" android:scaleY="0.375">
+        <path android:fillColor="@color/widget_water" android:pathData="M12,2c-5.33,4.55-8,8.48-8,11.8c0,4.98,3.8,8.2,8,8.2s8-3.22,8-8.2C20,10.48,17.33,6.55,12,2z" />
+    </group>
+    <group android:translateX="56" android:translateY="113" android:scaleX="0.375" android:scaleY="0.375">
+        <path android:fillColor="@color/widget_water" android:pathData="M12,2c-5.33,4.55-8,8.48-8,11.8c0,4.98,3.8,8.2,8,8.2s8-3.22,8-8.2C20,10.48,17.33,6.55,12,2z" />
+    </group>
+</vector>

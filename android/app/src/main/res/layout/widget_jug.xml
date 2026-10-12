@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hosts the jug on Android 12 and later, where the home screen resolves its colours itself
+     and the fill is the image level (Glance has no level). Decorative: the total is spoken. -->
+<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_jug_image"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:importantForAccessibility="no"
+    android:scaleType="fitCenter" />

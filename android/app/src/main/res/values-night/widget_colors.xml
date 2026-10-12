@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="widget_surface">#222662</color>
+    <color name="widget_text_primary">#FFFFFF</color>
+    <color name="widget_text_secondary">#C9CFF5</color>
+    <color name="widget_text_tertiary">#A9B1DC</color>
+    <color name="widget_accent_text">#8CC4FF</color>
+    <color name="widget_control_fill">#3D4075</color>
+    <color name="widget_primary">#3A6EF4</color>
+    <color name="widget_on_primary">#FFFFFF</color>
+    <color name="widget_done">#4DF0A3</color>
+    <color name="widget_done_text">#8DFFC6</color>
+    <color name="widget_done_tint">#2A4A6E</color>
+    <color name="widget_amber">#FF9F3D</color>
+    <color name="widget_amber_text">#FFC27A</color>
+    <color name="widget_danger">#FF7A7A</color>
+    <color name="widget_ring_track">#414478</color>
+    <color name="widget_day_badge_fill">#3D4075</color>
+    <color name="widget_day_badge_text">#FFFFFF</color>
+    <color name="widget_water">#5EA8FF</color>
+    <color name="widget_jug_top">#8CC4FF</color>
+    <color name="widget_jug_bottom">#2E66F0</color>
+    <color name="widget_jug_outline">#C9CFF5</color>
+    <color name="widget_jug_glass">#1AFFFFFF</color>
+</resources>

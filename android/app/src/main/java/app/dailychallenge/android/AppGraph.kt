@@ -8,6 +8,7 @@ import android.os.Looper
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import app.dailychallenge.android.widget.ChallengeWidgets
 import app.dailychallenge.core.AuthModel
 import app.dailychallenge.core.ChallengeTime
 import app.dailychallenge.core.DeviceWording
@@ -19,6 +20,7 @@ import app.dailychallenge.core.SupabaseConfiguration
 import app.dailychallenge.core.SupabaseHttp
 import app.dailychallenge.core.Tracker
 import app.dailychallenge.core.WaterReminderController
+import app.dailychallenge.core.WidgetAccountStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import java.io.File
@@ -107,14 +109,21 @@ class AppGraph(
     companion object {
         const val APPEARANCE_KEY = "appearancePreference"
 
+        private val configuration: SupabaseConfiguration? get() =
+            SupabaseConfiguration.from(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_PUBLISHABLE_KEY)
+
+        /** One folder per Supabase project, so a differently configured build never mixes histories. */
+        fun dataDirectory(context: Context): File =
+            File(context.filesDir, "DailyChallenge/${configuration?.projectRef ?: "unconfigured"}")
+
         /** The real app: configuration from the build, the Keystore session, real alarms and sync. */
         fun production(context: Context): AppGraph {
             val prefs = SharedPrefsStore(context)
-            val configuration = SupabaseConfiguration.from(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_PUBLISHABLE_KEY)
+            val configuration = configuration
             val scope = MainScope()
-            // One folder per Supabase project, so a differently configured build never mixes histories.
             val project = configuration?.projectRef ?: "unconfigured"
-            val tracker = Tracker(File(context.filesDir, "DailyChallenge/$project"), scope)
+            val directory = dataDirectory(context)
+            val tracker = Tracker(directory, scope)
             val reminders = WaterReminderController(prefs, AlarmReminderScheduler(context, prefs), DeviceWording.android)
             val auth = if (configuration != null) {
                 val http = SupabaseHttp(configuration)
@@ -126,9 +135,18 @@ class AppGraph(
                     "This build has no server configuration. Build it with .env.local at the repository root (docs/android.md).")
             }
             val graph = AppGraph(auth, tracker, reminders, prefs, scope, context.applicationContext, isFixture = false)
+            // Widgets see only the account published here, and redraw after every committed change.
+            val widgetAccount = WidgetAccountStore(directory)
+            tracker.onCommitted = { ChallengeWidgets.requestRefresh(context) }
             auth.onSessionChange { owner ->
                 graph.tab = Tab.TODAY
                 SyncWorker.schedule(context, owner != null)
+                try {
+                    widgetAccount.publish(owner)
+                } catch (_: Exception) {
+                    // Unpublishing failed: the widgets keep the earlier account until the next change.
+                }
+                ChallengeWidgets.requestRefresh(context)
             }
             auth.attachTracker(tracker)
             auth.start()

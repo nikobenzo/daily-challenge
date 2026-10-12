@@ -1,6 +1,8 @@
 package app.dailychallenge.android
 
 import android.app.Application
+import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -17,18 +19,30 @@ import androidx.lifecycle.repeatOnLifecycle
 import app.dailychallenge.android.ui.DailyChallengeTheme
 import app.dailychallenge.android.ui.RootScreen
 import app.dailychallenge.android.ui.SheetHostBox
+import app.dailychallenge.android.widget.ChallengeWidgets
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.max
 import kotlin.math.min
 
 class DailyChallengeApp : Application() {
-    /** Created on first use, so a Debug fixture launch never opens the real session or history. */
-    val graph: AppGraph by lazy { AppGraph.production(this) }
+    private val lazyGraph = lazy { AppGraph.production(this) }
+
+    /** Created on first use, so a Debug fixture launch or a widget tap never opens the real session. */
+    val graph: AppGraph by lazyGraph
+
+    /** The running app's graph, if anything has created it; widget taps only ask it to reload. */
+    val startedGraph: AppGraph? get() = if (lazyGraph.isInitialized()) graph else null
 
     override fun onCreate() {
         super.onCreate()
         AlarmReminderScheduler.createChannel(this)
+    }
+
+    /** Light or Dark, or the font size, changed: widgets before Android 12 draw their colours themselves. */
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        ChallengeWidgets.requestRefresh(this, force = true)
     }
 }
 
@@ -38,7 +52,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Debug only: seeds the widgets' fixture history and leaves (Fixtures.seedWidgets).
+        if (Fixtures.seedWidgets(this, intent)) {
+            finish()
+            return
+        }
         graph = Fixtures.graph(this, intent) ?: (application as DailyChallengeApp).graph
+        open(intent)
         enableEdgeToEdge(statusBarStyle = SystemBarStyle.auto(0, 0), navigationBarStyle = SystemBarStyle.auto(0, 0))
         setContent {
             val dark = when (graph.appearance) {
@@ -76,5 +96,24 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (Fixtures.seedWidgets(this, intent)) return
+        setIntent(intent)
+        open(intent)
+    }
+
+    /** A widget opened the app: Today, or Manage extras once signed in with a challenge (RootScreen gates it). */
+    private fun open(intent: Intent?) {
+        when (intent?.getStringExtra(DESTINATION)) {
+            "today" -> { graph.tab = Tab.TODAY; graph.tracker.showToday() }
+            "extras" -> { graph.tab = Tab.TODAY; graph.tracker.showToday(); graph.manageExtrasRequested = true }
+        }
+    }
+
+    companion object {
+        const val DESTINATION = "destination"
     }
 }

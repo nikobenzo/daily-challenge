@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Today ring gauge: 64 dp, stroke 6, white and tinted (track, or done green). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="ring"
+    android:innerRadius="26dp"
+    android:thickness="6dp"
+    android:useLevel="false">
+    <solid android:color="#FFFFFFFF" />
+    <size android:width="64dp" android:height="64dp" />
+</shape>

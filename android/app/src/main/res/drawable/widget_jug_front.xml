@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Outline, highlight and lid, drawn over the water. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="126dp"
+    android:viewportWidth="96"
+    android:viewportHeight="126">
+    <path
+        android:pathData="M21.78,10 L44.22,10 L44.22,22 Q62.04,26 62.04,41 L62.04,98 Q62.04,110 53.46,110 L12.54,110 Q3.96,110 3.96,98 L3.96,41 Q3.96,26 21.78,22 Z"
+        android:strokeColor="@color/widget_jug_outline"
+        android:strokeWidth="2.5" />
+    <path
+        android:fillColor="#59FFFFFF"
+        android:pathData="M10,49 A2,2 0 0 1 14,49 V99 A2,2 0 0 1 10,99 Z" />
+    <path
+        android:fillColor="@color/widget_jug_glass"
+        android:pathData="M22,3 H44 A3,3 0 0 1 47,6 V8 A3,3 0 0 1 44,11 H22 A3,3 0 0 1 19,8 V6 A3,3 0 0 1 22,3 Z"
+        android:strokeColor="@color/widget_jug_outline"
+        android:strokeWidth="2" />
+</vector>
