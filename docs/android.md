@@ -283,6 +283,12 @@ for extras, `20261011000100_account_deletion` for deletion; see
 
 Use the same disposable account, signed in on this phone, the Mac and the iPhone.
 
+The widgets have been placed and tapped only on emulators (Android 10 and 16). Placing them on
+the Redmi Note 7 (MIUI 12.5) and trying the taps there is still an owner step: install the debug
+build through Files > Download (see Install on a phone above), run steps 1 and 2 on it, and
+capture the placed widgets with `adb exec-out screencap -p` into
+`docs/screenshots/android/widgets/redmi-*.png`.
+
 1. Long-press the home screen, Widgets, Daily Challenge: add Water, Daily requirements and
    Extras. Each shows today's data and the challenge date.
 2. With the app closed, tap **+ 450 ml** twice and **−** once, tick workout, flip diet to clean
