@@ -291,10 +291,10 @@ private final class ChallengeWireProtocol: URLProtocol {
     #expect(model.syncError == nil)
     #expect(model.skippedRows == 1)
     // The skipped row's local copy is still waiting, and the status says why.
-    #expect(model.syncStatus == "Saved locally · 1 pending · 1 entry from the server could not be read and was skipped")
-    #expect(model.skippedNotice == "1 entry from the server could not be read and was skipped")
+    #expect(model.syncStatus == "Saved locally · 1 pending · 1 entry from the server could not be read and was skipped. Updating Daily Challenge may show it.")
+    #expect(model.skippedNotice == "1 entry from the server could not be read and was skipped. Updating Daily Challenge may show it.")
     #expect(skippedRowsNotice(0) == nil)
-    #expect(skippedRowsNotice(3) == "3 entries from the server could not be read and were skipped")
+    #expect(skippedRowsNotice(3) == "3 entries from the server could not be read and were skipped. Updating Daily Challenge may show them.")
     #expect(model.store?.pending.map(\.id) == [bad.id])
     #expect(try ChallengeStore(ownerID: session.user.id, directory: directory).pending.map(\.id) == [bad.id])
 

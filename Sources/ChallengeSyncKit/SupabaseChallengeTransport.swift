@@ -82,10 +82,12 @@ public struct ServerRow<Value: Decodable>: Decodable {
     }
 }
 
-/// Reported in the sync status, not as a failure: everything else still synced.
+/// Reported in the sync status, not as a failure: everything else still synced. Most
+/// such rows come from a newer version (a kind or value this one predates), so the
+/// notice points to updating.
 public func skippedRowsNotice(_ count: Int) -> String? {
     guard count > 0 else { return nil }
     return count == 1
-        ? "1 entry from the server could not be read and was skipped"
-        : "\(count) entries from the server could not be read and were skipped"
+        ? "1 entry from the server could not be read and was skipped. Updating Daily Challenge may show it."
+        : "\(count) entries from the server could not be read and were skipped. Updating Daily Challenge may show them."
 }

@@ -222,7 +222,35 @@ class SupabaseWireTest {
         assertEquals(1, fetched.skipped)
         assertTrue(server.takeRequest().path!!.endsWith("&order=id.asc&offset=0&limit=500"))
         assertTrue(server.takeRequest().path!!.endsWith("&order=id.asc&offset=500&limit=500"))
-        assertEquals("1 entry from the server could not be read and was skipped", skippedRowsNotice(fetched.skipped))
+        assertEquals("1 entry from the server could not be read and was skipped. Updating Daily Challenge may show it.",
+            skippedRowsNotice(fetched.skipped))
+    }
+
+    @Test
+    fun fetchReadsTargetAndScheduleRowsAndSkipsOutOfRangeOrFutureOnes() = runTest {
+        val transport = SupabaseChallengeTransport(http, auth())
+        val challengeID = UUID.randomUUID()
+        val day = ChallengeCalendar(ZoneId.of("Europe/Jersey")).startOfDay(syncDate)
+        fun row(action: String): String {
+            val id = Challenge.uuidString(UUID.randomUUID())
+            return "{\"id\":\"$id\",\"owner_id\":\"$owner\",\"challenge_id\":\"$challengeID\",\"received_at\":\"2026-10-08T12:00:01+00:00\"," +
+                "\"activity\":{\"id\":\"$id\",\"day\":${day.toLong()},\"recordedAt\":${syncDate.toLong()},\"deviceID\":\"PHONE\",\"action\":$action}}"
+        }
+        val extra = Challenge.uuidString(UUID.randomUUID())
+        server.enqueue(json(200, listOf(
+            row("""{"setWater":{"goal":3000,"pour":250}}"""),
+            row("""{"setTarget":{"_0":"walk","name":"Yoga","amount":30,"unit":"minutes","icon":"yoga"}}"""),
+            row("""{"scheduleExtra":{"id":"$extra","weekdays":[1,2,3,4,5]}}"""),
+            row("""{"setTarget":{"_0":"walk","name":"Yoga","amount":301,"unit":"minutes"}}"""),
+            row("""{"setTimer":{"minutes":30}}"""),
+        ).joinToString(",", "[", "]")))
+        val fetched = transport.fetchEvents(owner, challengeID)
+        server.takeRequest()
+        assertEquals(listOf(Action.SetWater(3000, 250), Action.SetTarget(TargetSlot.WALK, "Yoga", 30, TargetUnit.MINUTES, "yoga"),
+            Action.ScheduleExtra(UUID.fromString(extra), weekdays = listOf(1L, 2L, 3L, 4L, 5L))), fetched.events.map { it.activity.action })
+        assertEquals(2, fetched.skipped)
+        assertEquals("2 entries from the server could not be read and were skipped. Updating Daily Challenge may show them.",
+            skippedRowsNotice(fetched.skipped))
     }
 
     @Test

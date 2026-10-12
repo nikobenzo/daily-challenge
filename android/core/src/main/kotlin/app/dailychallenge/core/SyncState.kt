@@ -60,11 +60,14 @@ sealed interface SyncState {
 /** An account's fetched history. Rows the app could not read are counted and left out. */
 data class RemoteEvents(val events: List<ChallengeEvent>, val skipped: Int = 0)
 
-/** Reported beside the sync state, not as a failure: everything else still synced. */
+/**
+ * Reported beside the sync state, not as a failure: everything else still synced. Most such
+ * rows come from a newer version (a kind or value this one predates), so it points to updating.
+ */
 fun skippedRowsNotice(count: Int): String? = when {
     count <= 0 -> null
-    count == 1 -> "1 entry from the server could not be read and was skipped"
-    else -> "$count entries from the server could not be read and were skipped"
+    count == 1 -> "1 entry from the server could not be read and was skipped. Updating Daily Challenge may show it."
+    else -> "$count entries from the server could not be read and were skipped. Updating Daily Challenge may show them."
 }
 
 /** The seam shared by the Supabase adapter and offline fixtures (Swift `ChallengeTransport`). */
