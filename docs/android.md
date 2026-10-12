@@ -4,14 +4,16 @@ A native Android app in `android/`: Kotlin, Jetpack Compose and Material 3, buil
 from the command line. It is the same tracker as the iPhone app (sign in, create account with an
 emailed code, password reset, setup with a time zone, Today, History with Edit this day, Account
 with sync, water reminders, appearance, sign out and account deletion) and syncs with the Mac and
-iPhone apps through the same Supabase project and wire format. There are no widgets yet, and no
-Google Play listing, store assets, release signing or upload; those are later phases.
+iPhone apps through the same Supabase project and wire format. There are no widgets yet. Release
+signing, the Play listing drafts and store graphics are ready; uploading is the owner's
+[Google Play release checklist](play-release.md).
 
 - Package (applicationId): `app.dailychallenge.android`. It cannot change after the first Play
   upload, so confirm it before that.
 - minSdk 29 (Android 10, the Redmi Note 7), targetSdk and compileSdk 36.
-- Version: `versionName` and `versionCode` in `android/app/build.gradle.kts`. Raise
-  `versionCode` for every Play upload.
+- Version: `versionName` and `versionCode` in `android/app/build.gradle.kts`. `versionCode`
+  counts Play uploads: raise it by one for every bundle uploaded to any track
+  ([scheme](play-release.md#3-build-the-release-bundle)).
 
 ## Layout
 
@@ -60,9 +62,21 @@ cd android
 ./gradlew connectedDebugAndroidTest   # Compose UI tests on a connected phone or emulator
 ```
 
-`./gradlew assembleRelease` builds a minified release APK but it is unsigned: release signing is a
-later owner step (Play App Signing with an upload key the owner creates and keeps; never commit a
-keystore, `*.jks` and `*.keystore` are gitignored).
+Release builds (`./gradlew bundleRelease` for Play, `assembleRelease` for a sideloadable APK) are
+minified and shrunk with R8 and signed with the owner's Play upload key. The key lives outside the
+repository: `scripts/android-upload-key.sh` creates it, and Gradle reads `DC_UPLOAD_STORE_FILE`,
+`DC_UPLOAD_STORE_PASSWORD` and `DC_UPLOAD_KEY_ALIAS` from `~/.gradle/gradle.properties` or the
+environment, refusing a release build without them or with a keystore inside the repository
+([checklist](play-release.md#2-create-the-upload-key-once)). Never commit a keystore; `*.jks` and
+`*.keystore` are gitignored.
+
+The release manifest asks for `INTERNET`, `ACCESS_NETWORK_STATE` (sync), `POST_NOTIFICATIONS`
+(water reminders, Android 13 and later, asked only when reminders are turned on),
+`RECEIVE_BOOT_COMPLETED` (re-plan reminders and background sync after a restart) and `WAKE_LOCK`
+(WorkManager), plus AndroidX's signature-only `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. There is
+no exact-alarm permission (reminders use inexact `setAndAllowWhileIdle`), no advertising ID and no
+foreground service: WorkManager's `FOREGROUND_SERVICE` and `SystemForegroundService` are removed in
+the manifest. Cleartext traffic and backup are off.
 
 ## Install on a phone
 
@@ -172,12 +186,10 @@ for extras, `20261011000100_account_deletion` for deletion; see
     says the account was deleted; signing in again fails, and the Mac/iPhone are signed out.
     Offline, deletion fails and changes nothing.
 
-## Remaining owner steps before Google Play (later phases)
+## Google Play
 
-- Confirm the package name `app.dailychallenge.android` (permanent after the first upload).
-- Create the app in Play Console, enrol in Play App Signing and create an upload key (kept by
-  the owner, never committed); add a signing config that reads it from outside the repository.
-- Store listing, screenshots, privacy policy URL, Data safety form (email, challenge activity;
-  account deletion in app and by request), content rating, and target audience.
-- Internal testing track first, on real phones, using the checklist above.
-- Widgets for Android (home screen water, requirements and extras), as on the iPhone.
+The owner steps from a verified developer account to a closed test and production are in the
+[Google Play release checklist](play-release.md); the store text, Data safety, content rating and
+reviewer instructions are in [Google Play listing drafts](play-store-listing.md), and the graphics
+in `docs/assets/play/`. Widgets for Android (home screen water, requirements and extras) are a
+separate phase.
