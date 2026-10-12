@@ -3,6 +3,7 @@ package app.dailychallenge.android
 import android.content.Context
 import android.content.Intent
 import app.dailychallenge.core.AccountDeletionTransport
+import app.dailychallenge.core.Action
 import app.dailychallenge.core.AuthBackend
 import app.dailychallenge.core.AuthModel
 import app.dailychallenge.core.AuthSession
@@ -10,10 +11,13 @@ import app.dailychallenge.core.AuthStep
 import app.dailychallenge.core.ChallengeCalendar
 import app.dailychallenge.core.ChallengeEvent
 import app.dailychallenge.core.ChallengeRecord
+import app.dailychallenge.core.ChallengeSyncError
+import app.dailychallenge.core.ChallengeSyncException
 import app.dailychallenge.core.ChallengeTime
 import app.dailychallenge.core.ChallengeTransport
 import app.dailychallenge.core.DeviceWording
 import app.dailychallenge.core.DietState
+import app.dailychallenge.core.ExtraSchedule
 import app.dailychallenge.core.Habit
 import app.dailychallenge.core.MemoryKeyValueStore
 import app.dailychallenge.core.NetworkException
@@ -22,11 +26,16 @@ import app.dailychallenge.core.OtpType
 import app.dailychallenge.core.RemoteEvents
 import app.dailychallenge.core.ReminderScheduler
 import app.dailychallenge.core.SignUpResult
+import app.dailychallenge.core.Target
+import app.dailychallenge.core.TargetUnit
+import app.dailychallenge.core.Targets
 import app.dailychallenge.core.Tracker
 import app.dailychallenge.core.WaterReminderController
 import app.dailychallenge.core.WaterReminderSettings
+import app.dailychallenge.core.WaterTarget
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
 import java.time.ZoneId
@@ -57,6 +66,9 @@ object Fixtures {
             showManagement = intent.getBooleanExtra("manageExtras", false),
             showDeletion = intent.getBooleanExtra("deleteAccount", false) || intent.getBooleanExtra("deleteAccountConfirm", false),
             showDeletionConfirmation = intent.getBooleanExtra("deleteAccountConfirm", false),
+            showGoals = intent.getBooleanExtra("dailyGoals", false),
+            editGoal = intent.getStringExtra("editGoal"),
+            editExtra = intent.getStringExtra("editExtra"),
         ), deletionFails = intent.getBooleanExtra("deletionFails", false))
     }
 
@@ -87,8 +99,9 @@ object Fixtures {
         fun day(offset: Long) = ChallengeCalendar(zone).addDays(now, offset) + 12 * 3_600
         fun extraID(title: String) = tracker.challenge!!.allExtras.first { it.title == title }.id
 
+        val goals = setOf("todayGoals", "historyGoals", "historyBeforeGoals", "accountGoals", "goalsServerUpdate")
         val seeded = setOf("today", "todayComplete", "history", "account", "todayExtras", "extrasCap", "historyExtras",
-            "historyExtrasEditing", "accountExtras", "historyCarryOver")
+            "historyExtrasEditing", "accountExtras", "historyCarryOver", "todayRepeating") + goals
         when (screen) {
             "checking" -> tracker.configureSync(UnreachableTransport())
             in seeded -> {
@@ -134,6 +147,35 @@ object Fixtures {
                         if (screen == "historyExtrasEditing") tracker.enableCorrections()
                     }
                 }
+                if (screen in goals) {
+                    // Changed from today (day 12): earlier days keep the standard five.
+                    tracker.setGoals(customGoals)
+                    tracker.addWater(330)
+                    tracker.clearCelebration()
+                    when (screen) {
+                        "historyGoals" -> { graph.tab = Tab.HISTORY; tracker.selectHistoryDay(tracker.today) }
+                        "historyBeforeGoals" -> { graph.tab = Tab.HISTORY; tracker.selectHistoryDay(day(-2)) }
+                        "accountGoals" -> graph.tab = Tab.ACCOUNT
+                        "goalsServerUpdate" -> {
+                            graph.tab = Tab.ACCOUNT
+                            tracker.configureSync(UnmigratedTransport())
+                            scope.launch { tracker.sync(force = true) }
+                        }
+                    }
+                }
+                if (screen == "todayRepeating") {
+                    // Repeating extras beside a late to-do; Friday 9 October is a weekday.
+                    clock = day(-2); tracker.showToday()
+                    tracker.addExtra("Book dentist")
+                    tracker.addExtra("Stretch", ExtraSchedule.Every(1))
+                    tracker.addExtra("Pack lunch", ExtraSchedule.Weekdays((1..5).toSet()))
+                    tracker.addExtra("Call family", ExtraSchedule.Weekdays(setOf(5)))
+                    tracker.addExtra("Water the plants", ExtraSchedule.Every(3))
+                    clock = now; tracker.showToday()
+                    tracker.toggleExtra(extraID("Stretch"))
+                    tracker.toggleExtra(extraID("Call family"))
+                    tracker.clearCelebration()
+                }
                 if (screen == "history") { graph.tab = Tab.HISTORY; tracker.selectHistoryDay(day(-2)) }
                 if (screen == "historyCarryOver") { graph.tab = Tab.HISTORY; tracker.selectHistoryDay(day(-1)) }
                 if (screen == "account" || screen == "accountExtras") {
@@ -145,6 +187,33 @@ object Fixtures {
         if (options.showDeletion) graph.tab = Tab.ACCOUNT
         return graph
     }
+}
+
+/** The goals the custom-goals fixtures change to on day 12, as in the plan's wireframes. */
+private val customGoals = Targets(
+    WaterTarget(3_000, 330),
+    Target("Gym", 45, TargetUnit.MINUTES),
+    Target("Yoga", 30, TargetUnit.MINUTES, "yoga"),
+    Target("No sugar"),
+    Target("Audiobook", 20, TargetUnit.MINUTES, "headphones"),
+)
+
+/**
+ * An in-memory server without the custom goals update: it keeps the challenge and older kinds,
+ * and refuses a batch holding a target or schedule as Supabase does (23514 on the action-kind check).
+ */
+private class UnmigratedTransport : ChallengeTransport {
+    private var header: ChallengeRecord? = null
+    private val events = LinkedHashMap<UUID, ChallengeEvent>()
+    override suspend fun fetchChallenge(ownerID: UUID): ChallengeRecord? = header
+    override suspend fun insertChallenge(record: ChallengeRecord) { if (header == null) header = record }
+    override suspend fun upload(events: List<ChallengeEvent>, ownerID: UUID) {
+        if (events.any { it.activity.action.let { action -> action is Action.SetTarget || action is Action.SetWater || action is Action.ScheduleExtra } }) {
+            throw ChallengeSyncException(ChallengeSyncError.SERVER_NEEDS_CUSTOM_GOALS_UPDATE)
+        }
+        events.forEach { this.events.putIfAbsent(it.id, it.copy(receivedAt = "2026-10-09T14:00:00Z")) }
+    }
+    override suspend fun fetchEvents(ownerID: UUID, challengeID: UUID): RemoteEvents = RemoteEvents(events.values.toList())
 }
 
 /** Reports permission as allowed and keeps nothing: no alarm is ever set by a fixture. */

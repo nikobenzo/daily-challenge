@@ -27,7 +27,12 @@ import app.dailychallenge.core.ChallengeCalendar
 import app.dailychallenge.core.ChallengeStore
 import app.dailychallenge.core.ChallengeTime
 import app.dailychallenge.core.DietState
+import app.dailychallenge.core.ExtraSchedule
 import app.dailychallenge.core.Habit
+import app.dailychallenge.core.Target
+import app.dailychallenge.core.TargetUnit
+import app.dailychallenge.core.Targets
+import app.dailychallenge.core.WaterTarget
 import app.dailychallenge.core.WidgetAccountStore
 import app.dailychallenge.core.WidgetState
 import org.junit.After
@@ -51,10 +56,10 @@ class WidgetLayoutTest {
 
     @After fun cleanUp() { directory.deleteRecursively() }
 
-    private fun state(setUp: (ChallengeStore) -> Unit = {}): WidgetState.Ready {
+    private fun state(targets: Targets = Targets.STANDARD, setUp: (ChallengeStore) -> Unit = {}): WidgetState.Ready {
         WidgetAccountStore(directory).publish(owner)
         val store = ChallengeStore(owner, directory)
-        store.start(ChallengeCalendar(zone).addDays(now, -11), zone)
+        store.start(ChallengeCalendar(zone).addDays(now, -11), zone, targets, now)
         setUp(store)
         return WidgetState.load(directory, now) as WidgetState.Ready
     }
@@ -109,10 +114,50 @@ class WidgetLayoutTest {
         setAppWidgetSize(DpSize(320.dp, 180.dp))
         provideComposable { WidgetSurface(ready, Destination.TODAY) { RequirementsContent(it) } }
         onNode(hasText("Day 12")).assertExists()
-        onNode(hasContentDescriptionEqualTo("Workout, 45 min, home or gym, done")).assert(tap(ready, "habit", "workout"))
+        onNode(hasContentDescriptionEqualTo("Workout, 45 minutes, home or gym, done")).assert(tap(ready, "habit", "workout"))
         onNode(hasContentDescriptionEqualTo("Walk, 45 minutes, pending")).assert(tap(ready, "habit", "walk"))
         onNode(hasContentDescriptionEqualTo("Bible, 10 pages, pending")).assert(tap(ready, "habit", "bibleReading"))
         onNode(hasContentDescriptionEqualTo("Clean diet, your own rules, pending")).assert(tap(ready, "diet"))
+    }
+
+    private val custom = Targets(WaterTarget(3_000, 330), Target("Gym", 45, TargetUnit.MINUTES), Target("Yoga", 30, TargetUnit.MINUTES, "yoga"),
+        Target("No sugar"), Target("Audiobook", 20, TargetUnit.MINUTES, "headphones"))
+
+    @Test
+    fun requirementRingsShowTheDaysOwnGoals() = runGlanceAppWidgetUnitTest {
+        val ready = state(custom) { store -> store.record(Action.SetHabit(Habit.WALK, true), now, now) }
+        setContext(context)
+        setAppWidgetSize(DpSize(320.dp, 180.dp))
+        provideComposable { WidgetSurface(ready, Destination.TODAY) { RequirementsContent(it) } }
+        onNode(hasText("YOGA")).assertExists()
+        onNode(hasContentDescriptionEqualTo("Gym, 45 minutes, pending")).assert(tap(ready, "habit", "workout"))
+        onNode(hasContentDescriptionEqualTo("Yoga, 30 minutes, done")).assert(tap(ready, "habit", "walk"))
+        onNode(hasContentDescriptionEqualTo("Audiobook, 20 minutes, pending")).assert(tap(ready, "habit", "bibleReading"))
+        onNode(hasContentDescriptionEqualTo("No sugar, your own rules, pending")).assert(tap(ready, "diet"))
+    }
+
+    @Test
+    fun waterFollowsTheDaysGoalAndGlass() = runGlanceAppWidgetUnitTest {
+        val ready = state(custom) { store -> store.record(Action.Pour(330), now, now) }
+        setContext(context)
+        setAppWidgetSize(DpSize(300.dp, 160.dp))
+        provideComposable { WidgetSurface(ready, Destination.TODAY) { WaterContent(it) } }
+        onNode(hasContentDescriptionEqualTo("Water, 330 of 3,000 millilitres")).assertExists()
+        onNode(hasContentDescriptionEqualTo("Add 330 ml")).assert(tap(ready, "pour"))
+        onNode(hasText("2,670 ml to go")).assertExists()
+    }
+
+    @Test
+    fun aRepeatingExtraSaysHowItRepeats() = runGlanceAppWidgetUnitTest {
+        val stretch = UUID.randomUUID()
+        val ready = state { store ->
+            store.record(Action.DefineExtra(stretch, "Stretch"), now, now)
+            store.record(ExtraSchedule.Every(1).action(stretch), now, now)
+        }
+        setContext(context)
+        setAppWidgetSize(DpSize(300.dp, 180.dp))
+        provideComposable { WidgetSurface(ready, Destination.EXTRAS) { ExtrasContent(it) } }
+        onNode(hasContentDescriptionEqualTo("Stretch, every day, pending")).assert(tap(ready, "extra", stretch.toString().uppercase()))
     }
 
     @Test
