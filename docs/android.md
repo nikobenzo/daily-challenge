@@ -4,9 +4,9 @@ A native Android app in `android/`: Kotlin, Jetpack Compose and Material 3, buil
 from the command line. It is the same tracker as the iPhone app (sign in, create account with an
 emailed code, password reset, setup with a time zone, Today, History with Edit this day, Account
 with sync, water reminders, appearance, sign out and account deletion) and syncs with the Mac and
-iPhone apps through the same Supabase project and wire format. There are no widgets yet. Release
-signing, the Play listing drafts and store graphics are ready; uploading is the owner's
-[Google Play release checklist](play-release.md).
+iPhone apps through the same Supabase project and wire format, with three home-screen widgets
+(see [Widgets](#widgets)). Release signing, the Play listing drafts and store graphics are ready;
+uploading is the owner's [Google Play release checklist](play-release.md).
 
 - Package (applicationId): `app.dailychallenge.android`. It cannot change after the first Play
   upload, so confirm it before that.
@@ -151,7 +151,100 @@ real configured app opened with no account. Those in `emulator/` come from an An
   permission needed), at most 48 queued, re-planned whenever the total changes, after a reboot,
   an app update or a time zone change, and from the background sync. Android 13 and later ask
   for notification permission when reminders are turned on.
-- **Not ported:** widgets (later phase), Mac-only features (backups, launch at login, updates).
+- **Not ported:** the iPhone's Lock Screen water ring (Android phones have no equivalent), and
+  Mac-only features (backups, launch at login, updates).
+
+## Widgets
+
+Three resizable home-screen widgets, the iPhone set drawn in the Android app's design system
+(Jetpack Glance, `android/app/src/main/java/app/dailychallenge/android/widget/`):
+
+- **Water** (2 by 2, wider sizes put the jug beside the total): the Today jug and today's total
+  out of 4,000 ml. **+ 450 ml** records a 450 ml pour, also past the goal. **−** undoes today's
+  latest pour, whatever its amount or the device it came from; with no pour today it is drawn
+  disabled and a stale tap records nothing.
+- **Daily requirements** (4 by 2): the day badge, the streak and Today's ring gauges for workout,
+  walk, clean diet and Bible reading. Tapping workout, walk or Bible ticks or unticks it. Diet
+  flips between pending and clean; a diet marked missed in the app shows a dashed red ring, and
+  tapping it opens the app instead of changing it.
+- **Extras** (4 by 2, taller sizes show more rows, up to all ten): today's checklist with Late
+  markers; tap a row to tick it. When rows do not fit, "Open all N extras" opens Manage extras;
+  with none, "Add your own to-dos" does.
+
+Each widget shows the challenge's own date ("12 Oct · Jersey"), so a phone in another time zone
+still makes sense. Anything that is not a control opens the app on Today (Extras: Manage extras),
+behind sign-in and setup as usual. Signed out, the widgets say "Open Daily Challenge to sign in";
+with no challenge yet, "Open Daily Challenge to set up"; with history the app cannot read, "Open
+Daily Challenge". They never show another account's data.
+
+**How a tap is recorded.** A tap runs in the app's own process without opening the app, the
+session or the network. Inside the store lock it reads the published widget account and today's
+stored state at the tap's own time in the challenge's zone, decides the action from that (never
+from what the widget last drew), and records one of the existing actions (`pour(450)`,
+`undoLatestPour`, `setHabit`, `setDiet`, `setExtra`) into the normal history and pending queue,
+exactly as an in-app edit would. The app's own edits, setup and sync merge load the store fresh
+inside the same lock (`StoreLock`, a JVM lock plus an advisory file lock), so a widget tap and an
+in-app edit or an in-flight sync can never lose or duplicate each other. After a recorded tap the
+open app reloads, and one run of the app's sync worker is queued for when there is a network; the
+app's sync then uploads the pending events like any others. The widgets never hold a session
+token and never make a network request.
+
+**Account binding.** The app publishes `widget-account.json` beside the history: the signed-in
+owner and an opaque generation, never a token or an email. Every drawn control carries that
+generation and the challenge ID. Sign-out, account deletion and switching account unpublish it
+or issue a new generation first, so a tap drawn before is refused (the widget then redraws in its
+current state). Archived extras, extras no longer shown today and days outside the challenge are
+refused too.
+
+**When they redraw.** After every committed change in the app (edits, setup, sync merges), after a
+widget tap, after sign-in or sign-out, and at the next midnight in the challenge's zone through one
+inexact alarm that does not wake the phone (it fires at the next wake), re-armed on each redraw
+and after a restart or an app update, and cleared when no widget is placed. There is no periodic
+update and no background job. On Android 12 and later the widgets follow Light and Dark by
+themselves, even with the app closed. On Android 10 and 11 they draw the colours of the moment:
+the app redraws them when the theme or font size changes while it is running, and otherwise they
+switch at their next redraw (a tap, opening the app, a sync or midnight).
+
+**Accessibility.** Every control has a spoken label with its state ("Workout, 45 min, home or gym,
+done", "Undo latest pour, no pour today", "Stretch, late, pending"); the water total is spoken as
+"Water, 1,350 of 4,000 millilitres". Text follows the system font size; at large sizes the pour
+label shortens, extra titles truncate (and are still spoken in full) and fewer extras rows are
+shown, with the "Open all" link kept.
+
+**Limits.** A pour from a widget that reaches 4,000 ml stops water reminders when the app next runs
+(the reload after a tap does it when the app is in memory). Undo after midnight acts on the new day.
+
+### Widget fixtures (Debug builds)
+
+```sh
+adb shell am start -n app.dailychallenge.android/.MainActivity --es widgetFixture partial
+adb shell am start -n app.dailychallenge.android/.MainActivity --es widgetFixture partial --es pinWidget water
+adb shell am start -n app.dailychallenge.android/.MainActivity --es widgetFixture off
+```
+
+A widget fixture writes synthetic history (day 12 in Jersey, relative to today) into the app's
+`WidgetFixtures` folder, points the widgets at it and redraws them; taps then record there.
+`off` points them back at the real history. Fixtures: `partial`, `empty`, `complete`, `over`,
+`missedDiet`, `extrasMany`, `signedOut`, `noChallenge`, `off`. `--es pinWidget
+water|requirements|extras` asks the launcher to place one (it shows "Add to home screen"). The
+real session and history are never read or changed. Release builds contain none of this.
+
+Screenshots: `docs/screenshots/android/widgets/`, placed on the home screen of an Android 10
+(API 29) emulator in Light and Dark (`<fixture>-water-extras-<theme>.png` and
+`<fixture>-requirements-<theme>.png`, plus `partial-*-dark-largetext.png` at the largest font
+size), and on an Android 16 (API 36) emulator (`android16-*`; the dark one was taken with the
+app's process stopped). Redmi Note 7 captures are `redmi-*`.
+
+### Tests
+
+`WidgetActionsTest` (`./gradlew :core:test`) runs the widget actions against the real store and
+lock: pour (also past the goal), undo with and without a pour and of a synced pour, habit ticks
+read from storage, diet pending and clean with a missed day left alone, extras ticks and refusals,
+refusal after sign-out, account switch and deletion, a binding for another challenge, the day at
+the tap time in a New York challenge, an app edit after a widget tap, a tap during an in-flight
+sync, and threads racing app edits. `WidgetLayoutTest` (`./gradlew connectedDebugAndroidTest`)
+checks the Glance layouts: what each widget shows and speaks, which tap or app link each control
+carries, extras rows at small, tall and large-text sizes, and the signed-out state.
 
 ## Owner acceptance checklist (real account, real phone)
 
@@ -186,10 +279,37 @@ for extras, `20261011000100_account_deletion` for deletion; see
     says the account was deleted; signing in again fails, and the Mac/iPhone are signed out.
     Offline, deletion fails and changes nothing.
 
+### Widgets (real account, real phones)
+
+Use the same disposable account, signed in on this phone, the Mac and the iPhone.
+
+1. Long-press the home screen, Widgets, Daily Challenge: add Water, Daily requirements and
+   Extras. Each shows today's data and the challenge date.
+2. With the app closed, tap **+ 450 ml** twice and **−** once, tick workout, flip diet to clean
+   and tick an extra. Each widget updates at once.
+3. Open the app: Today shows the same. Within a minute (or on Sync now), the Mac and the iPhone
+   show the pour, the undo and the ticks; nothing is doubled.
+4. Turn on airplane mode, tap a few widget controls, open the app: Account says the changes are
+   waiting; turn airplane mode off and they upload.
+5. On the Mac or iPhone, add a pour and archive an extra; after the phone's next sync (open the
+   app, or wait for background sync) the widgets show both, and the archived extra cannot be
+   ticked.
+6. Mark diet missed in the app: the widget shows a dashed red ring, and tapping it opens the app.
+7. Sign out in the app: all three widgets say "Open Daily Challenge to sign in", and no tap
+   records anything. Sign in again and they return.
+8. Leave the widgets placed past midnight in the challenge's zone: the next morning they show
+   the new day (0 ml, pending rings, carried-over extras marked Late).
+9. Switch the phone between Light and Dark: the widgets follow (on Android 10, at once if the app
+   is running, otherwise at their next update).
+10. TalkBack: each ring, button and extra is read with its state.
+11. On MIUI, set Settings > Apps > Manage apps > Daily Challenge > Battery saver to "No
+    restrictions" and allow Autostart. MIUI can otherwise stop the app in the background, which
+    delays the midnight redraw (until the next unlock, tap or app launch) and the sync after a
+    widget tap (until the app is opened). Taps themselves still record.
+
 ## Google Play
 
 The owner steps from a verified developer account to a closed test and production are in the
 [Google Play release checklist](play-release.md); the store text, Data safety, content rating and
 reviewer instructions are in [Google Play listing drafts](play-store-listing.md), and the graphics
-in `docs/assets/play/`. Widgets for Android (home screen water, requirements and extras) are a
-separate phase.
+in `docs/assets/play/`.
