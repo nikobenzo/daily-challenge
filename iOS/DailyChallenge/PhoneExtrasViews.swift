@@ -51,8 +51,9 @@ struct PhoneExtrasHeading: View {
     }
 }
 
-/// The selected day's extras: carried-over ones marked "Late", completed ones gone from
-/// later days, and extras archived after that day.
+/// The selected day's extras: carried-over ones marked "Late", repeating ones captioned
+/// with how they repeat, completed to-dos gone from later days, and extras archived after
+/// that day.
 struct PhoneExtrasChecklist: View {
     @Bindable var tracker: TrackerModel
 
@@ -61,6 +62,7 @@ struct PhoneExtrasChecklist: View {
             ForEach(tracker.summary?.extras ?? []) { extra in
                 let done = tracker.summary?.completedExtras.contains(extra.id) == true
                 let late = tracker.summary?.isLate(extra) == true
+                let repeats = tracker.summary.flatMap { GoalWords.repeatCaption(extra.schedule(on: $0.interval.start)) }
                 Button { tracker.toggleExtra(extra.id) } label: {
                     HStack(spacing: 12) {
                         Image(systemName: done ? "checkmark.circle.fill" : "circle")
@@ -70,13 +72,18 @@ struct PhoneExtrasChecklist: View {
                             .foregroundStyle(done ? Theme.textSecondary : Theme.textPrimary)
                             .fixedSize(horizontal: false, vertical: true)
                         if late { LateMarker() }
+                        if let repeats {
+                            Text(repeats).font(Theme.Fonts.caption).foregroundStyle(Theme.textSecondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                         Spacer(minLength: 0)
                     }
                     .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                     .padding(.vertical, 4).contentShape(Rectangle())
                 }
                 .buttonStyle(.plain).disabled(!tracker.canEdit)
-                .accessibilityLabel(late ? "\(extra.title), late" : extra.title).accessibilityValue(done ? "Done" : "Not done")
+                .accessibilityLabel([extra.title, late ? "late" : nil, repeats].compactMap { $0 }.joined(separator: ", "))
+                .accessibilityValue(done ? "Done" : "Not done")
                 .accessibilityHint(tracker.canEdit ? "Double-tap to \(done ? "undo" : "mark done")" : "Select Edit this day to correct this tick")
                 .accessibilityIdentifier("extra-\(extra.id.uuidString)")
             }

@@ -352,8 +352,8 @@ struct PhoneReminderSettings: View {
     }
 
     static func details(timeZone: TimeZone) -> String {
-        "Times are \(ChallengeDates.city(timeZone)) time, your challenge's time zone. Reminders stop for the day at "
-            + "4,000 ml; a goal met on another device stops them here once this iPhone syncs. This setting stays on this iPhone."
+        "Times are \(ChallengeDates.city(timeZone)) time, your challenge's time zone. Reminders stop for the day once "
+            + "that day's water goal is met; a goal met on another device stops them here once this iPhone syncs. This setting stays on this iPhone."
     }
 
     private func setting<Value>(_ keyPath: WritableKeyPath<WaterReminderSettings, Value>) -> Binding<Value> {

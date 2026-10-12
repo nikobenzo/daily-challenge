@@ -46,9 +46,10 @@ struct TodayScreen: View {
     }
 }
 
-/// WATER · WORKOUT · WALK · DIET · BIBLE. Water mirrors the jug; the four habit rings are
-/// the habit controls (tap to toggle; diet cycles, and a long press chooses directly).
-/// At accessibility text sizes the rings wrap onto two rows.
+/// WATER · WORKOUT · WALK · DIET · BIBLE, or the names the selected day's targets give
+/// them. Water mirrors the jug; the four habit rings are the habit controls (tap to toggle;
+/// diet cycles, and a long press chooses directly). At accessibility text sizes the rings
+/// wrap onto two rows.
 struct PhoneRingRow: View {
     @Bindable var tracker: TrackerModel
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -57,16 +58,16 @@ struct PhoneRingRow: View {
         Group {
             if typeSize.isAccessibilitySize {
                 Grid(horizontalSpacing: 14, verticalSpacing: 14) {
-                    GridRow { water; habit(.workout, "Workout", "45 min · home / gym", "dumbbell"); habit(.walk, "Walk", "45 minutes", "figure.walk") }
-                    GridRow { diet; habit(.bibleReading, "Bible", "10 pages", "book") }
+                    GridRow { water; habit(.workout); habit(.walk) }
+                    GridRow { diet; habit(.bibleReading) }
                 }
             } else {
                 HStack(spacing: 0) {
                     water.frame(maxWidth: .infinity)
-                    habit(.workout, "Workout", "45 min · home / gym", "dumbbell").frame(maxWidth: .infinity)
-                    habit(.walk, "Walk", "45 minutes", "figure.walk").frame(maxWidth: .infinity)
+                    habit(.workout).frame(maxWidth: .infinity)
+                    habit(.walk).frame(maxWidth: .infinity)
                     diet.frame(maxWidth: .infinity)
-                    habit(.bibleReading, "Bible", "10 pages", "book").frame(maxWidth: .infinity)
+                    habit(.bibleReading).frame(maxWidth: .infinity)
                 }
             }
         }
@@ -75,26 +76,33 @@ struct PhoneRingRow: View {
     }
 
     private var closed: Bool { tracker.summary?.status == .missed }
+    private var targets: Challenge.Targets { tracker.summary?.targets ?? .standard }
+    /// A chosen name shrinks, then truncates, inside its ring's share of the row.
+    private let labelWidth: CGFloat = 68
 
     private var water: some View {
         let ml = tracker.summary?.waterMillilitres ?? 0
+        let goal = targets.water.goal
         let state: RingGauge.State = tracker.summary?.waterComplete == true ? .done
-            : closed ? .missed : ml == 0 ? .pending : .progress(Double(ml) / 4_000)
+            : closed ? .missed : ml == 0 ? .pending : .progress(Double(ml) / Double(goal))
         return RingGauge(symbol: "drop.fill", label: "Water", state: state, showsPercent: true)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Water")
-            .accessibilityValue("\(ml) of 4,000 millilitres")
+            .accessibilityValue("\(ml) of \(goal.formatted()) millilitres")
             .accessibilityIdentifier("ring-water")
     }
 
-    private func habit(_ habit: Challenge.Habit, _ title: String, _ detail: String, _ icon: String) -> some View {
+    private func habit(_ habit: Challenge.Habit) -> some View {
+        let slot = GoalWords.slot(habit)
+        let target = targets[slot]
         let complete = tracker.summary?.completedHabits.contains(habit) ?? false
         return Button { tracker.toggle(habit) } label: {
-            RingGauge(symbol: icon, label: title, state: complete ? .done : closed ? .missed : .pending)
+            RingGauge(symbol: GoalWords.symbol(slot, target), label: target.name,
+                      state: complete ? .done : closed ? .missed : .pending, labelWidth: labelWidth)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain).disabled(!tracker.canEdit)
-        .accessibilityLabel("\(title), \(detail)")
+        .accessibilityLabel(GoalWords.spoken(slot, target))
         .accessibilityValue(complete ? "Complete" : "Not complete")
         .accessibilityHint("Double-tap to \(complete ? "undo" : "mark complete")")
         .accessibilityIdentifier("ring-\(habit.rawValue)")
@@ -106,10 +114,12 @@ struct PhoneRingRow: View {
         return Button {
             tracker.setDiet(state == .pending ? .clean : state == .clean ? .missed : .pending)
         } label: {
-            RingGauge(symbol: "leaf", label: "Diet", state: ring).contentShape(Rectangle())
+            RingGauge(symbol: GoalWords.symbol(.diet, targets.diet), label: targets.diet.name, state: ring,
+                      labelWidth: labelWidth)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain).disabled(!tracker.canEdit)
-        .accessibilityLabel("Clean diet, your own rules").accessibilityValue(state.rawValue)
+        .accessibilityLabel(GoalWords.spoken(.diet, targets.diet)).accessibilityValue(state.rawValue)
         .accessibilityHint("Double-tap to cycle pending, clean and missed")
         .accessibilityIdentifier("ring-diet")
         .contextMenu { PhoneDietMenu(tracker: tracker) }
@@ -151,7 +161,7 @@ struct CompletionBand: View {
 }
 
 /// The jug beside the total, then the pour controls across the full width (on a phone the
-/// Mac's row beside the jug would truncate "450 ml"); stacked at accessibility text sizes.
+/// Mac's row beside the jug would truncate "+ 450 ml"); stacked at accessibility text sizes.
 struct PhoneWaterSection: View {
     @Bindable var tracker: TrackerModel
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -162,7 +172,7 @@ struct PhoneWaterSection: View {
             : AnyLayout(HStackLayout(spacing: 18))
         VStack(spacing: 16) {
             layout {
-                WaterJugView(millilitres: ml)
+                WaterJugView(millilitres: ml, goal: tracker.summary?.targets.water.goal ?? 4_000)
                     .frame(width: Theme.Size.jug.width + 8, height: Theme.Size.jug.height + 14)
                     .accessibilityIdentifier("water-jug")
                 WaterTotal(tracker: tracker, font: Theme.Fonts.hero)
@@ -174,7 +184,7 @@ struct PhoneWaterSection: View {
     }
 }
 
-/// "2,250 ml / 4,000" for the selected day, with the goal turning green once met.
+/// "2,250 ml / 4,000" against the selected day's goal, turning green once met.
 struct WaterTotal: View {
     let tracker: TrackerModel
     let font: Font
@@ -182,20 +192,21 @@ struct WaterTotal: View {
     var body: some View {
         let ml = tracker.summary?.waterMillilitres ?? 0
         let complete = tracker.summary?.waterComplete == true
+        let goal = tracker.summary?.targets.water.goal ?? Challenge.Targets.standard.water.goal
         HStack(alignment: .firstTextBaseline, spacing: 6) {
             Text("\(ml.formatted()) ml").font(font).tracking(Theme.Tracking.hero)
                 .monospacedDigit().foregroundStyle(Theme.textPrimary)
                 .lineLimit(1).minimumScaleFactor(0.6)
-            Text("/ 4,000").font(Theme.Fonts.caption)
+            Text("/ \(goal.formatted())").font(Theme.Fonts.caption)
                 .foregroundStyle(complete ? Theme.doneText : Theme.textSecondary)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(ml) of 4,000 millilitres")
+        .accessibilityLabel("\(ml) of \(goal.formatted()) millilitres")
         .accessibilityIdentifier("water-total")
     }
 }
 
-/// −, + 450 ml and ⋯ (custom pour), for the selected day.
+/// −, + the selected day's glass (450 ml unless changed) and ⋯ (custom pour).
 struct PhoneWaterControls: View {
     @Bindable var tracker: TrackerModel
     @State private var showingCustom = false
@@ -227,7 +238,8 @@ struct PhoneWaterControls: View {
 
     /// Primary until the goal is met, then a quieter tinted pill.
     @ViewBuilder private var add: some View {
-        let label = Label("450 ml", systemImage: "plus").lineLimit(1)
+        let glass = tracker.summary?.targets.water.glass ?? Challenge.Targets.standard.water.glass
+        let label = Label("\(glass.formatted()) ml", systemImage: "plus").lineLimit(1)
         Group {
             if tracker.summary?.waterComplete == true {
                 Button { tracker.addWater() } label: { label }
@@ -238,7 +250,7 @@ struct PhoneWaterControls: View {
             }
         }
         .disabled(!tracker.canEdit)
-        .accessibilityLabel("Add 450 millilitres of water")
+        .accessibilityLabel("Add \(glass.formatted()) millilitres of water")
         .accessibilityIdentifier("water-add")
     }
 }

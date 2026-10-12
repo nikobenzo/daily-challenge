@@ -371,10 +371,10 @@ struct RequirementsWidgetView: View {
             }
             .dynamicTypeSize(...DynamicTypeSize.xxLarge)
             HStack(alignment: .top, spacing: 0) {
-                habit(.workout, "Workout", "45 min · home / gym", "dumbbell")
-                habit(.walk, "Walk", "45 minutes", "figure.walk")
+                habit(.workout)
+                habit(.walk)
                 diet
-                habit(.bibleReading, "Bible", "10 pages", "book")
+                habit(.bibleReading)
             }
             // Fixed 64 pt rings in four equal columns: the labels stop at extra large.
             .dynamicTypeSize(...DynamicTypeSize.xLarge)
@@ -410,11 +410,15 @@ struct RequirementsWidgetView: View {
         .accessibilityLabel("Current streak: \(entry.streak) days")
     }
 
-    private func habit(_ habit: Challenge.Habit, _ title: String, _ detail: String, _ icon: String) -> some View {
+    /// The entry day's names, icons and amounts: the standard five unless changed.
+    private var targets: Challenge.Targets { entry.summary?.targets ?? .standard }
+
+    private func habit(_ habit: Challenge.Habit) -> some View {
+        let slot = GoalWords.slot(habit)
         let done = entry.summary?.completedHabits.contains(habit) == true
         return WidgetControl(request: entry.binding.map { WidgetActionRequest(.toggleHabit(habit), binding: $0) }) {
-            ring(icon, title, done ? .done : .pending,
-                 spoken: "\(title), \(detail), \(done ? "done" : "pending")")
+            ring(GoalWords.symbol(slot, targets[slot]), targets[slot].name, done ? .done : .pending,
+                 spoken: "\(GoalWords.spoken(slot, targets[slot])), \(done ? "done" : "pending")")
         }
     }
 
@@ -423,13 +427,14 @@ struct RequirementsWidgetView: View {
     @ViewBuilder private var diet: some View {
         if entry.summary?.diet == .missed {
             Link(destination: URL(string: "daily-challenge://today")!) {
-                ring("leaf", "Diet", .missed, spoken: "Clean diet, missed. Opens Daily Challenge to change it")
+                ring(GoalWords.symbol(.diet, targets.diet), targets.diet.name, .missed,
+                     spoken: "\(targets.diet.name), missed. Opens Daily Challenge to change it")
             }
         } else {
             let clean = entry.summary?.diet == .clean
             WidgetControl(request: entry.binding.map { WidgetActionRequest(.toggleDiet, binding: $0) }) {
-                ring("leaf", "Diet", clean ? .done : .pending,
-                     spoken: "Clean diet, your own rules, \(clean ? "done" : "pending")")
+                ring(GoalWords.symbol(.diet, targets.diet), targets.diet.name, clean ? .done : .pending,
+                     spoken: "\(GoalWords.spoken(.diet, targets.diet)), \(clean ? "done" : "pending")")
             }
         }
     }
@@ -438,7 +443,8 @@ struct RequirementsWidgetView: View {
     /// button in one frame or cross-fades it with a ghosted icon. Only the done stroke is.
     private func ring(_ icon: String, _ title: String, _ state: RingGauge.State, spoken: String) -> some View {
         ZStack(alignment: .top) {
-            RingGauge(symbol: icon, label: title, state: state, labelFont: WidgetFont.ringLabel, fillsDone: true)
+            RingGauge(symbol: icon, label: title, state: state, labelFont: WidgetFont.ringLabel, fillsDone: true,
+                      labelWidth: 72)
             WidgetRingFill(done: state == .done)
         }
         .frame(maxWidth: .infinity)
@@ -514,7 +520,8 @@ struct ExtrasWidgetView: View {
             } else {
                 ForEach(extras.prefix(limit)) { extra in
                     row(extra, done: summary?.completedExtras.contains(extra.id) == true,
-                        late: summary?.isLate(extra) == true, large: large)
+                        late: summary?.isLate(extra) == true, large: large,
+                        repeats: summary.flatMap { GoalWords.repeatCaption(extra.schedule(on: $0.interval.start)) })
                 }
                 Spacer(minLength: 0)
                 if extras.count > limit {
@@ -533,9 +540,9 @@ struct ExtrasWidgetView: View {
     }
 
     /// The app's checklist row: filled green check or empty circle, title dimmed when done,
-    /// "Late" once it has carried over. The check springs in over the circle (Reduce Motion:
-    /// fades) when the entry changes.
-    private func row(_ extra: Challenge.Extra, done: Bool, late: Bool, large: Bool) -> some View {
+    /// "Late" once it has carried over, or how it repeats. The check springs in over the
+    /// circle (Reduce Motion: fades) when the entry changes.
+    private func row(_ extra: Challenge.Extra, done: Bool, late: Bool, large: Bool, repeats: String?) -> some View {
         WidgetControl(request: entry.binding.map { WidgetActionRequest(.toggleExtra(extra.id), binding: $0) }) {
             HStack(spacing: 10) {
                 ZStack {
@@ -551,13 +558,18 @@ struct ExtrasWidgetView: View {
                 Text(extra.title).font(WidgetFont.row)
                     .foregroundStyle(done ? Theme.textSecondary : Theme.textPrimary)
                     .lineLimit(1).truncationMode(.tail)
+                    .layoutPriority(1)
                 if late { LateMarker(font: WidgetFont.caption) }
+                if let repeats {
+                    Text(repeats).font(WidgetFont.caption).foregroundStyle(Theme.textSecondary).lineLimit(1)
+                }
             }
             .animation(reduceMotion ? WidgetMotion.dissolve : WidgetMotion.tick, value: done)
             .frame(maxWidth: .infinity, minHeight: large ? 28 : 27, alignment: .leading)
             .contentShape(Rectangle())
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(extra.title + (late ? ", late" : "") + (done ? ", done" : ", pending"))
+            .accessibilityLabel(extra.title + (late ? ", late" : "") + (repeats.map { ", \($0)" } ?? "")
+                                + (done ? ", done" : ", pending"))
         }
     }
 }

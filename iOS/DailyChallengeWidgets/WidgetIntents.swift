@@ -24,7 +24,7 @@ enum WidgetIntentRunner {
 }
 
 struct PourWaterIntent: AppIntent {
-    static let title: LocalizedStringResource = "Add 450 ml of water"
+    static let title: LocalizedStringResource = "Add a glass of water"
     static let isDiscoverable = false
     @Parameter(title: "Generation") var generation: String
     @Parameter(title: "Challenge") var challenge: String

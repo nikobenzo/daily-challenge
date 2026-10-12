@@ -17,7 +17,7 @@ struct WaterWidget: Widget {
             WidgetSurface(entry: entry, destination: "today") { WaterWidgetView(entry: entry) }
         }
         .configurationDisplayName("Water")
-        .description("Log 450 ml pours toward 4,000 ml / 4 L, or undo today's latest pour. On the Lock Screen, today's total only.")
+        .description("Log a glass toward your daily water goal, or undo today's latest pour. On the Lock Screen, today's total only.")
         // D-W2: the Lock Screen gets the read-only water ring only, hidden while locked.
         .supportedFamilies([.systemSmall, .systemMedium, .accessoryCircular])
     }
@@ -29,7 +29,7 @@ struct RequirementsWidget: Widget {
             WidgetSurface(entry: entry, destination: "today") { RequirementsWidgetView(entry: entry) }
         }
         .configurationDisplayName("Daily requirements")
-        .description("Tick workout, walk, clean diet and Bible reading for your challenge day.")
+        .description("Tick your daily five: two activities, diet and reading, for your challenge day.")
         .supportedFamilies([.systemMedium])
     }
 }

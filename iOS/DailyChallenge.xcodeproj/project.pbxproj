@@ -11,6 +11,7 @@
 		17A3D909DAEA3EC7A4B2455C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B3318ACB2990FBC3B3771486 /* Assets.xcassets */; };
 		1DC1BD8C7677C816AD978C8F /* TodayScreenUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB8EA1BE55351A5ADA6FF79 /* TodayScreenUITests.swift */; };
 		276AEE6B3AD81C56666A02A9 /* DailyChallengeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0211C155DA07084E38D22D16 /* DailyChallengeApp.swift */; };
+		2FA5F67FD464004C9349D34C /* GoalWords.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE95FFACE183F6818D9AADAA /* GoalWords.swift */; };
 		2FF488A62E7C1B53DC7C546E /* WidgetTimeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7294939D231DA52CC101476D /* WidgetTimeline.swift */; };
 		3A39D28CBF7C193D408456E2 /* CompletionEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07750909352F2CCF3386CA44 /* CompletionEffect.swift */; };
 		3F1C7DE0E001EB84EEE03B2D /* ChallengeCore in Frameworks */ = {isa = PBXBuildFile; productRef = BCACA4963E18CCE1FA2A5117 /* ChallengeCore */; };
@@ -25,6 +26,7 @@
 		62987B738EA8E3C318F150CB /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62D3FBAE0645D9A0B21E47D9 /* SharedComponents.swift */; };
 		62BD84EAB2B1390748708AEE /* ChallengeSyncKit in Frameworks */ = {isa = PBXBuildFile; productRef = 5313A37E6B8A90076F23F638 /* ChallengeSyncKit */; };
 		66135E50905E864CA0802DA1 /* WidgetActionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F5596FA2E7CBBAAE65BEE3F /* WidgetActionTests.swift */; };
+		700B5EDAADB2BABEE7D17503 /* GoalWords.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE95FFACE183F6818D9AADAA /* GoalWords.swift */; };
 		712FB1DA40F26A225F6B7C4B /* PhoneApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF0746F58D619CE08A655CE1 /* PhoneApp.swift */; };
 		74E3EE639877BC4081F709F9 /* WidgetPlacementUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3888D73E71C2F5D574A1540 /* WidgetPlacementUITests.swift */; };
 		7803A2B6B83C56CB86DE75FB /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52CECB8A3AA40F95A0D695BE /* Theme.swift */; };
@@ -134,6 +136,7 @@
 		AF0746F58D619CE08A655CE1 /* PhoneApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneApp.swift; sourceTree = "<group>"; };
 		B3318ACB2990FBC3B3771486 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		BAA6BA706226779D4FF164F3 /* WidgetTimelineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetTimelineTests.swift; sourceTree = "<group>"; };
+		BE95FFACE183F6818D9AADAA /* GoalWords.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalWords.swift; sourceTree = "<group>"; };
 		CB890CC717BA70018ED35C1B /* DailyChallenge.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = DailyChallenge.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D21C3753FE4E3D2CC52A5F5D /* PhoneComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneComponents.swift; sourceTree = "<group>"; };
 		D3888D73E71C2F5D574A1540 /* WidgetPlacementUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetPlacementUITests.swift; sourceTree = "<group>"; };
@@ -199,6 +202,7 @@
 		2A08581EEF65AE28B0E2DC2C /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				BE95FFACE183F6818D9AADAA /* GoalWords.swift */,
 				1F2787F38AE405DAEF50D673 /* PhoneSharedStore.swift */,
 				7CDF630F289537D9F5F48348 /* WidgetActions.swift */,
 			);
@@ -537,6 +541,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F438959BC676798B693C8A62 /* ChallengeWidgets.swift in Sources */,
+				700B5EDAADB2BABEE7D17503 /* GoalWords.swift in Sources */,
 				C7B157EA60573C9319ED0E14 /* JugDrawing.swift in Sources */,
 				E90BD427FD54FE10121E6985 /* PhoneSharedStore.swift in Sources */,
 				62987B738EA8E3C318F150CB /* SharedComponents.swift in Sources */,
@@ -556,6 +561,7 @@
 				FC2D42FF69FB4BB7F55EAA85 /* AuthScreen.swift in Sources */,
 				3A39D28CBF7C193D408456E2 /* CompletionEffect.swift in Sources */,
 				276AEE6B3AD81C56666A02A9 /* DailyChallengeApp.swift in Sources */,
+				2FA5F67FD464004C9349D34C /* GoalWords.swift in Sources */,
 				BBDD3F15B6B638223CC8418E /* HistoryScreen.swift in Sources */,
 				D0745E75260518924130896F /* JugDrawing.swift in Sources */,
 				712FB1DA40F26A225F6B7C4B /* PhoneApp.swift in Sources */,

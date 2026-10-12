@@ -201,27 +201,29 @@ struct HistoryScreen: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.bottom, Theme.Space.s)
             } else {
-                ForEach(tracker.history) { activity in row(activity) }
+                let contexts = ActivityWords.contexts(on: tracker.selectedDay, in: tracker.challenge)
+                ForEach(tracker.history) { activity in row(activity, contexts[activity.id] ?? .init()) }
             }
         }
         .padding(.horizontal, Theme.Size.sectionHorizontal)
         .padding(.vertical, Theme.Space.xs)
     }
 
-    private func row(_ activity: Challenge.Activity) -> some View {
-        let (symbol, tint) = ActivityWords.icon(activity)
+    private func row(_ activity: Challenge.Activity, _ context: ActivityWords.Context) -> some View {
+        let (symbol, tint) = ActivityWords.icon(activity, in: context)
         return HStack(spacing: 12) {
             Image(systemName: symbol).font(.system(size: 15, weight: .semibold)).foregroundStyle(tint)
                 .frame(width: 22)
                 .accessibilityHidden(true)
-            Text(ActivityWords.short(activity)).font(Theme.Fonts.field).foregroundStyle(Theme.textPrimary)
+            Text(ActivityWords.short(activity, in: context)).font(Theme.Fonts.field).foregroundStyle(Theme.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
             Spacer()
             Text(tracker.dates.label(activity.recordedAt, format: "HH:mm")).font(Theme.Fonts.caption).monospacedDigit()
                 .foregroundStyle(Theme.textTertiary)
         }
         .frame(minHeight: 36)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(ActivityWords.long(activity)), edited \(tracker.dates.label(activity.recordedAt, format: "d MMM, HH:mm"))")
+        .accessibilityLabel("\(ActivityWords.long(activity, in: context)), edited \(tracker.dates.label(activity.recordedAt, format: "d MMM, HH:mm"))")
     }
 
     private var statusName: String { name(tracker.summary?.status ?? .outsideChallenge) }
@@ -251,87 +253,152 @@ struct HistoryScreen: View {
 }
 
 /// Activity wording, as on the Mac. Written as `if case` chains so a newer client's
-/// action kinds read as a generic change instead of breaking this screen.
+/// action kinds read as a generic change instead of breaking this screen. Habits are named
+/// by the day's targets, and a goal change by the target it replaced.
 enum ActivityWords {
-    static func habitName(_ habit: Challenge.Habit) -> String {
-        habit == .bibleReading ? "Bible reading" : habit.rawValue.capitalized
+    /// What an activity's wording depends on besides the activity itself.
+    struct Context {
+        /// The targets of the activity's day: what its habit ticks are called.
+        var targets: Challenge.Targets = .standard
+        /// The targets in force just before it: what a goal change replaced.
+        var previous: Challenge.Targets = .standard
+        /// The extra a repeat rule belongs to.
+        var extraTitle: String?
     }
 
-    static func symbol(_ habit: Challenge.Habit) -> String {
-        switch habit {
-        case .workout: "dumbbell"
-        case .walk: "figure.walk"
-        case .bibleReading: "book"
+    /// Each activity of the challenge day starting at `day`, replayed in event order.
+    static func contexts(on day: Date, in challenge: Challenge?) -> [UUID: Context] {
+        guard let challenge else { return [:] }
+        let targets = challenge.targets(on: day)
+        let titles = Dictionary(challenge.allExtras.map { ($0.id, $0.title) }, uniquingKeysWith: { $1 })
+        let earlier = challenge.calendar.date(byAdding: .day, value: -1, to: day).map { challenge.targets(on: $0) }
+        var current = earlier ?? .standard
+        var contexts: [UUID: Context] = [:]
+        for activity in challenge.history(on: day) {
+            var context = Context(targets: targets, previous: current)
+            if case .setTarget(let slot, let name, let amount, let unit, let icon) = activity.action {
+                current[slot] = Challenge.Target(name: name, amount: amount, unit: unit, icon: icon)
+            }
+            if case .setWater(let goal, let pour) = activity.action {
+                current.water = Challenge.WaterTarget(goal: goal, glass: pour)
+            }
+            if case .scheduleExtra(let id, _, _) = activity.action { context.extraTitle = titles[id] }
+            contexts[activity.id] = context
         }
+        return contexts
     }
 
-    static func icon(_ activity: Challenge.Activity) -> (String, Color) {
+    static func habitName(_ habit: Challenge.Habit, in targets: Challenge.Targets = .standard) -> String {
+        let name = targets[GoalWords.slot(habit)].name
+        return habit == .bibleReading && name == "Bible" ? "Bible reading" : name
+    }
+
+    static func symbol(_ habit: Challenge.Habit, in targets: Challenge.Targets = .standard) -> String {
+        GoalWords.symbol(habit, in: targets)
+    }
+
+    static func icon(_ activity: Challenge.Activity, in context: Context = Context()) -> (String, Color) {
         if case .pour = activity.action { return ("drop.fill", Theme.water) }
         if case .undoLatestPour = activity.action { return ("arrow.uturn.backward", Theme.textSecondary) }
         if case .setDiet(let value) = activity.action {
-            return ("leaf", value == .clean ? Theme.done : value == .missed ? Theme.danger : Theme.textTertiary)
+            return (GoalWords.symbol(.diet, context.targets.diet),
+                    value == .clean ? Theme.done : value == .missed ? Theme.danger : Theme.textTertiary)
         }
         if case .setHabit(let habit, let completed) = activity.action {
-            return (symbol(habit), completed ? Theme.done : Theme.textTertiary)
+            return (symbol(habit, in: context.targets), completed ? Theme.done : Theme.textTertiary)
         }
         if case .defineExtra = activity.action { return ("checklist", Theme.textSecondary) }
         if case .archiveExtra = activity.action { return ("archivebox", Theme.textSecondary) }
         if case .setExtra(_, let completed) = activity.action {
             return ("checkmark.circle", completed ? Theme.done : Theme.textTertiary)
         }
+        if case .setTarget(let slot, let name, let amount, let unit, let icon) = activity.action {
+            return (GoalWords.symbol(slot, Challenge.Target(name: name, amount: amount, unit: unit, icon: icon)), Theme.textSecondary)
+        }
+        if case .setWater = activity.action { return ("drop", Theme.water) }
+        if case .scheduleExtra = activity.action { return ("repeat", Theme.textSecondary) }
         return ("square.and.pencil", Theme.textSecondary)
     }
 
-    static func short(_ activity: Challenge.Activity) -> String {
+    static func short(_ activity: Challenge.Activity, in context: Context = Context()) -> String {
         if case .pour(let amount) = activity.action { return "+\(amount.formatted()) ml" }
         if case .undoLatestPour = activity.action { return "Undid pour" }
-        if case .setDiet(let value) = activity.action { return "Diet \(value.rawValue)" }
+        if case .setDiet(let value) = activity.action { return "\(context.targets.diet.name) \(value.rawValue)" }
         if case .setHabit(let habit, let completed) = activity.action {
-            return "\(habitName(habit)) \(completed ? "complete" : "not complete")"
+            return "\(habitName(habit, in: context.targets)) \(completed ? "complete" : "not complete")"
         }
         if case .defineExtra(_, let title) = activity.action { return "Extra named “\(title)”" }
         if case .archiveExtra = activity.action { return "Archived extra" }
         if case .setExtra(_, let completed) = activity.action { return "Extra \(completed ? "done" : "not done")" }
+        if let words = goalChange(activity, context, spoken: false) { return words }
         return "Changed"
     }
 
-    static func long(_ activity: Challenge.Activity) -> String {
+    static func long(_ activity: Challenge.Activity, in context: Context = Context()) -> String {
         if case .pour(let amount) = activity.action { return "Added \(amount.formatted()) ml" }
         if case .undoLatestPour = activity.action { return "Undid a water pour" }
-        if case .setDiet(let value) = activity.action { return "Diet set to \(value.rawValue)" }
+        if case .setDiet(let value) = activity.action { return "\(context.targets.diet.name) set to \(value.rawValue)" }
         if case .setHabit(let habit, let completed) = activity.action {
-            return "\(habitName(habit)) set to \(completed ? "complete" : "not complete")"
+            return "\(habitName(habit, in: context.targets)) set to \(completed ? "complete" : "not complete")"
         }
         if case .defineExtra(_, let title) = activity.action { return "Extra named “\(title)”" }
         if case .archiveExtra = activity.action { return "Archived extra" }
         if case .setExtra(_, let completed) = activity.action { return "Extra \(completed ? "done" : "not done")" }
+        if let words = goalChange(activity, context, spoken: true) { return words }
         return "Changed"
+    }
+
+    /// "Walk changed to Yoga · 30 min", "Water goal changed to 3,000 ml, 330 ml glass",
+    /// "“Stretch” repeats every day".
+    private static func goalChange(_ activity: Challenge.Activity, _ context: Context, spoken: Bool) -> String? {
+        if case .setTarget(let slot, let name, let amount, let unit, let icon) = activity.action {
+            let target = Challenge.Target(name: name, amount: amount, unit: unit, icon: icon)
+            let before = context.previous[slot].name
+            let amountText = spoken ? GoalWords.spokenAmount(target) : GoalWords.amount(target)
+            if slot == .diet { return before == name ? "\(name) changed" : "\(before) renamed \(name)" }
+            let to = [name, amountText].compactMap { $0 }.joined(separator: spoken ? ", " : " · ")
+            return before == name && amountText == nil ? "\(name) changed to no set amount" : "\(before) changed to \(to)"
+        }
+        if case .setWater(let goal, let pour) = activity.action {
+            return "Water goal changed to \(goal.formatted()) ml, \(pour.formatted()) ml glass"
+        }
+        if case .scheduleExtra(_, let weekdays, let every) = activity.action {
+            let title = context.extraTitle.map { "“\($0)”" } ?? "Extra"
+            guard let phrase = Challenge.ExtraSchedule(weekdays: weekdays, every: every).flatMap(GoalWords.repeatPhrase) else {
+                return "\(title) no longer repeats"
+            }
+            return "\(title) repeats \(phrase)"
+        }
+        return nil
     }
 }
 
-/// Four habit pills (44 pt): pending, done (green + check), missed (red + ×).
+/// Four habit pills (44 pt): pending, done (green + check), missed (red + ×), with the
+/// selected day's icons and, for VoiceOver, its names and amounts.
 struct PhoneHabitControls: View {
     @Bindable var tracker: TrackerModel
 
     var body: some View {
         HStack(spacing: 10) {
-            habit(.workout, title: "Workout", detail: "45 min · home / gym")
-            habit(.walk, title: "Walk", detail: "45 minutes")
+            habit(.workout)
+            habit(.walk)
             diet
-            habit(.bibleReading, title: "Bible", detail: "10 pages")
+            habit(.bibleReading)
         }
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
 
     private var closed: Bool { tracker.summary?.status == .missed }
+    private var targets: Challenge.Targets { tracker.summary?.targets ?? .standard }
 
-    private func habit(_ habit: Challenge.Habit, title: String, detail: String) -> some View {
+    private func habit(_ habit: Challenge.Habit) -> some View {
+        let slot = GoalWords.slot(habit)
         let complete = tracker.summary?.completedHabits.contains(habit) ?? false
         return Button { tracker.toggle(habit) } label: {
-            pill(ActivityWords.symbol(habit), state: complete ? .done : closed ? .missed : .pending)
+            pill(GoalWords.symbol(slot, targets[slot]), state: complete ? .done : closed ? .missed : .pending)
         }
         .buttonStyle(.plain).disabled(!tracker.canEdit)
-        .accessibilityLabel("\(title), \(detail)")
+        .accessibilityLabel(GoalWords.spoken(slot, targets[slot]))
         .accessibilityValue(complete ? "Complete" : "Not complete")
         .accessibilityHint("Double-tap to \(complete ? "undo" : "mark complete")")
     }
@@ -341,10 +408,10 @@ struct PhoneHabitControls: View {
         return Button {
             tracker.setDiet(state == .pending ? .clean : state == .clean ? .missed : .pending)
         } label: {
-            pill("leaf", state: state == .clean ? .done : state == .missed || closed ? .missed : .pending)
+            pill(GoalWords.symbol(.diet, targets.diet), state: state == .clean ? .done : state == .missed || closed ? .missed : .pending)
         }
         .buttonStyle(.plain).disabled(!tracker.canEdit)
-        .accessibilityLabel("Clean diet, your own rules").accessibilityValue(state.rawValue)
+        .accessibilityLabel(GoalWords.spoken(.diet, targets.diet)).accessibilityValue(state.rawValue)
         .accessibilityHint("Double-tap to cycle pending, clean and missed")
         .contextMenu { PhoneDietMenu(tracker: tracker) }
     }
