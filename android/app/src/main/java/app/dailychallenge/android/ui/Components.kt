@@ -41,7 +41,9 @@ import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -102,7 +104,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import app.dailychallenge.core.AuthModel
 import app.dailychallenge.core.SyncState
@@ -379,9 +380,10 @@ fun RingGauge(icon: ImageVector, label: String, state: RingState, showsPercent: 
             }
         }
         val labelColor = when (state) { RingState.Pending -> palette.textTertiary; RingState.Missed -> palette.danger; else -> palette.textSecondary }
-        // A chosen name longer than the standard ones scales down, then truncates; TalkBack reads it in full.
-        val labelStyle = if (label.length > 8) Type.ringLabel.copy(fontSize = 8.sp, letterSpacing = 0.02.em) else Type.ringLabel
-        Eyebrow(label, labelColor, labelStyle, Modifier.padding(horizontal = 2.dp))
+        // A chosen name too long for the ring scales down, then truncates; TalkBack reads it in full.
+        BasicText(label.uppercase(), Modifier.padding(horizontal = 2.dp), style = Type.ringLabel.copy(color = labelColor),
+            overflow = TextOverflow.Ellipsis, maxLines = 1,
+            autoSize = TextAutoSize.StepBased(minFontSize = 7.sp, maxFontSize = Type.ringLabel.fontSize, stepSize = 0.5.sp))
     }
 }
 
