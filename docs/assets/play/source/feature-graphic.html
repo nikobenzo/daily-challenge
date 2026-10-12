@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en-GB"><meta charset="utf-8"><title>Daily Challenge | Google Play feature graphic</title>
+<!-- Rendered at 1024 x 500 by scripts/render-play-assets.py. The App Store header's look
+     (docs/screenshots/app-store/marketing/header/template.html) with the real Android Today capture. -->
+<style>
+* { box-sizing:border-box; }
+html,body { margin:0; width:1024px; height:500px; overflow:hidden; }
+body { font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; }
+.canvas { position:relative; width:100%; height:100%; overflow:hidden; color:#0f172a;
+ background:radial-gradient(ellipse at 82% 70%,#c6dcff 0,transparent 52%),radial-gradient(ellipse at 12% 15%,#fff 0,transparent 50%),#f6f8fd; }
+.halo { position:absolute; left:-260px; top:-330px; width:900px; height:900px; border:2px solid #2e66f00f; border-radius:50%; }
+.halo:after { content:""; position:absolute; inset:90px; border:2px solid #2e66f00f; border-radius:50%; }
+.core { position:absolute; inset:0 48px; display:flex; align-items:center; justify-content:space-between; gap:36px; }
+.copy { flex:1; min-width:0; }
+.brand { display:flex; align-items:center; gap:14px; font-size:28px; font-weight:700; letter-spacing:-.4px; margin-bottom:26px; }
+.brand img { width:64px; height:64px; border-radius:15px; box-shadow:0 10px 24px #1e285a2e; }
+.tag { color:#1f56e0; font-size:17px; font-weight:750; letter-spacing:2.4px; margin-bottom:12px; }
+h1 { font-size:66px; font-weight:850; line-height:1.03; letter-spacing:-2.4px; margin:0; }
+h1 span { display:block; white-space:nowrap; }
+h1 span:last-child { color:#1f56e0; }
+.today { position:relative; flex-shrink:0; overflow:hidden; width:__TODAY_W__px; height:__TODAY_H__px; border-radius:30px; box-shadow:0 24px 56px #1e285a2e; }
+.today img { position:absolute; width:__SOURCE_W__px; left:__SOURCE_X__px; top:__SOURCE_Y__px; max-width:none; }
+</style>
+<div class="canvas">
+ <div class="halo"></div>
+ <div class="core">
+  <div class="copy">
+   <div class="brand"><img src="__ICON__" alt="">Daily Challenge</div>
+   <div class="tag">75-DAY CHALLENGE</div>
+   <h1><span>Make every</span><span>day count.</span></h1>
+  </div>
+  <div class="today"><img src="__TODAY__" alt="Real Android Today capture: the five goals, water progress and logging controls"></div>
+ </div>
+</div></html>
