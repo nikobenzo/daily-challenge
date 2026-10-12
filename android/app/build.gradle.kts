@@ -39,6 +39,31 @@ if (!configured) {
 
 fun quoted(value: String) = "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
 
+/**
+ * Release signing with the owner's Google Play upload key, which never enters the repository
+ * (scripts/android-upload-key.sh creates it). The keystore path, alias and password come from
+ * Gradle properties (~/.gradle/gradle.properties) or environment variables of the same names;
+ * a release build without them refuses rather than producing an unsigned or debug-signed file.
+ */
+fun signingValue(name: String): String? =
+    (providers.gradleProperty(name).orNull ?: providers.environmentVariable(name).orNull)?.takeIf { it.isNotBlank() }
+val uploadStoreFile = signingValue("DC_UPLOAD_STORE_FILE")?.let { file(it.replaceFirst(Regex("^~(?=/)"), System.getProperty("user.home"))) }
+val uploadStorePassword = signingValue("DC_UPLOAD_STORE_PASSWORD")
+val uploadKeyAlias = signingValue("DC_UPLOAD_KEY_ALIAS")
+val uploadSigned = uploadStoreFile != null && uploadStorePassword != null && uploadKeyAlias != null
+gradle.taskGraph.whenReady {
+    val releasePackaging = allTasks.any { it.project == project && it.name in setOf("packageRelease", "signReleaseBundle") }
+    if (!releasePackaging) return@whenReady
+    if (!uploadSigned) {
+        throw GradleException("Release builds need the upload key: set DC_UPLOAD_STORE_FILE, DC_UPLOAD_STORE_PASSWORD " +
+            "and DC_UPLOAD_KEY_ALIAS in ~/.gradle/gradle.properties or the environment (docs/play-release.md).")
+    }
+    if (!uploadStoreFile!!.isFile) throw GradleException("DC_UPLOAD_STORE_FILE does not exist: $uploadStoreFile")
+    if (uploadStoreFile.canonicalPath.startsWith(rootProject.file("..").canonicalPath + File.separator)) {
+        throw GradleException("The upload keystore must live outside the repository, not at $uploadStoreFile.")
+    }
+}
+
 android {
     namespace = "app.dailychallenge.android"
     compileSdk = 36
@@ -47,7 +72,8 @@ android {
         applicationId = "app.dailychallenge.android"
         minSdk = 29
         targetSdk = 36
-        // Raise versionCode for every build uploaded to Google Play.
+        // versionCode counts uploads: raise it by one for every bundle uploaded to any Play
+        // track, never reuse or lower it. versionName is what people see (docs/play-release.md).
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -55,8 +81,18 @@ android {
         buildConfigField("String", "SUPABASE_PUBLISHABLE_KEY", quoted(supabaseKey))
     }
 
+    signingConfigs {
+        if (uploadSigned) create("upload") {
+            storeFile = uploadStoreFile
+            storePassword = uploadStorePassword
+            keyAlias = uploadKeyAlias
+            keyPassword = signingValue("DC_UPLOAD_KEY_PASSWORD") ?: uploadStorePassword
+        }
+    }
+
     buildTypes {
         release {
+            if (uploadSigned) signingConfig = signingConfigs.getByName("upload")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
