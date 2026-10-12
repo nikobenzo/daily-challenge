@@ -30,11 +30,8 @@ import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.automirrored.outlined.DirectionsWalk
 import androidx.compose.material.icons.outlined.Eco
 import androidx.compose.material.icons.outlined.EditNote
-import androidx.compose.material.icons.outlined.FitnessCenter
-import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Tune
@@ -68,6 +65,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.dailychallenge.core.Action
 import app.dailychallenge.core.Activity
+import app.dailychallenge.core.Challenge
+import app.dailychallenge.core.ExtraSchedule
+import app.dailychallenge.core.Target
+import app.dailychallenge.core.TargetSlot
+import app.dailychallenge.core.Targets
+import app.dailychallenge.core.WaterTarget
 import app.dailychallenge.core.DayStatus
 import app.dailychallenge.core.DietState
 import app.dailychallenge.core.Habit
@@ -218,10 +221,12 @@ private fun DayCard(tracker: Tracker, modifier: Modifier) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Icon(Icons.Filled.WaterDrop, null, tint = P.water, modifier = Modifier.size(18.dp))
             val ml = summary?.waterMillilitres ?: 0
-            Row(Modifier.semantics(mergeDescendants = true) { contentDescription = "$ml of 4,000 millilitres" },
+            // That day's own goal: a later change never re-judges it.
+            val goal = formatNumber((summary?.targets ?: Targets.STANDARD).water.goal)
+            Row(Modifier.semantics(mergeDescendants = true) { contentDescription = "$ml of $goal millilitres" },
                 verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("${formatNumber(ml)} ml", style = Type.streak.copy(fontFeatureSettings = "tnum"), color = P.textPrimary)
-                Text("/ 4,000", style = Type.caption, color = if (summary?.waterComplete == true) P.doneText else P.textSecondary,
+                Text("/ $goal", style = Type.caption, color = if (summary?.waterComplete == true) P.doneText else P.textSecondary,
                     modifier = Modifier.padding(bottom = 3.dp))
             }
         }
@@ -258,13 +263,14 @@ private fun EditChip(tracker: Tracker) {
 
 private enum class PillState { PENDING, DONE, MISSED }
 
-/** Four habit pills (44 dp): pending, done (green and check), missed (red and ×). */
+/** Four habit pills (44 dp) for the selected day's targets: pending, done (green and check), missed (red and ×). */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HabitControls(tracker: Tracker) {
     tracker.observe()
 
     val summary = tracker.summary
+    val targets = summary?.targets ?: Targets.STANDARD
     val closed = summary?.status == DayStatus.MISSED
     @Composable
     fun pill(icon: ImageVector, state: PillState, label: String, value: String, modifier: Modifier, onLongClick: (() -> Unit)? = null,
@@ -291,20 +297,23 @@ fun HabitControls(tracker: Tracker) {
         }
     }
     @Composable
-    fun habit(habit: Habit, title: String, detail: String, modifier: Modifier) {
+    fun habit(habit: Habit, modifier: Modifier) {
+        val slot = TargetSlot.fromWire(habit.wire)!!
         val complete = summary?.completedHabits?.contains(habit) == true
-        pill(ActivityWords.icon(habit), if (complete) PillState.DONE else if (closed) PillState.MISSED else PillState.PENDING,
-            "$title, $detail", if (complete) "Complete" else "Not complete", modifier) { tracker.toggle(habit) }
+        pill(GoalIcons.of(slot, targets[slot]).vector, if (complete) PillState.DONE else if (closed) PillState.MISSED else PillState.PENDING,
+            GoalWords.spoken(slot, targets[slot]), if (complete) "Complete" else "Not complete", modifier.testTag("pill-${habit.wire}")) {
+            tracker.toggle(habit)
+        }
     }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        habit(Habit.WORKOUT, "Workout", "45 min, home or gym", Modifier.weight(1f))
-        habit(Habit.WALK, "Walk", "45 minutes", Modifier.weight(1f))
+        habit(Habit.WORKOUT, Modifier.weight(1f))
+        habit(Habit.WALK, Modifier.weight(1f))
         val diet = summary?.diet ?: DietState.PENDING
         var menu by rememberSaveable { mutableStateOf(false) }
         Box(Modifier.weight(1f)) {
-            pill(Icons.Outlined.Eco,
+            pill(GoalIcons.of(TargetSlot.DIET, targets.diet).vector,
                 if (diet == DietState.CLEAN) PillState.DONE else if (diet == DietState.MISSED || closed) PillState.MISSED else PillState.PENDING,
-                "Clean diet, your own rules", diet.wire, Modifier.fillMaxWidth(), onLongClick = { menu = true }) {
+                GoalWords.spoken(TargetSlot.DIET, targets.diet), diet.wire, Modifier.fillMaxWidth(), onLongClick = { menu = true }) {
                 tracker.setDiet(when (diet) { DietState.PENDING -> DietState.CLEAN; DietState.CLEAN -> DietState.MISSED; DietState.MISSED -> DietState.PENDING })
             }
             DropdownMenu(menu, { menu = false }) {
@@ -313,7 +322,7 @@ fun HabitControls(tracker: Tracker) {
                 }
             }
         }
-        habit(Habit.BIBLE_READING, "Bible", "10 pages", Modifier.weight(1f))
+        habit(Habit.BIBLE_READING, Modifier.weight(1f))
     }
 }
 
@@ -322,6 +331,7 @@ private fun ActivityList(tracker: Tracker) {
     tracker.observe()
 
     val history = tracker.history
+    val names = AuditNames(tracker.challenge)
     Column(Modifier.padding(horizontal = Size.sectionHorizontal, vertical = 4.dp)) {
         Row(Modifier.fillMaxWidth().heightIn(min = 44.dp)
             .semantics(mergeDescendants = true) { contentDescription = "Activity and corrections, ${history.size}"; heading() },
@@ -337,10 +347,10 @@ private fun ActivityList(tracker: Tracker) {
             history.forEach { activity ->
                 val (icon, tint) = ActivityWords.icon(activity)
                 Row(Modifier.fillMaxWidth().heightIn(min = 36.dp).semantics(mergeDescendants = true) {
-                    contentDescription = "${ActivityWords.long(activity)}, edited ${tracker.dates.label(activity.recordedAt, "d MMM, HH:mm")}"
+                    contentDescription = "${ActivityWords.long(activity, names)}, edited ${tracker.dates.label(activity.recordedAt, "d MMM, HH:mm")}"
                 }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Icon(icon, null, tint = tint, modifier = Modifier.width(22.dp).size(18.dp))
-                    Text(ActivityWords.short(activity), style = Type.field, color = P.textPrimary, modifier = Modifier.weight(1f))
+                    Text(ActivityWords.short(activity, names), style = Type.field, color = P.textPrimary, modifier = Modifier.weight(1f))
                     Text(tracker.dates.label(activity.recordedAt, "HH:mm"), style = Type.caption.copy(fontFeatureSettings = "tnum"),
                         color = P.textTertiary)
                 }
@@ -349,22 +359,46 @@ private fun ActivityList(tracker: Tracker) {
     }
 }
 
-/** Activity wording, as on the Mac and iPhone. */
-object ActivityWords {
-    fun habitName(habit: Habit) = when (habit) { Habit.WORKOUT -> "Workout"; Habit.WALK -> "Walk"; Habit.BIBLE_READING -> "Bible reading" }
+/**
+ * What the audit needs beyond an event: the targets in force on its day (so a tick reads with that
+ * day's name), the targets just before a change (so it reads "Walk changed to Yoga"), and extras' names.
+ */
+class AuditNames(private val challenge: Challenge?) {
+    fun targets(activity: Activity): Targets = challenge?.targets(activity.day) ?: Targets.STANDARD
 
-    fun icon(habit: Habit): ImageVector = when (habit) {
-        Habit.WORKOUT -> Icons.Outlined.FitnessCenter
-        Habit.WALK -> Icons.AutoMirrored.Outlined.DirectionsWalk
-        Habit.BIBLE_READING -> Icons.AutoMirrored.Outlined.MenuBook
+    /** The targets in force on the change's day from every earlier change, by the same rule as [Challenge.targets]. */
+    fun before(activity: Activity): Targets {
+        val challenge = challenge ?: return Targets.STANDARD
+        val earlier = challenge.allActivities.filter {
+            (it.action is Action.SetTarget || it.action is Action.SetWater) &&
+                (it.day < activity.day || (it.day == activity.day && Challenge.eventOrder.compare(it, activity) < 0))
+        }
+        return Challenge(challenge.ownerID, challenge.startDate, challenge.zone).also { it.merge(earlier) }.targets(activity.day)
     }
+
+    fun extraTitle(id: java.util.UUID): String? = challenge?.allExtras?.firstOrNull { it.id == id }?.title
+}
+
+/** Activity wording, as on the Mac and iPhone; slot names are the ones in force that day. */
+object ActivityWords {
+    private fun slotName(habit: Habit, targets: Targets): String {
+        val target = targets[TargetSlot.fromWire(habit.wire)!!]
+        // The standard reading slot has always been "Bible reading" in the audit.
+        return if (habit == Habit.BIBLE_READING && target == Targets.STANDARD.bibleReading) "Bible reading" else target.name
+    }
+
+    private fun dietName(targets: Targets, state: DietState): String =
+        if (targets.diet.name == Targets.STANDARD.diet.name) "Diet ${state.wire}" else "${targets.diet.name}: ${state.wire}"
 
     @Composable
     fun icon(activity: Activity): Pair<ImageVector, Color> = when (val action = activity.action) {
         is Action.Pour -> Icons.Filled.WaterDrop to P.water
         Action.UndoLatestPour -> Icons.AutoMirrored.Filled.Undo to P.textSecondary
         is Action.SetDiet -> Icons.Outlined.Eco to when (action.state) { DietState.CLEAN -> P.done; DietState.MISSED -> P.danger; else -> P.textTertiary }
-        is Action.SetHabit -> icon(action.habit) to if (action.completed) P.done else P.textTertiary
+        is Action.SetHabit -> {
+            val slot = TargetSlot.fromWire(action.habit.wire)!!
+            GoalIcons.of(slot, Targets.STANDARD[slot]).vector to if (action.completed) P.done else P.textTertiary
+        }
         is Action.DefineExtra -> Icons.Filled.Checklist to P.textSecondary
         is Action.ArchiveExtra -> Icons.Outlined.Archive to P.textSecondary
         is Action.SetExtra -> Icons.Outlined.CheckCircle to if (action.completed) P.done else P.textTertiary
@@ -372,30 +406,57 @@ object ActivityWords {
         is Action.ScheduleExtra -> Icons.Outlined.Repeat to P.textSecondary
     }
 
-    fun short(activity: Activity): String = when (val action = activity.action) {
+    /** "Walk changed to Yoga · 30 min", "Yoga changed to 45 min", "Diet renamed to No sugar". */
+    private fun targetChange(action: Action.SetTarget, previous: Target, spoken: Boolean): String {
+        val next = Target(action.name, action.amount, action.unit, action.icon)
+        val amount = if (spoken) GoalWords.amountSpoken(next) else GoalWords.amount(next)
+        val separator = if (spoken) ", " else " · "
+        return when {
+            action.slot == TargetSlot.DIET -> "${previous.name} renamed to ${next.name}"
+            previous.name != next.name -> "${previous.name} changed to ${next.name}" + (amount?.let { separator + it } ?: "")
+            previous.amount != next.amount || previous.unit != next.unit -> "${next.name} changed to ${amount ?: "no amount"}"
+            else -> "${next.name} icon changed"
+        }
+    }
+
+    /** "Water goal changed to 3,000 ml, 330 ml glass", or only the part that changed. */
+    private fun waterChange(action: Action.SetWater, previous: WaterTarget, unit: String): String = when {
+        previous.goal == action.goal -> "Glass changed to ${formatNumber(action.pour)} $unit"
+        previous.glass == action.pour -> "Water goal changed to ${formatNumber(action.goal)} $unit"
+        else -> "Water goal changed to ${formatNumber(action.goal)} $unit, ${formatNumber(action.pour)} $unit glass"
+    }
+
+    private fun scheduleChange(action: Action.ScheduleExtra, names: AuditNames): String {
+        val title = names.extraTitle(action.id)?.let { "“$it”" } ?: "Extra"
+        return when (val schedule = ExtraSchedule.of(action.weekdays, action.every)) {
+            null, ExtraSchedule.Once -> "$title set to once"
+            else -> "$title repeats ${RepeatWords.caption(schedule, sentence = true)}"
+        }
+    }
+
+    fun short(activity: Activity, names: AuditNames): String = when (val action = activity.action) {
         is Action.Pour -> "+${formatNumber(action.millilitres)} ml"
         Action.UndoLatestPour -> "Undid pour"
-        is Action.SetDiet -> "Diet ${action.state.wire}"
-        is Action.SetHabit -> "${habitName(action.habit)} ${if (action.completed) "complete" else "not complete"}"
+        is Action.SetDiet -> dietName(names.targets(activity), action.state)
+        is Action.SetHabit -> "${slotName(action.habit, names.targets(activity))} ${if (action.completed) "complete" else "not complete"}"
         is Action.DefineExtra -> "Extra named “${action.title}”"
         is Action.ArchiveExtra -> "Archived extra"
         is Action.SetExtra -> "Extra ${if (action.completed) "done" else "not done"}"
-        is Action.SetTarget -> "Goal “${action.name}”"
-        is Action.SetWater -> "Water goal ${formatNumber(action.goal)} ml"
-        is Action.ScheduleExtra -> "Extra repeat changed"
+        is Action.SetTarget -> targetChange(action, names.before(activity)[action.slot], spoken = false)
+        is Action.SetWater -> waterChange(action, names.before(activity).water, "ml")
+        is Action.ScheduleExtra -> scheduleChange(action, names)
     }
 
-    fun long(activity: Activity): String = when (val action = activity.action) {
+    fun long(activity: Activity, names: AuditNames): String = when (val action = activity.action) {
         is Action.Pour -> "Added ${formatNumber(action.millilitres)} ml"
         Action.UndoLatestPour -> "Undid a water pour"
-        is Action.SetDiet -> "Diet set to ${action.state.wire}"
-        is Action.SetHabit -> "${habitName(action.habit)} set to ${if (action.completed) "complete" else "not complete"}"
+        is Action.SetDiet -> "${names.targets(activity).diet.name} set to ${action.state.wire}"
+        is Action.SetHabit -> "${slotName(action.habit, names.targets(activity))} set to ${if (action.completed) "complete" else "not complete"}"
         is Action.DefineExtra -> "Extra named “${action.title}”"
         is Action.ArchiveExtra -> "Archived extra"
         is Action.SetExtra -> "Extra ${if (action.completed) "done" else "not done"}"
-        is Action.SetTarget -> "Goal set to “${action.name}”"
-        is Action.SetWater -> "Water goal set to ${formatNumber(action.goal)} ml, ${formatNumber(action.pour)} ml glass"
-        is Action.ScheduleExtra -> "Extra repeat changed"
+        is Action.SetTarget -> targetChange(action, names.before(activity)[action.slot], spoken = true) + ", from this day on"
+        is Action.SetWater -> waterChange(action, names.before(activity).water, "millilitres") + ", from this day on"
+        is Action.ScheduleExtra -> scheduleChange(action, names) + ", from this day on"
     }
 }
-

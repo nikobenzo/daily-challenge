@@ -26,10 +26,6 @@ import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.WorkspacePremium
-import androidx.compose.material.icons.automirrored.outlined.DirectionsWalk
-import androidx.compose.material.icons.outlined.Eco
-import androidx.compose.material.icons.outlined.FitnessCenter
-import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -43,7 +39,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -57,6 +52,8 @@ import app.dailychallenge.core.DayStatus
 import app.dailychallenge.core.DietState
 import app.dailychallenge.core.Habit
 import app.dailychallenge.core.StreakSummary
+import app.dailychallenge.core.TargetSlot
+import app.dailychallenge.core.Targets
 import app.dailychallenge.core.Tracker
 import java.text.NumberFormat
 
@@ -120,22 +117,26 @@ fun RingRow(tracker: Tracker, modifier: Modifier = Modifier) {
     tracker.observe()
 
     val summary = tracker.summary
+    val targets = summary?.targets ?: Targets.STANDARD
     val closed = summary?.status == DayStatus.MISSED
     val ml = summary?.waterMillilitres ?: 0
+    val goal = targets.water.goal
     val waterState = when {
         summary?.waterComplete == true -> RingState.Done
         closed -> RingState.Missed
         ml == 0L -> RingState.Pending
-        else -> RingState.Progress(ml / 4_000.0)
+        else -> RingState.Progress(ml / goal.toDouble())
     }
     @Composable
-    fun habit(habit: Habit, title: String, detail: String, icon: ImageVector, rowModifier: Modifier) {
+    fun habit(habit: Habit, rowModifier: Modifier) {
+        val slot = TargetSlot.fromWire(habit.wire)!!
+        val target = targets[slot]
         val complete = summary?.completedHabits?.contains(habit) == true
-        RingGauge(icon, title, if (complete) RingState.Done else if (closed) RingState.Missed else RingState.Pending,
+        RingGauge(GoalIcons.of(slot, target).vector, target.name, if (complete) RingState.Done else if (closed) RingState.Missed else RingState.Pending,
             modifier = rowModifier
                 .combinedClickable(enabled = tracker.canEdit, role = Role.Checkbox, onClick = { tracker.toggle(habit) })
                 .semantics(mergeDescendants = true) {
-                    contentDescription = "$title, $detail"
+                    contentDescription = GoalWords.spoken(slot, target)
                     stateDescription = if (complete) "Complete" else "Not complete"
                 }
                 .testTag("ring-${habit.wire}"))
@@ -144,14 +145,14 @@ fun RingRow(tracker: Tracker, modifier: Modifier = Modifier) {
         RingGauge(Icons.Filled.WaterDrop, "Water", waterState, showsPercent = true,
             modifier = Modifier.weight(1f).semantics(mergeDescendants = true) {
                 contentDescription = "Water"
-                stateDescription = "$ml of 4,000 millilitres"
+                stateDescription = "$ml of ${formatNumber(goal)} millilitres"
             }.testTag("ring-water"))
-        habit(Habit.WORKOUT, "Workout", "45 min, home or gym", Icons.Outlined.FitnessCenter, Modifier.weight(1f))
-        habit(Habit.WALK, "Walk", "45 minutes", Icons.AutoMirrored.Outlined.DirectionsWalk, Modifier.weight(1f))
+        habit(Habit.WORKOUT, Modifier.weight(1f))
+        habit(Habit.WALK, Modifier.weight(1f))
         val diet = summary?.diet ?: DietState.PENDING
         var menu by rememberSaveable { mutableStateOf(false) }
         Box(Modifier.weight(1f)) {
-            RingGauge(Icons.Outlined.Eco, "Diet",
+            RingGauge(GoalIcons.of(TargetSlot.DIET, targets.diet).vector, targets.diet.name,
                 if (diet == DietState.CLEAN) RingState.Done else if (diet == DietState.MISSED || closed) RingState.Missed else RingState.Pending,
                 modifier = Modifier.fillMaxWidth()
                     .combinedClickable(enabled = tracker.canEdit, role = Role.Button,
@@ -160,7 +161,7 @@ fun RingRow(tracker: Tracker, modifier: Modifier = Modifier) {
                             tracker.setDiet(when (diet) { DietState.PENDING -> DietState.CLEAN; DietState.CLEAN -> DietState.MISSED; DietState.MISSED -> DietState.PENDING })
                         })
                     .semantics(mergeDescendants = true) {
-                        contentDescription = "Clean diet, your own rules. Tap to cycle pending, clean and missed"
+                        contentDescription = "${GoalWords.spoken(TargetSlot.DIET, targets.diet)}. Tap to cycle pending, clean and missed"
                         stateDescription = diet.wire
                     }
                     .testTag("ring-diet"))
@@ -171,7 +172,7 @@ fun RingRow(tracker: Tracker, modifier: Modifier = Modifier) {
                 }
             }
         }
-        habit(Habit.BIBLE_READING, "Bible", "10 pages", Icons.AutoMirrored.Outlined.MenuBook, Modifier.weight(1f))
+        habit(Habit.BIBLE_READING, Modifier.weight(1f))
     }
 }
 
@@ -194,44 +195,47 @@ fun WaterSection(tracker: Tracker, modifier: Modifier = Modifier) {
     tracker.observe()
 
     val ml = tracker.summary?.waterMillilitres ?: 0
+    val goal = (tracker.summary?.targets ?: Targets.STANDARD).water.goal
     Column(modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.dp)) {
-            WaterJug(ml, Modifier.testTag("water-jug"))
+            WaterJug(ml, goal, Modifier.testTag("water-jug"))
             WaterTotal(tracker)
         }
         WaterControls(tracker)
     }
 }
 
-/** "2,250 ml / 4,000" for the selected day, with the goal turning green once met. */
+/** "2,250 ml / 4,000" for the selected day, against that day's goal, turning green once met. */
 @Composable
 fun WaterTotal(tracker: Tracker) {
     tracker.observe()
 
     val ml = tracker.summary?.waterMillilitres ?: 0
     val complete = tracker.summary?.waterComplete == true
-    Row(Modifier.semantics(mergeDescendants = true) { contentDescription = "$ml of 4,000 millilitres" }.testTag("water-total"),
+    val goal = formatNumber((tracker.summary?.targets ?: Targets.STANDARD).water.goal)
+    Row(Modifier.semantics(mergeDescendants = true) { contentDescription = "$ml of $goal millilitres" }.testTag("water-total"),
         verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Text("${formatNumber(ml)} ml", style = Type.hero.copy(fontFeatureSettings = "tnum"), color = P.textPrimary, maxLines = 1,
             overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
-        Text("/ 4,000", style = Type.caption, color = if (complete) P.doneText else P.textSecondary, modifier = Modifier.padding(bottom = 6.dp))
+        Text("/ $goal", style = Type.caption, color = if (complete) P.doneText else P.textSecondary, modifier = Modifier.padding(bottom = 6.dp))
     }
 }
 
-/** −, + 450 ml and ⋯ (custom pour), for the selected day. */
+/** −, + the day's glass (450 ml unless changed) and ⋯ (custom pour), for the selected day. */
 @Composable
 fun WaterControls(tracker: Tracker) {
     tracker.observe()
 
     var custom by rememberSaveable { mutableStateOf<String?>(null) }
+    val glass = formatNumber((tracker.summary?.targets ?: Targets.STANDARD).water.glass)
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         RoundIconButton(Icons.Filled.Remove, "Undo latest water pour", tracker::undoWater, enabled = tracker.canUndo, size = 44.dp,
             modifier = Modifier.testTag("water-undo"))
-        val addModifier = Modifier.weight(1f).semantics { contentDescription = "Add 450 millilitres of water" }.testTag("water-add")
+        val addModifier = Modifier.weight(1f).semantics { contentDescription = "Add $glass millilitres of water" }.testTag("water-add")
         if (tracker.summary?.waterComplete == true) {
-            TintedPill("450 ml", { tracker.addWater() }, addModifier, icon = Icons.Filled.Add, enabled = tracker.canEdit, height = 44.dp, expands = true)
+            TintedPill("$glass ml", { tracker.addWater() }, addModifier, icon = Icons.Filled.Add, enabled = tracker.canEdit, height = 44.dp, expands = true)
         } else {
-            PrimaryPill("450 ml", { tracker.addWater() }, addModifier, icon = Icons.Filled.Add, enabled = tracker.canEdit, height = 44.dp)
+            PrimaryPill("$glass ml", { tracker.addWater() }, addModifier, icon = Icons.Filled.Add, enabled = tracker.canEdit, height = 44.dp)
         }
         RoundIconButton(Icons.Filled.MoreHoriz, "Custom pour", { custom = "" }, enabled = tracker.canEdit, size = 44.dp,
             modifier = Modifier.testTag("water-custom"))

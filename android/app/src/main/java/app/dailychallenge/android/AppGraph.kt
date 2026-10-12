@@ -41,6 +41,11 @@ data class FixtureOptions(
     val showManagement: Boolean = false,
     val showDeletion: Boolean = false,
     val showDeletionConfirmation: Boolean = false,
+    /** Opens Account › Daily goals, and with [editGoal] (`water`, `workout`, `walk`, `diet`, `bibleReading`) that editor; also setup's. */
+    val showGoals: Boolean = false,
+    val editGoal: String? = null,
+    /** Opens Manage extras editing the extra with this title. */
+    val editExtra: String? = null,
 )
 
 /**

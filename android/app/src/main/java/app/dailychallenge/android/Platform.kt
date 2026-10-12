@@ -164,9 +164,9 @@ class ReminderReceiver : BroadcastReceiver() {
         val notification = NotificationCompat.Builder(context, AlarmReminderScheduler.CHANNEL)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("Water check-in")
-            .setContentText("Check today's water log. If you're below 4,000 ml, drink only what you still need toward your goal.")
-            .setStyle(NotificationCompat.BigTextStyle().bigText(
-                "Check today's water log. If you're below 4,000 ml, drink only what you still need toward your goal."))
+            // No number: check-ins are queued ahead, and the day's goal may change before one arrives.
+            .setContentText("Time for some water. Drink only what you still need toward today's goal.")
+            .setStyle(NotificationCompat.BigTextStyle().bigText("Time for some water. Drink only what you still need toward today's goal."))
             .setContentIntent(open)
             .setAutoCancel(true)
             .build()

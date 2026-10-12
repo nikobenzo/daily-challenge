@@ -37,6 +37,7 @@ import androidx.compose.material.icons.outlined.NotificationsNone
 import androidx.compose.material.icons.outlined.PersonOff
 import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material.icons.outlined.TrackChanges
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -86,7 +87,8 @@ import java.time.ZoneId
 
 /**
  * Account: who is signed in and the challenge's progress, sync, this phone's water reminders
- * and appearance, extras, sign out and account deletion. Reminders and appearance stay on this phone.
+ * and appearance, daily goals, extras, sign out and account deletion. Reminders and appearance
+ * stay on this phone; daily goals belong to the challenge and sync.
  */
 @Composable
 fun AccountScreen(graph: AppGraph) {
@@ -97,6 +99,7 @@ fun AccountScreen(graph: AppGraph) {
     val scope = rememberCoroutineScope()
     var confirmingSignOut by rememberSaveable { mutableStateOf(false) }
     var deleting by rememberSaveable { mutableStateOf(graph.fixture.showDeletion) }
+    var goals by rememberSaveable { mutableStateOf(graph.fixture.showGoals) }
     var signOutError by remember { mutableStateOf<String?>(null) }
 
     PhoneScreen {
@@ -112,6 +115,15 @@ fun AccountScreen(graph: AppGraph) {
                 Hairline(Modifier.padding(vertical = 6.dp))
                 SettingRow(Icons.Filled.Contrast, "Appearance")
                 Segmented(app.dailychallenge.android.Appearance.entries.map { it to it.label }, graph.appearance, graph::chooseAppearance)
+                Hairline(Modifier.padding(vertical = 6.dp))
+                val today = tracker.todayTargets
+                SettingRow(Icons.Outlined.TrackChanges, "Daily goals",
+                    Modifier.clickable(enabled = tracker.challenge != null, role = Role.Button) { goals = true }
+                        .semantics(mergeDescendants = true) { contentDescription = "Daily goals, water ${formatNumber(today.water.goal)} millilitres" }
+                        .testTag("account-goals")) {
+                    Text("${formatNumber(today.water.goal)} ml", style = Type.field, color = P.textSecondary)
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = P.textTertiary)
+                }
                 Hairline(Modifier.padding(vertical = 6.dp))
                 val extras = tracker.activeExtras.size
                 SettingRow(Icons.Filled.Checklist, "Extras",
@@ -167,6 +179,7 @@ fun AccountScreen(graph: AppGraph) {
         )
     }
     if (deleting) DeleteAccountSheet(graph) { deleting = false }
+    if (goals && tracker.challenge != null) DailyGoalsSheet(tracker, graph.fixture.editGoal) { goals = false }
 }
 
 @Composable
@@ -252,7 +265,7 @@ private fun minuteLabel(minute: Int, twentyFour: Boolean): String {
 }
 
 fun reminderDetails(zone: ZoneId): String =
-    "Times are ${ChallengeDates.city(zone)} time, your challenge's time zone. Reminders stop for the day at 4,000 ml; " +
+    "Times are ${ChallengeDates.city(zone)} time, your challenge's time zone. Reminders stop for the day once your water goal is met; " +
         "a goal met on another device stops them here once this phone syncs. This setting stays on this phone."
 
 /**

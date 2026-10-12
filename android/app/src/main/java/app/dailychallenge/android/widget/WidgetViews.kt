@@ -60,10 +60,15 @@ import androidx.glance.color.ColorProvider
 import androidx.glance.unit.ColorProvider
 import app.dailychallenge.android.MainActivity
 import app.dailychallenge.android.R
+import app.dailychallenge.android.ui.GoalIcons
+import app.dailychallenge.android.ui.GoalWords
+import app.dailychallenge.android.ui.RepeatWords
 import app.dailychallenge.core.DayStatus
 import app.dailychallenge.core.DietState
 import app.dailychallenge.core.Extra
+import app.dailychallenge.core.ExtraSchedule
 import app.dailychallenge.core.Habit
+import app.dailychallenge.core.TargetSlot
 import app.dailychallenge.core.Targets
 import app.dailychallenge.core.WidgetState
 import app.dailychallenge.core.WidgetTap
@@ -460,30 +465,35 @@ internal fun RequirementsContent(state: WidgetState.Ready) {
         }
         Spacer(GlanceModifier.defaultWeight())
         Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            HabitRing(state, Habit.WORKOUT, "Workout", "45 min, home or gym", R.drawable.widget_ic_workout, ring)
-            HabitRing(state, Habit.WALK, "Walk", "45 minutes", R.drawable.widget_ic_walk, ring)
+            HabitRing(state, Habit.WORKOUT, ring)
+            HabitRing(state, Habit.WALK, ring)
             // A missed diet is never changed from the widget; its ring opens the app instead.
             val diet = summary.diet
+            val dietTarget = summary.targets.diet
+            val dietName = if (dietTarget.name == Targets.STANDARD.diet.name) "Clean diet" else dietTarget.name
             val dietAction = if (diet == DietState.MISSED) openApp(LocalContext.current, Destination.TODAY) else tap(WidgetTap.ToggleDiet, state)
-            RingColumn(R.drawable.widget_ic_diet, "Diet",
+            RingColumn(GoalIcons.of(TargetSlot.DIET, dietTarget).widget, dietTarget.name,
                 when (diet) { DietState.CLEAN -> Ring.DONE; DietState.MISSED -> Ring.MISSED; DietState.PENDING -> Ring.PENDING },
                 ring, dietAction,
                 when (diet) {
-                    DietState.MISSED -> "Clean diet, missed. Opens Daily Challenge to change it"
-                    DietState.CLEAN -> "Clean diet, your own rules, done"
-                    DietState.PENDING -> "Clean diet, your own rules, pending"
+                    DietState.MISSED -> "$dietName, missed. Opens Daily Challenge to change it"
+                    DietState.CLEAN -> "${GoalWords.spoken(TargetSlot.DIET, dietTarget)}, done"
+                    DietState.PENDING -> "${GoalWords.spoken(TargetSlot.DIET, dietTarget)}, pending"
                 })
-            HabitRing(state, Habit.BIBLE_READING, "Bible", "10 pages", R.drawable.widget_ic_bible, ring)
+            HabitRing(state, Habit.BIBLE_READING, ring)
         }
         Spacer(GlanceModifier.defaultWeight())
     }
 }
 
+/** A habit's ring with the tap day's name, icon and amount (the standard five unless changed). */
 @Composable
-private fun RowScope.HabitRing(state: WidgetState.Ready, habit: Habit, title: String, detail: String, @DrawableRes icon: Int, ring: Dp) {
+private fun RowScope.HabitRing(state: WidgetState.Ready, habit: Habit, ring: Dp) {
+    val slot = TargetSlot.fromWire(habit.wire)!!
+    val target = state.summary.targets[slot]
     val done = habit in state.summary.completedHabits
-    RingColumn(icon, title, if (done) Ring.DONE else Ring.PENDING, ring, tap(WidgetTap.ToggleHabit(habit), state),
-        "$title, $detail, ${if (done) "done" else "pending"}")
+    RingColumn(GoalIcons.of(slot, target).widget, target.name, if (done) Ring.DONE else Ring.PENDING, ring, tap(WidgetTap.ToggleHabit(habit), state),
+        "${GoalWords.spoken(slot, target)}, ${if (done) "done" else "pending"}")
 }
 
 /** Today's ring gauge: icon over a dash, check or ×; green when done, dashed red when missed. */
@@ -597,7 +607,8 @@ internal fun ExtrasContent(state: WidgetState.Ready) {
             // A nested column: Glance draws at most ten children in one.
             Column(GlanceModifier.fillMaxWidth()) {
                 extras.take(limit).forEach { extra ->
-                    ExtraRow(state, extra, extra.id in summary.completedExtras, summary.isLate(extra), row)
+                    ExtraRow(state, extra, extra.id in summary.completedExtras, summary.isLate(extra),
+                        extra.schedule(summary.intervalStart).takeIf { it != ExtraSchedule.Once }, row)
                 }
             }
             Spacer(GlanceModifier.defaultWeight())
@@ -615,13 +626,18 @@ internal fun ExtrasContent(state: WidgetState.Ready) {
     }
 }
 
-/** The app's checklist row: a green check or an empty circle, the title dimmed when done, "Late" once carried over. */
+/**
+ * The app's checklist row: a green check or an empty circle, the title dimmed when done, "Late"
+ * once carried over. A repeating extra says how it repeats when spoken ("Stretch, every day, done").
+ */
 @Composable
-private fun ExtraRow(state: WidgetState.Ready, extra: Extra, done: Boolean, late: Boolean, height: Dp) {
+private fun ExtraRow(state: WidgetState.Ready, extra: Extra, done: Boolean, late: Boolean, repeat: ExtraSchedule?, height: Dp) {
     val p = paint()
+    val spoken = listOfNotNull(extra.title, "late".takeIf { late }, repeat?.let { RepeatWords.caption(it, sentence = true) },
+        if (done) "done" else "pending").joinToString(", ")
     Row(
         GlanceModifier.fillMaxWidth().height(height).clickable(tap(WidgetTap.ToggleExtra(extra.id), state))
-            .semantics { contentDescription = extra.title + (if (late) ", late" else "") + if (done) ", done" else ", pending" },
+            .semantics { contentDescription = spoken },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Image(ImageProvider(if (done) R.drawable.widget_ic_check_circle else R.drawable.widget_ic_circle), null, GlanceModifier.size(22.dp),

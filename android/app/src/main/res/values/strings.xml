@@ -2,11 +2,11 @@
 <resources>
     <string name="app_name">Daily Challenge</string>
     <string name="reminder_channel">Water reminders</string>
-    <string name="reminder_channel_description">Check-ins during your chosen hours until today\'s 4,000 ml is logged.</string>
+    <string name="reminder_channel_description">Check-ins during your chosen hours until today\'s water goal is logged.</string>
     <string name="widget_water_name">Water</string>
-    <string name="widget_water_description">Log 450 ml pours toward 4,000 ml, or undo today\'s latest pour.</string>
+    <string name="widget_water_description">Log a glass of water toward your daily goal, or undo today\'s latest pour.</string>
     <string name="widget_requirements_name">Daily requirements</string>
-    <string name="widget_requirements_description">Tick workout, walk, clean diet and Bible reading for your challenge day.</string>
+    <string name="widget_requirements_description">Tick your daily activities, diet and reading for your challenge day.</string>
     <string name="widget_extras_name">Extras</string>
     <string name="widget_extras_description">Tick your optional daily to-dos. Open the app to manage them.</string>
 </resources>

@@ -1,7 +1,5 @@
 package app.dailychallenge.android.ui
 
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,11 +21,6 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.WaterDrop
-import androidx.compose.material.icons.automirrored.outlined.DirectionsWalk
-import androidx.compose.material.icons.outlined.Eco
-import androidx.compose.material.icons.outlined.FitnessCenter
-import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
@@ -45,9 +38,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -59,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import app.dailychallenge.core.Challenge
 import app.dailychallenge.core.ChallengeCalendar
 import app.dailychallenge.core.ChallengeDates
+import app.dailychallenge.core.Targets
 import app.dailychallenge.core.TimeZoneChoices
 import app.dailychallenge.core.Tracker
 import kotlinx.coroutines.launch
@@ -79,12 +70,15 @@ val zoneChoices: TimeZoneChoices by lazy {
 
 /**
  * Shown only after the server confirmed this account has no challenge yet (an existing one is
- * adopted by sync instead). Start date and zone cannot change once started.
+ * adopted by sync instead). Start date and zone cannot change once started; the daily five can,
+ * from Account. Accepting the standard five is still one tap: Start challenge.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SetupScreen(tracker: Tracker) {
+fun SetupScreen(tracker: Tracker, initialEditing: String? = null) {
     tracker.observe()
+    var targets by rememberSaveable(stateSaver = TargetsSaver) { mutableStateOf(Targets.STANDARD) }
+    var editing by rememberSaveable { mutableStateOf(initialEditing) }
     var zoneID by rememberSaveable { mutableStateOf(deviceZone().id) }
     val zone = ZoneId.of(zoneID)
     val calendar = ChallengeCalendar(zone)
@@ -102,12 +96,11 @@ fun SetupScreen(tracker: Tracker) {
                 Text("Your next 75 days", style = Type.screenTitle, color = P.textPrimary, modifier = Modifier.semantics { heading() })
                 Text("Every day, midnight to midnight, all five.", style = Type.link, color = P.textSecondary)
             }
-            Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 16.dp)) {
-                Requirement(Icons.Filled.WaterDrop, "4,000 ml", "4 litres of water", P.water, Modifier.weight(1f))
-                Requirement(Icons.Outlined.FitnessCenter, "45 min", "45-minute workout, home or gym", P.textPrimary, Modifier.weight(1f))
-                Requirement(Icons.AutoMirrored.Outlined.DirectionsWalk, "45 min", "45-minute walk", P.textPrimary, Modifier.weight(1f))
-                Requirement(Icons.Outlined.Eco, "Clean diet", "Clean diet, your own rules", P.textPrimary, Modifier.weight(1f))
-                Requirement(Icons.AutoMirrored.Outlined.MenuBook, "10 pages", "10 Bible pages", P.textPrimary, Modifier.weight(1f))
+            Column(Modifier.padding(horizontal = Size.sectionHorizontal).padding(top = 16.dp, bottom = 10.dp)) {
+                Eyebrow("Your daily five", modifier = Modifier.padding(bottom = 4.dp).semantics { heading() })
+                GoalRows(targets) { editing = it }
+                Text("Change any of these now, or later in Account.", style = Type.caption, color = P.textSecondary,
+                    modifier = Modifier.padding(top = 6.dp))
             }
             Hairline()
             Column(Modifier.padding(horizontal = Size.sectionHorizontal)) {
@@ -130,13 +123,14 @@ fun SetupScreen(tracker: Tracker) {
                 }
             }
             Hairline()
-            PrimaryPill("Start challenge", { tracker.startChallenge(startDate, zone) },
+            PrimaryPill("Start challenge", { tracker.startChallenge(startDate, zone, targets) },
                 Modifier.padding(horizontal = Size.sectionHorizontal, vertical = 16.dp).testTag("setup-start-challenge"),
                 icon = Icons.Filled.PlayArrow, height = Size.largePill, style = Type.appName)
         }
         ErrorBanner(tracker)
         Text("Days follow ${zone.id}, midnight to midnight, including daylight saving. " +
             "The start date and time zone can't be changed after you start. " +
+            "Your daily goals can change later; earlier days keep the goals they had. " +
             "Closed unfinished days break the streak. Tracking continues beyond 75. " +
             "Use the same account on your other devices: activity saves on this phone first, then syncs.",
             style = Type.caption, color = P.textSecondary, modifier = Modifier.padding(horizontal = 4.dp))
@@ -172,18 +166,8 @@ fun SetupScreen(tracker: Tracker) {
     if (choosingZone) {
         TimeZoneSheet(zone, tracker.now, { zoneID = it.id; choosingZone = false }) { choosingZone = false }
     }
-}
-
-@Composable
-private fun Requirement(icon: ImageVector, label: String, detail: String, tint: Color, modifier: Modifier) {
-    val track = P.ringTrack
-    Column(modifier.semantics(mergeDescendants = true) { contentDescription = detail }, horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Box(Modifier.size(56.dp), contentAlignment = Alignment.Center) {
-            Canvas(Modifier.fillMaxSize().padding(Size.ringStroke / 2)) { drawCircle(track, style = Stroke(Size.ringStroke.toPx())) }
-            Icon(icon, null, tint = tint, modifier = Modifier.size(20.dp))
-        }
-        Eyebrow(label, P.textSecondary, Type.ringLabel)
+    editing?.let { key ->
+        GoalEditorSheet(key, targets, { editing = null }) { targets = it; editing = null }
     }
 }
 

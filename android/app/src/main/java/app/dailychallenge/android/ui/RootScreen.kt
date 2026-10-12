@@ -47,7 +47,7 @@ fun RootScreen(graph: AppGraph, visible: Boolean) {
         else -> Tabs(graph, visible)
     }
     if (graph.manageExtrasRequested && auth.ownerID != null && graph.tracker.challenge != null) {
-        ManageExtrasSheet(graph.tracker) { graph.manageExtrasRequested = false }
+        ManageExtrasSheet(graph.tracker, graph.fixture.editExtra) { graph.manageExtrasRequested = false }
     }
 }
 
@@ -100,7 +100,7 @@ private fun TodayTab(graph: AppGraph, visible: Boolean) {
                 TintedPill("Try again", tracker::reload)
             }
         }
-        tracker.challenge == null -> if (tracker.canStartChallenge) SetupScreen(tracker) else CheckingScreen(tracker)
+        tracker.challenge == null -> if (tracker.canStartChallenge) SetupScreen(tracker, graph.fixture.editGoal) else CheckingScreen(tracker)
         else -> TodayScreen(graph, visible)
     }
 }

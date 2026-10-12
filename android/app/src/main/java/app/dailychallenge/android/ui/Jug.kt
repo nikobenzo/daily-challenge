@@ -63,20 +63,21 @@ fun reduceMotion(): Boolean {
 }
 
 /**
- * The four-litre jug, drawn as on the Mac and iPhone (`JugDrawing.swift`): 88 by 112 within a
- * 96 by 126 frame. A pour fills it with a short slosh; past 4,000 ml two drops sit below it.
+ * The water jug, drawn as on the Mac and iPhone (`JugDrawing.swift`): 88 by 112 within a
+ * 96 by 126 frame. It holds the day's goal (4,000 ml unless changed): a pour fills it with a
+ * short slosh, and past the goal two drops sit below it.
  */
 @Composable
-fun WaterJug(millilitres: Long, modifier: Modifier = Modifier) {
+fun WaterJug(millilitres: Long, goal: Long, modifier: Modifier = Modifier) {
     val palette = P
-    val target = (millilitres / 4_000.0).coerceIn(0.0, 1.0).toFloat()
+    val target = (millilitres / goal.toDouble()).coerceIn(0.0, 1.0).toFloat()
     val level = remember { Animatable(target) }
     val slosh = remember { Animatable(0f) }
     var spill by remember { mutableStateOf(0f) }
     val still = reduceMotion()
     var previous by remember { mutableStateOf(millilitres) }
-    LaunchedEffect(millilitres) {
-        val overflowing = previous >= 4_000 && millilitres > previous
+    LaunchedEffect(millilitres, goal) {
+        val overflowing = previous >= goal && millilitres > previous
         previous = millilitres
         if (still) { level.snapTo(target); return@LaunchedEffect }
         if (overflowing) {
@@ -91,7 +92,7 @@ fun WaterJug(millilitres: Long, modifier: Modifier = Modifier) {
             launch { slosh.animateTo(0f, tween(900, easing = LinearEasing)) }
         }
     }
-    val description = "Four-litre water jug, $millilitres of 4,000 millilitres" + if (millilitres > 4_000) ", goal exceeded" else ""
+    val description = "Water jug, $millilitres of ${formatNumber(goal)} millilitres" + if (millilitres > goal) ", goal exceeded" else ""
     Box(modifier.size(96.dp, 126.dp).semantics { contentDescription = description }) {
         Canvas(Modifier.fillMaxSize()) {
             val u = 1.dp.toPx()
@@ -133,7 +134,7 @@ fun WaterJug(millilitres: Long, modifier: Modifier = Modifier) {
             drawRoundRect(outline, topLeft = Offset(19f * u, 3f * u), size = GeometrySize(28f * u, 8f * u), cornerRadius = CornerRadius(3f * u),
                 style = Stroke(2f * u))
         }
-        if (millilitres > 4_000) {
+        if (millilitres > goal) {
             Row(Modifier.offset(13.dp, 113.dp), horizontalArrangement = Arrangement.spacedBy(34.dp)) {
                 repeat(2) { Icon(Icons.Filled.WaterDrop, null, tint = palette.water, modifier = Modifier.size(9.dp)) }
             }

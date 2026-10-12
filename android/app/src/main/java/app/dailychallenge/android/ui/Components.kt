@@ -102,6 +102,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import app.dailychallenge.core.AuthModel
 import app.dailychallenge.core.SyncState
@@ -306,7 +307,7 @@ fun SettingRow(icon: ImageVector, title: String, modifier: Modifier = Modifier, 
 /** Small caps with tracking: ring labels and section eyebrows. */
 @Composable
 fun Eyebrow(text: String, color: Color = P.textSecondary, style: TextStyle = Type.eyebrow, modifier: Modifier = Modifier) {
-    Text(text.uppercase(), style = style, color = color, maxLines = 1, modifier = modifier)
+    Text(text.uppercase(), style = style, color = color, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = modifier)
 }
 
 /** "Late" beside a carried-over extra: small amber text, never a pill. */
@@ -378,7 +379,9 @@ fun RingGauge(icon: ImageVector, label: String, state: RingState, showsPercent: 
             }
         }
         val labelColor = when (state) { RingState.Pending -> palette.textTertiary; RingState.Missed -> palette.danger; else -> palette.textSecondary }
-        Eyebrow(label, labelColor, Type.ringLabel)
+        // A chosen name longer than the standard ones scales down, then truncates; TalkBack reads it in full.
+        val labelStyle = if (label.length > 8) Type.ringLabel.copy(fontSize = 8.sp, letterSpacing = 0.02.em) else Type.ringLabel
+        Eyebrow(label, labelColor, labelStyle, Modifier.padding(horizontal = 2.dp))
     }
 }
 
