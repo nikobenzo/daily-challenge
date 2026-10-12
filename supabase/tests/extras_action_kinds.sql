@@ -8,7 +8,7 @@ do $$ begin
  if exists (select 1 from pg_constraint where conname = 'challenge_events_action_kind') then
    raise exception 'FAIL the original action-kind constraint must be replaced';
  end if;
- if not exists (select 1 from pg_constraint where conname = 'challenge_events_action_kind_v2' and convalidated) then
+ if not exists (select 1 from pg_constraint where conname in ('challenge_events_action_kind_v2','challenge_events_action_kind_v3') and convalidated) then
    raise exception 'FAIL the widened action-kind constraint must exist and be validated';
  end if;
 end $$;
