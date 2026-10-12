@@ -101,6 +101,7 @@ struct PhoneManageExtrasView: View {
     @State private var renaming: Challenge.Extra?
     @State private var renameTitle = ""
     @State private var archiving: Challenge.Extra?
+    @State private var repeating: Challenge.Extra?
     @State private var error: String?
     @FocusState private var focusedField: String?
 
@@ -111,7 +112,8 @@ struct PhoneManageExtrasView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("\(tracker.activeExtras.count)/\(Challenge.maximumActiveExtras) extras")
                             .font(Theme.Fonts.rowLabel).accessibilityIdentifier("extras-active-count")
-                        Text("To-dos of your own that carry over until done. They never count toward the five or your streak.")
+                        Text("To-dos of your own that carry over until done, or items that repeat on the days you choose. "
+                             + "They never count toward the five or your streak.")
                             .font(Theme.Fonts.caption).foregroundStyle(Theme.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                         if tracker.canAddExtra {
@@ -148,6 +150,14 @@ struct PhoneManageExtrasView: View {
             .foregroundStyle(Theme.textPrimary)
             .navigationTitle("Manage extras").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .sheet(item: $repeating) { extra in
+                NavigationStack { ExtraRepeatEditor(tracker: tracker, extra: extra) }
+            }
+            #if DEBUG
+            .onAppear {
+                if PhoneFixtures.showingRepeat { repeating = tracker.activeExtras.first }
+            }
+            #endif
             .alert("Archive extra?", isPresented: Binding(
                 get: { archiving != nil }, set: { if !$0 { archiving = nil } }
             )) {
@@ -180,7 +190,25 @@ struct PhoneManageExtrasView: View {
                     Button("Cancel") { renaming = nil }.buttonStyle(TintedPillStyle(height: controlHeight, expands: true))
                 }
             } else {
-                Text(extra.title).font(Theme.Fonts.field).fixedSize(horizontal: false, vertical: true)
+                HStack(alignment: .center, spacing: 8) {
+                    Text(extra.title).font(Theme.Fonts.field).fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 4)
+                    Button { error = nil; renaming = nil; repeating = extra } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "repeat").font(.system(size: 12, weight: .semibold))
+                            Text(GoalWords.repeatTitle(extra.schedule(on: tracker.today)))
+                            Image(systemName: "chevron.right").font(.system(size: 11, weight: .bold))
+                                .foregroundStyle(Theme.textTertiary)
+                        }
+                        .font(Theme.Fonts.caption).foregroundStyle(Theme.textSecondary)
+                        .frame(minHeight: 44).contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Repeat \(extra.title)")
+                    .accessibilityValue(GoalWords.repeatTitle(extra.schedule(on: tracker.today)))
+                    .accessibilityHint("Choose once, every day, weekdays, chosen days or every few days")
+                    .accessibilityIdentifier("extras-repeat")
+                }
                 actionLayout {
                     Button { error = nil; renameTitle = extra.title; renaming = extra } label: {
                         Label("Rename", systemImage: "pencil")
@@ -214,6 +242,147 @@ struct PhoneManageExtrasView: View {
     private func add() {
         error = tracker.addExtra(newTitle)
         if error == nil { newTitle = "" }
+    }
+}
+
+/// How one extra repeats, from today: once (a to-do that carries over), every day,
+/// weekdays, chosen days or every N days. A repeating extra is never late and a missed
+/// day doesn't carry over.
+struct ExtraRepeatEditor: View {
+    let tracker: TrackerModel
+    let extra: Challenge.Extra
+    @Environment(\.dismiss) private var dismiss
+    @State private var choice: Choice
+    @State private var days: Set<Int>
+    @State private var interval: Int
+    @State private var error: String?
+
+    enum Choice: String, CaseIterable, Identifiable {
+        case once = "Once", daily = "Every day", weekdays = "Weekdays", chosen = "Choose days", every = "Every N days"
+        var id: String { rawValue }
+    }
+
+    init(tracker: TrackerModel, extra: Challenge.Extra) {
+        self.tracker = tracker
+        self.extra = extra
+        let current = extra.schedule(on: tracker.today)
+        switch current {
+        case .once: _choice = State(initialValue: .once); _days = State(initialValue: []); _interval = State(initialValue: 2)
+        case .every(1): _choice = State(initialValue: .daily); _days = State(initialValue: []); _interval = State(initialValue: 2)
+        case .every(let n): _choice = State(initialValue: .every); _days = State(initialValue: []); _interval = State(initialValue: n)
+        case .weekdays(let set):
+            _choice = State(initialValue: set == Set(1...5) ? .weekdays : .chosen)
+            _days = State(initialValue: set); _interval = State(initialValue: 2)
+        }
+    }
+
+    private var schedule: Challenge.ExtraSchedule? {
+        switch choice {
+        case .once: .once
+        case .daily: .every(1)
+        case .weekdays: .weekdays(Set(1...5))
+        case .chosen: days.isEmpty ? nil : .weekdays(days)
+        case .every: Challenge.ExtraSchedule.intervals.contains(interval) ? .every(interval) : nil
+        }
+    }
+
+    var body: some View {
+        PhoneScreen {
+            GlassCard {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(extra.title).font(Theme.Fonts.rowLabel).fixedSize(horizontal: false, vertical: true)
+                        .accessibilityAddTraits(.isHeader)
+                    Eyebrow(text: "Repeat", font: Theme.Fonts.caption)
+                    FlowLayout(spacing: 8) {
+                        ForEach(Choice.allCases) { option in
+                            Button(option.rawValue) { choice = option; error = nil }
+                                .buttonStyle(ChoiceCapsuleStyle(selected: choice == option))
+                                .accessibilityAddTraits(choice == option ? .isSelected : [])
+                                .accessibilityIdentifier("repeat-\(option.id)")
+                        }
+                    }
+                    if choice == .chosen { dayPicker }
+                    if choice == .every { intervalPicker }
+                    Text(explanation).font(Theme.Fonts.caption).foregroundStyle(Theme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("repeat-explanation")
+                    if let error { FieldError(text: error).accessibilityIdentifier("repeat-error") }
+                }
+                .padding(Theme.Size.sectionHorizontal)
+            }
+            Text("Applies from today, \(tracker.dates.label(tracker.today, format: "EEE d MMM")). Earlier days keep how they showed.")
+                .font(Theme.Fonts.caption).foregroundStyle(Theme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, Theme.Space.xs)
+            GoalsServerNotice(tracker: tracker)
+        }
+        .foregroundStyle(Theme.textPrimary)
+        .navigationTitle("Repeat").navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Done", action: done).disabled(schedule == nil).accessibilityIdentifier("repeat-done")
+            }
+        }
+    }
+
+    private var explanation: String {
+        switch choice {
+        case .once: "A to-do: it carries over, marked late, until you tick it."
+        case .chosen where days.isEmpty: "Choose at least one day."
+        default: "Shows on its days and is never late. A missed day doesn't carry over."
+        }
+    }
+
+    private var dayPicker: some View {
+        HStack(spacing: 6) {
+            ForEach(1...7, id: \.self) { day in
+                let on = days.contains(day)
+                Button {
+                    if on { days.remove(day) } else { days.insert(day) }
+                } label: {
+                    Text(String(GoalWords.shortWeekdayNames[day - 1].prefix(1)))
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .frame(maxWidth: .infinity, minHeight: 40)
+                        .foregroundStyle(on ? Theme.textInverse : Theme.textPrimary)
+                        .background(Circle().fill(on ? Theme.textPrimary : Theme.controlFill))
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(GoalWords.weekdayNames[day - 1])
+                .accessibilityAddTraits(on ? .isSelected : [])
+            }
+        }
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+    }
+
+    private var intervalPicker: some View {
+        HStack(spacing: 12) {
+            Text("Every").font(Theme.Fonts.field)
+            Button { interval = max(2, interval - 1) } label: { Image(systemName: "minus") }
+                .buttonStyle(RoundIconStyle(size: 40)).disabled(interval <= 2)
+                .accessibilityHidden(true)
+            Text("\(interval)").font(Theme.Fonts.streak).monospacedDigit().frame(minWidth: 36)
+                .accessibilityHidden(true)
+            Button { interval = min(Challenge.ExtraSchedule.intervals.upperBound, interval + 1) } label: { Image(systemName: "plus") }
+                .buttonStyle(RoundIconStyle(size: 40)).disabled(interval >= Challenge.ExtraSchedule.intervals.upperBound)
+                .accessibilityHidden(true)
+            Text("days").font(Theme.Fonts.field)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Repeat every")
+        .accessibilityValue("\(interval) days")
+        .accessibilityAdjustableAction { direction in
+            interval = direction == .increment ? min(Challenge.ExtraSchedule.intervals.upperBound, interval + 1) : max(2, interval - 1)
+        }
+        .accessibilityIdentifier("repeat-interval")
+    }
+
+    private func done() {
+        guard let schedule else { return }
+        error = tracker.scheduleExtra(extra.id, schedule)
+        if error == nil { dismiss() }
     }
 }
 
