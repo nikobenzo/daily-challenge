@@ -6,9 +6,9 @@
       "class" : "DailyChallengeProof.PopupPanel",
       "frame" : [
         0,
-        -199,
+        -340,
         540,
-        599
+        740
       ],
       "level" : 3,
       "title" : "",
@@ -17,7 +17,7 @@
     {
       "class" : "NSStatusBarWindow",
       "frame" : [
-        1023,
+        1059,
         949,
         32,
         33
@@ -30,9 +30,9 @@
       "class" : "DailyChallengeProof.WelcomeWindow",
       "frame" : [
         526,
-        242,
+        227,
         460,
-        683
+        698
       ],
       "level" : 0,
       "title" : "Welcome to Daily Challenge",
@@ -61,31 +61,19 @@
       "level" : 25,
       "title" : "",
       "visible" : true
-    },
-    {
-      "class" : "NSStatusBarWindow",
-      "frame" : [
-        2527,
-        2389,
-        32,
-        33
-      ],
-      "level" : 25,
-      "title" : "",
-      "visible" : true
     }
   ],
   "macOS" : "Version 27.0.1 (Build 26A434)",
   "statusItem" : [
-    1023,
+    1059,
     949,
     32,
     33
   ],
   "welcomeFrame" : [
     526,
-    242,
+    227,
     460,
-    683
+    698
   ]
 }

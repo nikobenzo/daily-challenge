@@ -17,7 +17,7 @@
     {
       "class" : "NSStatusBarWindow",
       "frame" : [
-        1023,
+        1059,
         949,
         32,
         33
@@ -30,9 +30,9 @@
       "class" : "DailyChallengeProof.WelcomeWindow",
       "frame" : [
         526,
-        212,
+        197,
         460,
-        713
+        728
       ],
       "level" : 0,
       "title" : "Welcome to Daily Challenge",
@@ -77,15 +77,15 @@
   ],
   "macOS" : "Version 27.0.1 (Build 26A434)",
   "statusItem" : [
-    1023,
+    1059,
     949,
     32,
     33
   ],
   "welcomeFrame" : [
     526,
-    212,
+    197,
     460,
-    713
+    728
   ]
 }

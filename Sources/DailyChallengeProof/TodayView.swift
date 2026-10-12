@@ -56,6 +56,10 @@ struct RingRow: View {
         }
     }
 
+    /// Inside a fifth of the row, so a chosen name (up to 20 characters) scales down, then
+    /// truncates; the tooltip and VoiceOver read it in full.
+    static let labelWidth: CGFloat = 72
+
     private var closed: Bool { model.summary?.status == .missed }
 
     private func water(_ target: Challenge.WaterTarget) -> some View {
@@ -74,7 +78,7 @@ struct RingRow: View {
         let complete = model.summary?.completedHabits.contains(habit) ?? false
         return Button { model.toggle(habit) } label: {
             RingGauge(symbol: Goals.symbol(slot, target), label: target.name,
-                      state: complete ? .done : closed ? .missed : .pending)
+                      state: complete ? .done : closed ? .missed : .pending, labelWidth: Self.labelWidth)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain).disabled(!model.canEdit)
@@ -90,7 +94,7 @@ struct RingRow: View {
         return Button {
             model.setDiet(state == .pending ? .clean : state == .clean ? .missed : .pending)
         } label: {
-            RingGauge(symbol: "leaf", label: target.name, state: ring).contentShape(Rectangle())
+            RingGauge(symbol: "leaf", label: target.name, state: ring, labelWidth: Self.labelWidth).contentShape(Rectangle())
         }
         .buttonStyle(.plain).disabled(!model.canEdit)
         .accessibilityLabel(Goals.dietLabel(target)).accessibilityValue(state.rawValue)

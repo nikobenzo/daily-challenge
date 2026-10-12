@@ -254,6 +254,9 @@ struct RingGauge: View {
     /// Widgets have no `onChange` pop: they draw the done stroke themselves (`WidgetRingFill`)
     /// and the check scales in as WidgetKit animates the new entry (Reduce Motion fades).
     var fillsDone = false
+    /// A width the label shrinks, then truncates, to: for names the person chose. Nil keeps
+    /// the label at its natural width.
+    var labelWidth: CGFloat? = nil
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @SwiftUI.State private var pop = false
 
@@ -284,10 +287,19 @@ struct RingGauge: View {
             .frame(width: Theme.Size.ring, height: Theme.Size.ring)
             .scaleEffect(pop ? 1.06 : 1)
             .animation(reduceMotion ? (fillsDone ? Theme.Motion.crossFade : nil) : Theme.Motion.ring, value: state)
-            // A custom name up to 20 characters scales down, then truncates; callers give
-            // VoiceOver and the tooltip the full name.
-            Eyebrow(text: label, color: labelColor, font: labelFont, tracking: Theme.Tracking.ringLabel)
-                .lineLimit(1).minimumScaleFactor(0.7).allowsTightening(true)
+            if let labelWidth {
+                // Natural size whenever it fits, so a short name matches the others.
+                ViewThatFits(in: .horizontal) {
+                    Eyebrow(text: label, color: labelColor, font: labelFont, tracking: Theme.Tracking.ringLabel)
+                        .lineLimit(1).fixedSize()
+                    Eyebrow(text: label, color: labelColor, font: labelFont, tracking: Theme.Tracking.ringLabel)
+                        .lineLimit(1).minimumScaleFactor(0.7).truncationMode(.tail)
+                }
+                .frame(maxWidth: labelWidth)
+            } else {
+                Eyebrow(text: label, color: labelColor, font: labelFont, tracking: Theme.Tracking.ringLabel)
+                    .lineLimit(1).fixedSize()
+            }
         }
         .onChange(of: state) { old, new in
             guard new == .done, old != .done, !reduceMotion else { return }

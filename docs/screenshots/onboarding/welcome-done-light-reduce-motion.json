@@ -8,9 +8,9 @@
       "class" : "DailyChallengeProof.PopupPanel",
       "frame" : [
         0,
-        -199,
+        -340,
         540,
-        599
+        740
       ],
       "level" : 3,
       "title" : "",
@@ -19,7 +19,7 @@
     {
       "class" : "NSStatusBarWindow",
       "frame" : [
-        1023,
+        1059,
         949,
         32,
         33
@@ -32,9 +32,9 @@
       "class" : "DailyChallengeProof.WelcomeWindow",
       "frame" : [
         526,
-        242,
+        227,
         460,
-        683
+        698
       ],
       "level" : 0,
       "title" : "Welcome to Daily Challenge",
@@ -57,18 +57,6 @@
       "frame" : [
         0,
         -33,
-        32,
-        33
-      ],
-      "level" : 25,
-      "title" : "",
-      "visible" : true
-    },
-    {
-      "class" : "NSStatusBarWindow",
-      "frame" : [
-        2527,
-        2389,
         32,
         33
       ],
@@ -80,22 +68,22 @@
   "macOS" : "Version 27.0.1 (Build 26A434)",
   "popupOpened" : true,
   "statusItem" : [
-    1023,
+    1059,
     949,
     32,
     33
   ],
   "welcomeFrame" : [
     526,
-    242,
+    227,
     460,
-    683
+    698
   ],
   "windowsAfter" : [
     {
       "class" : "DailyChallengeProof.PopupPanel",
       "frame" : [
-        963,
+        999,
         358,
         540,
         591
@@ -107,7 +95,7 @@
     {
       "class" : "NSStatusBarWindow",
       "frame" : [
-        1023,
+        1059,
         949,
         32,
         33
@@ -120,9 +108,9 @@
       "class" : "DailyChallengeProof.WelcomeWindow",
       "frame" : [
         526,
-        483,
+        466,
         460,
-        442
+        459
       ],
       "level" : 0,
       "title" : "Welcome to Daily Challenge",
@@ -145,18 +133,6 @@
       "frame" : [
         0,
         -33,
-        32,
-        33
-      ],
-      "level" : 25,
-      "title" : "",
-      "visible" : true
-    },
-    {
-      "class" : "NSStatusBarWindow",
-      "frame" : [
-        2527,
-        2389,
         32,
         33
       ],
