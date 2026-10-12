@@ -283,4 +283,73 @@ struct DailyGoalsTests {
             #expect(size.width == 420, "Long names scale down and truncate instead of widening the row")
         }
     }
+
+    // MARK: P5: repeating extras
+
+    @Test func repeatCaptionsReadPlainly() {
+        #expect(ExtraRepeat.caption(.once) == "Once")
+        #expect(ExtraRepeat.caption(.every(1)) == "Every day")
+        #expect(ExtraRepeat.caption(.every(3)) == "Every 3 days")
+        #expect(ExtraRepeat.caption(.weekdays([1, 2, 3, 4, 5])) == "Weekdays")
+        #expect(ExtraRepeat.caption(.weekdays([6, 7])) == "Weekends")
+        #expect(ExtraRepeat.caption(.weekdays([7])) == "Sundays")
+        #expect(ExtraRepeat.caption(.weekdays([5, 1, 3])) == "Mon, Wed, Fri")
+        #expect(ExtraRepeat.caption(.weekdays(Set(1...7))) == "Every day")
+        #expect(ExtraRepeat.rowCaption(.once) == nil, "A to-do has no caption; Late is its only marker")
+        #expect(ExtraRepeat.rowCaption(.every(1)) == "every day")
+        #expect(ExtraRepeat.rowCaption(.weekdays([1, 2, 3, 4, 5])) == "weekdays")
+        #expect(ExtraRepeat.rowCaption(.weekdays([7])) == "Sundays")
+        #expect(ExtraRepeat.phrase(.weekdays([7])) == "on Sundays")
+        #expect(ExtraRepeat.phrase(.every(2)) == "every 2 days")
+        let calendar = Challenge.calendar(for: Self.london)
+        #expect(ManageExtrasView.weekday(Self.now, calendar) == 1, "12 October 2026 is a Monday")
+    }
+
+    @Test func repeatPickerChoicesMapToRules() {
+        typealias Choice = ManageExtrasView.RepeatChoice
+        #expect(Choice.allCases.map(\.rawValue) == ["Once", "Every day", "Weekdays", "Choose days", "Every N days"])
+        #expect(Choice(.once) == .once && Choice(.every(1)) == .everyDay && Choice(.every(4)) == .everyN)
+        #expect(Choice(.weekdays([1, 2, 3, 4, 5])) == .weekdays && Choice(.weekdays([7])) == .chooseDays)
+    }
+
+    @Test func repeatingExtrasShowCaptionsAndAreNeverLate() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let clock = PopupProbe.Clock(Self.now)
+        let model = TrackerModel(directory: directory, clock: { clock.now })
+        model.activate(ownerID: UUID())
+        let start = Self.now.addingTimeInterval(-2 * 86_400)
+        let calendar = Challenge.calendar(for: Self.london)
+        model.startChallenge(on: start, timeZone: Self.london)
+        // A to-do added on the first day and still open is Late today.
+        clock.now = start; model.showToday()
+        #expect(model.addExtra("Book the dentist") == nil)
+        clock.now = Self.now; model.showToday()
+        for title in ["Stretch", "Pack lunch", "Call Mum"] { #expect(model.addExtra(title) == nil) }
+        let extras = try #require(model.challenge?.allExtras)
+        func id(_ title: String) -> UUID { extras.first { $0.title == title }!.id }
+        #expect(model.scheduleExtra(id("Stretch"), .every(1)) == nil)
+        #expect(model.scheduleExtra(id("Pack lunch"), .weekdays([1, 2, 3, 4, 5])) == nil)
+        #expect(model.scheduleExtra(id("Call Mum"), .weekdays([ManageExtrasView.weekday(Self.now, calendar)])) == nil)
+        do {
+            model.toggleExtra(id("Stretch"))
+            let today = try #require(model.summary)
+            #expect(today.extrasTotal == 4 && today.extrasDone == 1)
+            #expect(today.extras.filter { $0.schedule != .once }.allSatisfy { !today.isLate($0) })
+            #expect(today.extras.filter { today.isLate($0) }.map(\.title) == ["Book the dentist"])
+            #expect(model.summary?.isComplete == false, "Extras never count toward the five")
+            try Self.render(TodayTrackerView(model: model), name: "goals-today-repeating-extras")
+            try Self.render(ManageExtrasView(model: model), name: "goals-manage-extras", width: nil)
+            let stretch = id("Stretch")
+            for (choice, days, name) in [(ManageExtrasView.RepeatChoice.everyDay, Set<Int>(), "every-day"),
+                                         (.chooseDays, [1, 3, 5], "choose-days"), (.chooseDays, [], "choose-days-none"),
+                                         (.everyN, [], "every-n"), (.once, [], "once")] {
+                try Self.render(ManageExtrasView(model: model, renaming: stretch, renameTitle: "Stretch", repeatChoice: choice,
+                                                 repeatDays: days, repeatEvery: 3), name: "goals-repeat-\(name)", width: nil)
+            }
+            #expect(ManageExtrasView(model: model, repeatChoice: .chooseDays, repeatDays: []).chosenSchedule == nil,
+                    "Choose days needs at least one day")
+            #expect(ManageExtrasView(model: model, repeatChoice: .everyN, repeatEvery: 3).chosenSchedule == .every(3))
+        }
+    }
 }

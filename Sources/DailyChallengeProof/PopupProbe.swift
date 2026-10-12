@@ -20,7 +20,7 @@ import SwiftUI
 /// row while it expands.
 ///
 ///     DAILY_CHALLENGE_POPUP_PROBE=<directory>                                  required
-///     DAILY_CHALLENGE_POPUP_PROBE_SCREEN=sign-in|setup|today|today-extras|today-carryover|history|account   (today)
+///     DAILY_CHALLENGE_POPUP_PROBE_SCREEN=sign-in|setup|today|today-extras|today-carryover|today-goals|history|account   (today)
 ///     DAILY_CHALLENGE_POPUP_PROBE_APPEARANCE=light|dark                        (light)
 ///     DAILY_CHALLENGE_POPUP_PROBE_STEPS=history,account,today|extras           (none)
 ///
@@ -34,7 +34,8 @@ import SwiftUI
 @MainActor
 struct PopupProbe {
     enum Screen: String {
-        case signIn = "sign-in", setup, today, todayExtras = "today-extras", todayCarryOver = "today-carryover", history, account
+        case signIn = "sign-in", setup, today, todayExtras = "today-extras", todayCarryOver = "today-carryover"
+        case todayGoals = "today-goals", history, account
         case welcome, welcomeSignedIn = "welcome-signed-in", welcomeDone = "welcome-done"
         case welcomeExisting = "welcome-existing", welcomeUpgraded = "welcome-upgraded"
 
@@ -101,13 +102,14 @@ struct PopupProbe {
         // An upgraded install: a challenge saved on this Mac by an account now signed out.
         tracker.activate(ownerID: screen == .welcomeUpgraded ? owner : auth.ownerID)
         if screen.hasChallenge {
-            let start = screen == .todayCarryOver ? Self.carryOverStart(clock.now) : clock.now
+            let start = [.todayCarryOver, .todayGoals].contains(screen) ? Self.carryOverStart(clock.now) : clock.now
             tracker.startChallenge(on: start, timeZone: Challenge.legacyTimeZone)
             tracker.addWater()
             tracker.addWater()
         }
         if screen == .todayExtras { Self.seedExtras(tracker) }
         if screen == .todayCarryOver { Self.seedCarryOver(tracker, clock: clock) }
+        if screen == .todayGoals { Self.seedGoals(tracker, clock: clock) }
         if screen == .welcomeUpgraded { tracker.activate(ownerID: nil) }
         let defaults = UserDefaults(suiteName: Self.defaultsSuite)!
         defaults.removePersistentDomain(forName: Self.defaultsSuite)
@@ -142,6 +144,34 @@ struct PopupProbe {
         _ = tracker.addExtra("No phone after 10 pm")
         tracker.toggleExtra(id("No phone after 10 pm"))
     }
+
+    /// Custom goals: Gym, Yoga, No sugar, Audiobook and 3,000 ml in 330 ml glasses from
+    /// today (a Thursday), with a to-do carried over from the first day and three repeating
+    /// extras (every day, ticked; weekdays; Thursdays).
+    static func seedGoals(_ tracker: TrackerModel, clock: Clock) {
+        let today = clock.now
+        func id(_ title: String) -> UUID { tracker.challenge!.allExtras.first { $0.title == title }!.id }
+        clock.now = carryOverStart(today); tracker.showToday()
+        _ = tracker.addExtra("Book the dentist")
+        clock.now = today; tracker.showToday()
+        _ = tracker.setTargets(goalsFixture)
+        for title in ["Stretch", "Pack lunch", "Call Mum"] { _ = tracker.addExtra(title) }
+        _ = tracker.scheduleExtra(id("Stretch"), .every(1))
+        _ = tracker.scheduleExtra(id("Pack lunch"), .weekdays([1, 2, 3, 4, 5]))
+        _ = tracker.scheduleExtra(id("Call Mum"), .weekdays([4]))
+        tracker.toggleExtra(id("Stretch"))
+        tracker.toggle(.walk)
+    }
+
+    static let goalsFixture: Challenge.Targets = {
+        var targets = Challenge.Targets.standard
+        targets.water = Challenge.WaterTarget(goal: 3_000, glass: 330)
+        targets.workout = Challenge.Target(name: "Gym", amount: 45, unit: .minutes, icon: "dumbbell")
+        targets.walk = Challenge.Target(name: "Yoga", amount: 30, unit: .minutes, icon: "yoga")
+        targets.diet = Challenge.Target(name: "No sugar")
+        targets.bibleReading = Challenge.Target(name: "Audiobook", amount: 20, unit: .minutes, icon: "headphones")
+        return targets
+    }()
 
     // MARK: Run
 

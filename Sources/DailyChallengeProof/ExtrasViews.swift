@@ -101,7 +101,7 @@ struct ExtrasSection: View {
     /// Caption, the "New extra" field and its plus button, as in Manage extras.
     private var editor: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("To-dos of your own that carry over until done. They never count toward the five or your streak.")
+            Text(ManageExtrasView.caption)
                 .font(Theme.Fonts.caption).foregroundStyle(Theme.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
             ExtrasAddRow(title: $newTitle, focus: $focus, equals: true, add: add)
@@ -281,16 +281,49 @@ struct ExtrasAddRow<Focus: Hashable>: View {
     }
 }
 
-/// Add, rename and archive, at most 10 active. No reordering, reminders, notes or icons.
+/// Add, edit (name and repeat) and archive, at most 10 active. No reordering, reminders,
+/// notes or icons.
 struct ManageExtrasView: View {
+    static let caption = "Your own to-dos: once, carried over until done, or repeating on days you choose. "
+        + "They never count toward the five or your streak."
+
     @Bindable var model: TrackerModel
     @State var newTitle = ""
+    /// The extra whose name and repeat are being edited.
     @State var renaming: UUID?
-    @State private var renameTitle = ""
+    @State var renameTitle = ""
+    @State var repeatChoice = RepeatChoice.once
+    @State var repeatDays: Set<Int> = []
+    @State var repeatEvery = 2
     @State var confirmingArchive: UUID?
     @State var error: String?
     @FocusState private var focus: Field?
     private enum Field: Hashable { case new, rename }
+
+    /// The repeat picker's five choices (plan section 7.2).
+    enum RepeatChoice: String, CaseIterable {
+        case once = "Once", everyDay = "Every day", weekdays = "Weekdays", chooseDays = "Choose days", everyN = "Every N days"
+
+        init(_ schedule: Challenge.ExtraSchedule) {
+            switch schedule {
+            case .once: self = .once
+            case .every(1): self = .everyDay
+            case .every: self = .everyN
+            case .weekdays(let days): self = days == [1, 2, 3, 4, 5] ? .weekdays : .chooseDays
+            }
+        }
+    }
+
+    /// The rule the picker describes, or nil while "Choose days" has none chosen.
+    var chosenSchedule: Challenge.ExtraSchedule? {
+        switch repeatChoice {
+        case .once: .once
+        case .everyDay: .every(1)
+        case .weekdays: .weekdays([1, 2, 3, 4, 5])
+        case .chooseDays: repeatDays.isEmpty ? nil : .weekdays(repeatDays)
+        case .everyN: .every(repeatEvery)
+        }
+    }
 
     var body: some View {
         let extras = model.activeExtras
@@ -301,7 +334,7 @@ struct ManageExtrasView: View {
                 Badge(text: "\(extras.count)/\(Challenge.maximumActiveExtras)", height: 24)
                     .accessibilityLabel("\(extras.count) of \(Challenge.maximumActiveExtras) extras")
             }
-            Text("To-dos of your own that carry over until done. They never count toward the five or your streak.")
+            Text(Self.caption)
                 .font(Theme.Fonts.caption).foregroundStyle(Theme.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
             if !extras.isEmpty {
@@ -330,18 +363,7 @@ struct ManageExtrasView: View {
     @ViewBuilder
     private func row(_ extra: Challenge.Extra) -> some View {
         if renaming == extra.id {
-            HStack(spacing: 8) {
-                GlassField(symbol: "pencil", placeholder: "Name", text: $renameTitle,
-                           focus: $focus, equals: .rename, onSubmit: { saveRename(extra) })
-                Button { saveRename(extra) } label: { Image(systemName: "checkmark") }
-                    .buttonStyle(RoundIconStyle(size: 32))
-                    .disabled(Challenge.extraTitle(renameTitle) == nil)
-                    .help("Save name").accessibilityLabel("Save name")
-                Button { renaming = nil } label: { Image(systemName: "xmark") }
-                    .buttonStyle(RoundIconStyle(size: 32))
-                    .help("Cancel").accessibilityLabel("Cancel rename")
-            }
-            .padding(.vertical, 6)
+            editor(extra)
         } else if confirmingArchive == extra.id {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Archive “\(extra.title)”? It disappears from today on and can't be restored. Earlier days keep their ticks.")
@@ -356,16 +378,16 @@ struct ManageExtrasView: View {
             }
             .padding(.vertical, 8)
         } else {
+            let caption = ExtraRepeat.caption(extra.schedule)
             HStack(spacing: 8) {
                 Text(extra.title).font(Theme.Fonts.field).foregroundStyle(Theme.textPrimary)
                     .lineLimit(1).truncationMode(.tail).help(extra.title)
                 Spacer(minLength: 4)
-                Button {
-                    error = nil; confirmingArchive = nil
-                    renameTitle = extra.title; renaming = extra.id; focus = .rename
-                } label: { Image(systemName: "pencil") }
+                Text(caption).font(Theme.Fonts.caption).foregroundStyle(Theme.textSecondary)
+                    .lineLimit(1).layoutPriority(-1)
+                Button { edit(extra) } label: { Image(systemName: "pencil") }
                     .buttonStyle(RoundIconStyle(size: 30))
-                    .help("Rename").accessibilityLabel("Rename \(extra.title)")
+                    .help("Edit name and repeat").accessibilityLabel("Edit \(extra.title), \(caption)")
                 Button { error = nil; renaming = nil; confirmingArchive = extra.id } label: { Image(systemName: "archivebox") }
                     .buttonStyle(RoundIconStyle(size: 30))
                     .help("Archive").accessibilityLabel("Archive \(extra.title)")
@@ -380,8 +402,85 @@ struct ManageExtrasView: View {
         if error == nil { newTitle = "" }
     }
 
+    /// Name, the repeat chips, then the weekday toggles or the N stepper when they apply.
+    private func editor(_ extra: Challenge.Extra) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            GlassField(symbol: "pencil", placeholder: "Name", text: $renameTitle,
+                       focus: $focus, equals: .rename, onSubmit: { saveRename(extra) })
+            Text("Repeat").font(Theme.Fonts.caption).foregroundStyle(Theme.textSecondary)
+                .accessibilityAddTraits(.isHeader)
+            ChipFlow(spacing: 6) {
+                ForEach(RepeatChoice.allCases, id: \.self) { choice in
+                    GoalChip(title: choice.rawValue, selected: repeatChoice == choice) {
+                        repeatChoice = choice
+                        error = nil
+                        if choice == .chooseDays, repeatDays.isEmpty { repeatDays = [Self.weekday(model.today, model.dates.calendar)] }
+                    }
+                }
+            }
+            switch repeatChoice {
+            case .chooseDays:
+                HStack(spacing: 6) {
+                    ForEach(1...7, id: \.self) { day in
+                        let on = repeatDays.contains(day)
+                        Button { if on { repeatDays.remove(day) } else { repeatDays.insert(day) } } label: {
+                            Text(ExtraRepeat.weekdayInitials[day - 1]).font(Theme.Fonts.badge)
+                        }
+                        .buttonStyle(RoundIconStyle(size: 32, fill: on ? Theme.accentTint : Theme.controlFill,
+                                                    foreground: on ? Theme.accentText : Theme.textPrimary,
+                                                    border: on ? Theme.accentText.opacity(0.6) : .clear))
+                        .help(ExtraRepeat.weekdayNames[day - 1])
+                        .accessibilityLabel(ExtraRepeat.weekdayNames[day - 1])
+                        .accessibilityAddTraits(on ? .isSelected : [])
+                    }
+                }
+                if repeatDays.isEmpty { FieldError(text: "Choose at least one day.") }
+            case .everyN:
+                HStack {
+                    Text("Every").font(Theme.Fonts.field).foregroundStyle(Theme.textPrimary)
+                    PillStepper(text: "\(repeatEvery) days", accessibilityText: "Repeat every",
+                                decrement: repeatEvery > 2 ? { repeatEvery -= 1 } : nil,
+                                increment: repeatEvery < Challenge.ExtraSchedule.intervals.upperBound ? { repeatEvery += 1 } : nil)
+                }
+                Text("2 to \(Challenge.ExtraSchedule.intervals.upperBound) days, counted from today.")
+                    .font(Theme.Fonts.caption).foregroundStyle(Theme.textTertiary)
+            default: EmptyView()
+            }
+            Text(repeatChoice == .once
+                 ? "A to-do carries over, marked Late, until it's done."
+                 : "Repeats from today. It comes back on its days, is never late and doesn't carry over.")
+                .font(Theme.Fonts.caption).foregroundStyle(Theme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack {
+                Button("Cancel") { renaming = nil; error = nil }.buttonStyle(TintedPillStyle(height: 32))
+                Spacer()
+                Button("Save") { saveRename(extra) }
+                    .buttonStyle(PrimaryPillStyle(height: 32, expands: false))
+                    .disabled(Challenge.extraTitle(renameTitle) == nil || chosenSchedule == nil)
+            }
+        }
+        .padding(.vertical, 8)
+    }
+
+    private func edit(_ extra: Challenge.Extra) {
+        error = nil; confirmingArchive = nil
+        renameTitle = extra.title
+        repeatChoice = RepeatChoice(extra.schedule)
+        if case .weekdays(let days) = extra.schedule { repeatDays = days } else { repeatDays = [] }
+        if case .every(let days) = extra.schedule, days > 1 { repeatEvery = days } else { repeatEvery = 2 }
+        renaming = extra.id
+        focus = .rename
+    }
+
+    /// The ISO weekday (Monday = 1) of `day`.
+    static func weekday(_ day: Date, _ calendar: Calendar) -> Int {
+        (calendar.component(.weekday, from: day) + 5) % 7 + 1
+    }
+
     private func saveRename(_ extra: Challenge.Extra) {
+        guard let schedule = chosenSchedule else { return }
         error = model.renameExtra(extra.id, to: renameTitle)
+        if error == nil, schedule != extra.schedule(on: model.today) { error = model.scheduleExtra(extra.id, schedule) }
         if error == nil { renaming = nil }
     }
 

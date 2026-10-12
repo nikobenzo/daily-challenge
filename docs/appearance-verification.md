@@ -29,7 +29,7 @@ the copy once per screen and appearance through a developer-only launch path (`P
 | Environment variable | Meaning |
 | --- | --- |
 | `DAILY_CHALLENGE_POPUP_PROBE` | Directory for fixture data and output. Required: unset, the app behaves normally; the production bundle (`app.daily-challenge.proof`) ignores it. |
-| `DAILY_CHALLENGE_POPUP_PROBE_SCREEN` | `sign-in`, `setup`, `today` (default), `today-extras` (Today with three extras, one ticked), `today-carryover` (Day 3: two extras carried over as Late, one done today), `history` or `account`; the `welcome*` screens capture the first-run welcome window instead ([first launch](tracker-interface.md#first-launch), `scripts/test-first-launch.sh`) |
+| `DAILY_CHALLENGE_POPUP_PROBE_SCREEN` | `sign-in`, `setup`, `today` (default), `today-extras` (Today with three extras, one ticked), `today-carryover` (Day 3: two extras carried over as Late, one done today), `today-goals` (Day 3 with custom daily goals from today and three repeating extras beside a Late to-do), `history` or `account`; the `welcome*` screens capture the first-run welcome window instead ([first launch](tracker-interface.md#first-launch), `scripts/test-first-launch.sh`) |
 | `DAILY_CHALLENGE_POPUP_PROBE_APPEARANCE` | `light` (default) or `dark` |
 | `DAILY_CHALLENGE_POPUP_PROBE_STEPS` | Steps after the first capture: sections to switch to, such as `history,account,today`, or `extras` to click Today's empty Extras row so its add field drops down (`today-<appearance>-extras-expanded.*`) |
 
