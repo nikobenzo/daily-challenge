@@ -8,12 +8,15 @@ public struct WaterMotion: Equatable, Sendable {
     public let to: Int
     public let started: Date
     public let initialLevel: Double
+    /// The day's water goal: a full jug.
+    public let goal: Int
 
-    public init(from: Int, to: Int, started: Date, presentationLevel: Double? = nil) {
+    public init(from: Int, to: Int, started: Date, presentationLevel: Double? = nil, goal: Int = 4_000) {
         self.from = from
         self.to = to
         self.started = started
-        initialLevel = presentationLevel ?? Double(min(4_000, from)) / 4_000
+        self.goal = goal
+        initialLevel = presentationLevel ?? Double(min(goal, from)) / Double(goal)
     }
 
     public func isActive(at date: Date, visible: Bool, reduceMotion: Bool) -> Bool {
@@ -27,7 +30,7 @@ public struct WaterMotion: Equatable, Sendable {
     public func level(at date: Date) -> Double {
         let p = min(1, progress(at: date) / 0.55)
         let eased = 1 - pow(1 - p, 3)
-        let targetLevel = Double(min(4_000, to)) / 4_000
+        let targetLevel = Double(min(goal, to)) / Double(goal)
         return initialLevel + (targetLevel - initialLevel) * eased
     }
 
@@ -37,7 +40,7 @@ public struct WaterMotion: Equatable, Sendable {
     }
 
     public var frameDates: [Date] { finiteFrames(started: started, duration: Self.duration) }
-    public var spills: Bool { to > 4_000 && to > from }
+    public var spills: Bool { to > goal && to > from }
 }
 
 public enum CompletionCelebration: String, Codable, Sendable { case daily, milestone, extras }

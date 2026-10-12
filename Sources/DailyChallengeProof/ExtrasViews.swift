@@ -145,6 +145,9 @@ struct ExtrasChecklist: View {
             ForEach(summary?.extras ?? []) { extra in
                 let done = summary?.completedExtras.contains(extra.id) ?? false
                 let late = summary?.isLate(extra) ?? false
+                // A repeating extra is never late; its caption says how it repeats.
+                let repeats = summary.flatMap { ExtraRepeat.rowCaption(extra.schedule(on: $0.interval.start)) }
+                let spoken = late ? "\(extra.title), late" : repeats.map { "\(extra.title), \($0)" } ?? extra.title
                 Button { model.toggleExtra(extra.id) } label: {
                     HStack(spacing: 12) {
                         ExtraCheckbox(done: done)
@@ -152,6 +155,10 @@ struct ExtrasChecklist: View {
                             .foregroundStyle(done ? Theme.textSecondary : Theme.textPrimary)
                             .lineLimit(1).truncationMode(.tail)
                         if late { LateMarker() }
+                        if let repeats {
+                            Text(repeats).font(Theme.Fonts.caption).foregroundStyle(Theme.textTertiary)
+                                .lineLimit(1).layoutPriority(-1)
+                        }
                         Spacer(minLength: 0)
                     }
                     .frame(height: 32)
@@ -159,8 +166,8 @@ struct ExtrasChecklist: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(!model.canEdit)
-                .help(late ? "\(extra.title), late" : extra.title)
-                .accessibilityLabel(late ? "\(extra.title), late" : extra.title)
+                .help(spoken)
+                .accessibilityLabel(spoken)
                 .accessibilityValue(done ? "Done" : "Not done")
                 .accessibilityHint("Press to \(done ? "undo" : "mark done")")
             }

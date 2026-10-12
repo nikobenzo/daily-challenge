@@ -39,59 +39,63 @@ struct TodayTrackerView: View {
     }
 }
 
-/// WATER · WORKOUT · WALK · DIET · BIBLE. Water mirrors the jug; the four habit rings
-/// are the habit controls (click to toggle; diet cycles and has a context menu).
+/// Water and the four slots, named for the selected day's targets (WATER · WORKOUT · WALK ·
+/// DIET · BIBLE by default). Water mirrors the jug; the four rings are the habit controls
+/// (click to toggle; diet cycles and has a context menu).
 struct RingRow: View {
     @Bindable var model: TrackerModel
 
     var body: some View {
+        let targets = model.summary?.targets ?? .standard
         HStack(spacing: 0) {
-            water.frame(maxWidth: .infinity)
-            habit(.workout, title: "Workout", detail: "45 min · home / gym", icon: "dumbbell").frame(maxWidth: .infinity)
-            habit(.walk, title: "Walk", detail: "45 minutes", icon: "figure.walk").frame(maxWidth: .infinity)
-            diet.frame(maxWidth: .infinity)
-            habit(.bibleReading, title: "Bible", detail: "10 pages", icon: "book").frame(maxWidth: .infinity)
+            water(targets.water).frame(maxWidth: .infinity)
+            habit(.workout, targets).frame(maxWidth: .infinity)
+            habit(.walk, targets).frame(maxWidth: .infinity)
+            diet(targets.diet).frame(maxWidth: .infinity)
+            habit(.bibleReading, targets).frame(maxWidth: .infinity)
         }
     }
 
     private var closed: Bool { model.summary?.status == .missed }
 
-    private var water: some View {
+    private func water(_ target: Challenge.WaterTarget) -> some View {
         let ml = model.summary?.waterMillilitres ?? 0
         let state: RingGauge.State = model.summary?.waterComplete == true ? .done
-            : closed ? .missed : ml == 0 ? .pending : .progress(Double(ml) / 4_000)
+            : closed ? .missed : ml == 0 ? .pending : .progress(Double(ml) / Double(target.goal))
         return RingGauge(symbol: "drop.fill", label: "Water", state: state, showsPercent: true)
-            .help("Water: \(ml.formatted()) of 4,000 ml")
+            .help("Water: \(ml.formatted()) of \(target.goal.formatted()) ml")
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Water")
-            .accessibilityValue("\(ml) of 4,000 millilitres")
+            .accessibilityValue("\(ml) of \(target.goal) millilitres")
     }
 
-    private func habit(_ habit: Challenge.Habit, title: String, detail: String, icon: String) -> some View {
+    private func habit(_ habit: Challenge.Habit, _ targets: Challenge.Targets) -> some View {
+        let slot = Goals.slot(habit), target = targets[slot]
         let complete = model.summary?.completedHabits.contains(habit) ?? false
         return Button { model.toggle(habit) } label: {
-            RingGauge(symbol: icon, label: title, state: complete ? .done : closed ? .missed : .pending)
+            RingGauge(symbol: Goals.symbol(slot, target), label: target.name,
+                      state: complete ? .done : closed ? .missed : .pending)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain).disabled(!model.canEdit)
-        .accessibilityLabel("\(title), \(detail)")
+        .accessibilityLabel(Goals.spoken(slot, target))
         .accessibilityValue(complete ? "Complete" : "Not complete")
         .accessibilityHint("Press to \(complete ? "undo" : "mark complete")")
-        .help("\(title): \(detail). Click to \(complete ? "undo" : "complete").")
+        .help("\(target.name): \(Goals.detail(slot, target)). Click to \(complete ? "undo" : "complete").")
     }
 
-    private var diet: some View {
+    private func diet(_ target: Challenge.Target) -> some View {
         let state = model.summary?.diet ?? .pending
         let ring: RingGauge.State = state == .clean ? .done : state == .missed || closed ? .missed : .pending
         return Button {
             model.setDiet(state == .pending ? .clean : state == .clean ? .missed : .pending)
         } label: {
-            RingGauge(symbol: "leaf", label: "Diet", state: ring).contentShape(Rectangle())
+            RingGauge(symbol: "leaf", label: target.name, state: ring).contentShape(Rectangle())
         }
         .buttonStyle(.plain).disabled(!model.canEdit)
-        .accessibilityLabel("Clean diet, your own rules").accessibilityValue(state.rawValue)
+        .accessibilityLabel(Goals.dietLabel(target)).accessibilityValue(state.rawValue)
         .accessibilityHint("Press to cycle pending, clean and missed")
-        .help("Diet: \(state.rawValue.capitalized). Click to cycle pending → clean → missed. Right-click to choose.")
+        .help("\(target.name): \(state.rawValue.capitalized). Click to cycle pending → clean → missed. Right-click to choose.")
         .contextMenu { DietMenu(model: model) }
     }
 }
@@ -136,15 +140,16 @@ struct WaterSection: View {
     var body: some View {
         let ml = model.summary?.waterMillilitres ?? 0
         let complete = model.summary?.waterComplete == true
+        let goal = model.summary?.targets.water.goal ?? Challenge.Targets.standard.water.goal
         HStack(spacing: 18) {
-            WaterJugView(millilitres: ml)
+            WaterJugView(millilitres: ml, goal: goal)
                 .frame(width: Theme.Size.jug.width + 8, height: Theme.Size.jug.height + 14)
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text("\(ml.formatted()) ml").font(Theme.Fonts.hero).tracking(Theme.Tracking.hero)
                         .monospacedDigit().foregroundStyle(Theme.textPrimary)
                         .lineLimit(1).minimumScaleFactor(0.7)
-                    Text("/ 4,000").font(Theme.Fonts.caption)
+                    Text("/ \(goal.formatted())").font(Theme.Fonts.caption)
                         .foregroundStyle(complete ? Theme.doneText : Theme.textSecondary)
                 }
                 .accessibilityElement(children: .combine)
@@ -155,7 +160,7 @@ struct WaterSection: View {
     }
 }
 
-/// −, + 450 ml and ⋯ (custom pour). Today uses the wide layout; History the compact
+/// −, + the day's glass (450 ml unless changed) and ⋯ (custom pour). Today uses the wide layout; History the compact
 /// one with the total between the controls.
 struct WaterControls: View {
     @Bindable var model: TrackerModel
@@ -165,6 +170,7 @@ struct WaterControls: View {
 
     var body: some View {
         let ml = model.summary?.waterMillilitres ?? 0
+        let water = model.summary?.targets.water ?? Challenge.Targets.standard.water
         HStack(spacing: compact ? 10 : 12) {
             Button { model.undoWater() } label: { Image(systemName: "minus") }
                 .buttonStyle(RoundIconStyle(size: compact ? 40 : Theme.Size.pill))
@@ -176,14 +182,14 @@ struct WaterControls: View {
                     Image(systemName: "drop.fill").font(.system(size: 15)).foregroundStyle(Theme.water)
                     Text(ml.formatted()).font(.system(size: 22, weight: .heavy, design: .rounded)).monospacedDigit()
                         .foregroundStyle(Theme.textPrimary)
-                    Text("/ 4,000 ml").font(Theme.Fonts.caption).foregroundStyle(Theme.textSecondary)
+                    Text("/ \(water.goal.formatted()) ml").font(Theme.Fonts.caption).foregroundStyle(Theme.textSecondary)
                 }
                 .lineLimit(1)
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel("\(ml) of 4,000 millilitres")
+                .accessibilityLabel("\(ml) of \(water.goal) millilitres")
                 Spacer(minLength: 0)
             }
-            add(complete: model.summary?.waterComplete == true)
+            add(glass: water.glass, complete: model.summary?.waterComplete == true)
             Button { customAmount = ""; showingCustom = true } label: { Image(systemName: "ellipsis") }
                 .buttonStyle(RoundIconStyle(size: compact ? 40 : Theme.Size.pill))
                 .disabled(!model.canEdit)
@@ -194,20 +200,20 @@ struct WaterControls: View {
         }
     }
 
-    /// Primary until the goal is met, then a quieter tinted pill.
+    /// Primary until the goal is met, then a quieter tinted pill. Pours the day's glass.
     @ViewBuilder
-    private func add(complete: Bool) -> some View {
-        let label = Label(compact ? "450" : "450 ml", systemImage: "plus")
+    private func add(glass: Int, complete: Bool) -> some View {
+        let label = Label(compact ? glass.formatted() : "\(glass.formatted()) ml", systemImage: "plus")
         if complete {
             Button { model.addWater() } label: { label }
                 .buttonStyle(TintedPillStyle(height: compact ? 40 : Theme.Size.pill, expands: !compact))
                 .disabled(!model.canEdit)
-                .accessibilityLabel("Add 450 millilitres of water")
+                .accessibilityLabel("Add \(glass) millilitres of water")
         } else {
             Button { model.addWater() } label: { label }
                 .buttonStyle(PrimaryPillStyle(height: compact ? 40 : Theme.Size.pill, expands: !compact))
                 .disabled(!model.canEdit)
-                .accessibilityLabel("Add 450 millilitres of water")
+                .accessibilityLabel("Add \(glass) millilitres of water")
         }
     }
 

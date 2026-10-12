@@ -284,8 +284,10 @@ struct RingGauge: View {
             .frame(width: Theme.Size.ring, height: Theme.Size.ring)
             .scaleEffect(pop ? 1.06 : 1)
             .animation(reduceMotion ? (fillsDone ? Theme.Motion.crossFade : nil) : Theme.Motion.ring, value: state)
+            // A custom name up to 20 characters scales down, then truncates; callers give
+            // VoiceOver and the tooltip the full name.
             Eyebrow(text: label, color: labelColor, font: labelFont, tracking: Theme.Tracking.ringLabel)
-                .lineLimit(1).fixedSize()
+                .lineLimit(1).minimumScaleFactor(0.7).allowsTightening(true)
         }
         .onChange(of: state) { old, new in
             guard new == .done, old != .done, !reduceMotion else { return }

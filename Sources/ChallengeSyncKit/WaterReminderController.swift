@@ -74,7 +74,8 @@ public final class NativeWaterNotificationCenter: NSObject, WaterNotificationCen
     private func add(identifier: String, at date: Date, timeZone: TimeZone) async throws {
         let content = UNMutableNotificationContent()
         content.title = "Water check-in"
-        content.body = "Check today's water log. If you're below 4,000 ml, drink only what you still need toward your goal."
+        // No number: notifications are queued ahead, and the day's goal can change.
+        content.body = "Time for some water. Drink only what you still need toward today's goal."
         content.sound = .default
         let calendar = Challenge.calendar(for: timeZone)
         var components = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: date)

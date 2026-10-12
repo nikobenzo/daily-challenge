@@ -371,7 +371,10 @@ public final class TrackerModel {
         return backup
     }
 
-    public func addWater(_ amount: Int = 450) { record(.pour(amount)) }
+    /// Without an amount, pours the selected day's glass, read from the just-loaded summary.
+    public func addWater(_ amount: Int? = nil) {
+        record { .pour(amount ?? $0?.targets.water.glass ?? Challenge.Targets.standard.water.glass) }
+    }
 
     public func addCustomWater(_ text: String) {
         guard let amount = Int(text.trimmingCharacters(in: .whitespacesAndNewlines)), amount > 0 else {
