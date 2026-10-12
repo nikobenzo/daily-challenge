@@ -12,6 +12,11 @@ import WidgetKit
         case signIn, createAccount, forgotPassword, confirmCode, resetPassword
         case checking, setup, today, todayComplete, history, account, sharedToday, storageRecovery
         case todayExtras, extrasCap, historyExtras, historyExtrasEditing, accountExtras, historyCarryOver
+        /// Custom goals: changed today (Yoga, Audiobook, 3,000 ml in 330 ml glasses) after
+        /// eleven days on the standard five; `goalsUnmigrated` adds a server without the update.
+        case todayGoals, historyGoals, historyGoalsBefore, accountGoals, goalsUnmigrated
+        /// Repeating extras beside a late to-do.
+        case todayRecurring
     }
 
     static var isFixtureLaunch: Bool { ProcessInfo.processInfo.arguments.contains("-fixture") }
@@ -32,6 +37,26 @@ import WidgetKit
         let arguments = ProcessInfo.processInfo.arguments
         return arguments.contains("-fixture")
             && (arguments.contains("-delete-account") || arguments.contains("-delete-account-confirm"))
+    }
+
+    /// `-daily-goals` opens Account › Daily goals.
+    static var showingGoals: Bool {
+        ProcessInfo.processInfo.arguments.contains("-fixture")
+            && ProcessInfo.processInfo.arguments.contains("-daily-goals")
+    }
+
+    /// `-repeat-extra` (with `-manage-extras`) opens the first extra's Repeat editor.
+    static var showingRepeat: Bool {
+        ProcessInfo.processInfo.arguments.contains("-fixture")
+            && ProcessInfo.processInfo.arguments.contains("-repeat-extra")
+    }
+
+    /// `-edit-goal water|workout|walk|diet|bibleReading` opens that row's editor (in Setup,
+    /// or in Daily goals with `-daily-goals`).
+    static var editingGoal: GoalField? {
+        guard ProcessInfo.processInfo.arguments.contains("-fixture"),
+              let value = value(after: "-edit-goal", in: ProcessInfo.processInfo.arguments) else { return nil }
+        return GoalField.all.first { $0.id == value }
     }
 
     static var showingDeletionConfirmation: Bool {
@@ -147,10 +172,46 @@ import WidgetKit
                 app.tab = .account
                 reminders.update(.init(enabled: true))
             }
+        case .todayGoals, .historyGoals, .historyGoalsBefore, .accountGoals, .goalsUnmigrated:
+            seed(tracker, complete: false)
+            _ = tracker.setTargets(customTargets)
+            if screen == .historyGoals { app.tab = .history; tracker.showToday(); tracker.selectHistoryDay(day(0)) }
+            if screen == .historyGoalsBefore { app.tab = .history; tracker.selectHistoryDay(day(-2)) }
+            if screen == .accountGoals || screen == .goalsUnmigrated { app.tab = .account }
+            if screen == .goalsUnmigrated {
+                tracker.configureSync(UnmigratedGoalsTransport(record: tracker.store!.record!))
+                Task { await tracker.sync(force: true) }
+            }
+        case .todayRecurring:
+            seed(tracker, complete: false)
+            seedRecurring(tracker, clock: clock)
         default:
             break
         }
         return app
+    }
+
+    /// Changed today: what the custom goals fixtures show.
+    static let customTargets = Challenge.Targets(
+        water: Challenge.WaterTarget(goal: 3_000, glass: 330),
+        workout: Challenge.Target(name: "Gym", amount: 45, unit: .minutes, icon: "dumbbell"),
+        walk: Challenge.Target(name: "Yoga", amount: 30, unit: .minutes, icon: "yoga"),
+        diet: Challenge.Target(name: "No sugar"),
+        bibleReading: Challenge.Target(name: "Audiobook", amount: 20, unit: .minutes, icon: "headphones"))
+
+    /// Book dentist is a to-do from two days ago (late); Stretch repeats every day, Pack
+    /// lunch on weekdays and Call Mum on Fridays (the fixture's today), all set three days ago.
+    private static func seedRecurring(_ tracker: TrackerModel, clock: FixtureClock) {
+        clock.now = day(-3); tracker.showToday()
+        for title in ["Stretch", "Pack lunch", "Call Mum"] { _ = tracker.addExtra(title) }
+        _ = tracker.scheduleExtra(extraID("Stretch", in: tracker), .every(1))
+        _ = tracker.scheduleExtra(extraID("Pack lunch", in: tracker), .weekdays(Set(1...5)))
+        _ = tracker.scheduleExtra(extraID("Call Mum", in: tracker), .weekdays([5]))
+        clock.now = day(-2); tracker.showToday()
+        _ = tracker.addExtra("Book dentist")
+        clock.now = now; tracker.showToday()
+        tracker.toggleExtra(extraID("Stretch", in: tracker))
+        tracker.toggleExtra(extraID("Call Mum", in: tracker))
     }
 
     /// Explicit Debug launch publishes synthetic data in a separate group root.
@@ -318,5 +379,18 @@ import WidgetKit
     func insertChallenge(_ record: ChallengeRecord) async throws { throw URLError(.notConnectedToInternet) }
     func upload(_ events: [ChallengeEvent], ownerID: UUID) async throws { throw URLError(.notConnectedToInternet) }
     func fetchEvents(ownerID: UUID, challengeID: UUID) async throws -> RemoteEvents { throw URLError(.notConnectedToInternet) }
+}
+
+/// A server that has the challenge but not the custom goals update: every upload holding
+/// a target or schedule is refused, as the hosted check would refuse it.
+@MainActor final class UnmigratedGoalsTransport: ChallengeTransport {
+    let record: ChallengeRecord
+    init(record: ChallengeRecord) { self.record = record }
+    func fetchChallenge(ownerID: UUID) async throws -> ChallengeRecord? { record }
+    func insertChallenge(_ record: ChallengeRecord) async throws {}
+    func upload(_ events: [ChallengeEvent], ownerID: UUID) async throws {
+        throw ChallengeSyncError.serverNeedsCustomGoalsUpdate
+    }
+    func fetchEvents(ownerID: UUID, challengeID: UUID) async throws -> RemoteEvents { RemoteEvents(events: []) }
 }
 #endif

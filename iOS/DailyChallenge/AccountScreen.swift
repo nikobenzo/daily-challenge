@@ -7,6 +7,7 @@ import SwiftUI
 struct AccountScreen: View {
     @Bindable var app: PhoneApp
     @State private var managingExtras = false
+    @State private var managingGoals = false
     @State private var confirmingSignOut = false
     @State private var deletingAccount = false
     @State private var signOutError: String?
@@ -31,6 +32,17 @@ struct AccountScreen: View {
                     if let reminders = app.reminders { PhoneReminderSettings(model: reminders) }
                     HairlineDivider().padding(.vertical, 6)
                     appearance
+                    HairlineDivider().padding(.vertical, 6)
+                    Button { managingGoals = true } label: {
+                        SettingRow(symbol: "target", title: "Daily goals") {
+                            Image(systemName: "chevron.right").foregroundStyle(Theme.textTertiary)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain).disabled(tracker.challenge == nil)
+                    .accessibilityHint("Change your water goal, glass size, activities, diet and reading from today")
+                    .accessibilityIdentifier("account-goals")
+                    .id("fixture-account-goals")
                     HairlineDivider().padding(.vertical, 6)
                     Button { managingExtras = true } label: {
                         SettingRow(symbol: "checklist", title: "Extras") {
@@ -64,9 +76,13 @@ struct AccountScreen: View {
             }
         }
         .sheet(isPresented: $managingExtras) { PhoneManageExtrasView(tracker: tracker) }
+        .sheet(isPresented: $managingGoals) { PhoneDailyGoalsView(tracker: tracker) }
         .sheet(isPresented: $deletingAccount) { DeleteAccountView(app: app) }
         #if DEBUG
-        .onAppear { deletingAccount = PhoneFixtures.showingDeletion }
+        .onAppear {
+            deletingAccount = PhoneFixtures.showingDeletion
+            managingGoals = PhoneFixtures.showingGoals
+        }
         #endif
     }
 

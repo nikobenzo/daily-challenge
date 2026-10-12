@@ -48,6 +48,7 @@
 		D37F5D217DA619BF906540AD /* ChallengeCore in Frameworks */ = {isa = PBXBuildFile; productRef = 957BE63CB6A9EB0CF0698729 /* ChallengeCore */; };
 		D3EE7E6E67CEFF32333D34FE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E447F3DFBA6DC39838282822 /* PrivacyInfo.xcprivacy */; };
 		D63365EFFE0A3FAE99FE3AC6 /* PhoneSharedStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3789CD5BBCA369DA87A3BBD3 /* PhoneSharedStoreTests.swift */; };
+		DBD54EBB6AF11875617CF0B9 /* GoalEditors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04201A7D6D0E16441E4FD999 /* GoalEditors.swift */; };
 		E535F74B303E67499A7CF58E /* WidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0466DACCDCF6749B1610F568 /* WidgetViews.swift */; };
 		E56B490F52CB35FB52E36021 /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62D3FBAE0645D9A0B21E47D9 /* SharedComponents.swift */; };
 		E66B17464A8A8B65F448925D /* DailyChallengeWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A55448D6B0B46E6D034037D4 /* DailyChallengeWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -100,6 +101,7 @@
 
 /* Begin PBXFileReference section */
 		0211C155DA07084E38D22D16 /* DailyChallengeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyChallengeApp.swift; sourceTree = "<group>"; };
+		04201A7D6D0E16441E4FD999 /* GoalEditors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalEditors.swift; sourceTree = "<group>"; };
 		0466DACCDCF6749B1610F568 /* WidgetViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetViews.swift; sourceTree = "<group>"; };
 		068B1E20A6AEA7251526B69D /* PhoneFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneFixtures.swift; sourceTree = "<group>"; };
 		07750909352F2CCF3386CA44 /* CompletionEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionEffect.swift; sourceTree = "<group>"; };
@@ -185,6 +187,7 @@
 				0E72EADE2BE24A1AF75D3B58 /* AuthScreen.swift */,
 				49EE810FC2FA59822E8DF127 /* DailyChallenge.entitlements */,
 				0211C155DA07084E38D22D16 /* DailyChallengeApp.swift */,
+				04201A7D6D0E16441E4FD999 /* GoalEditors.swift */,
 				2ADC44F1D8FEAD95697FB1BC /* HistoryScreen.swift */,
 				76AB5F804FE5C4EFBE70F2B3 /* Info.plist */,
 				AF0746F58D619CE08A655CE1 /* PhoneApp.swift */,
@@ -561,6 +564,7 @@
 				FC2D42FF69FB4BB7F55EAA85 /* AuthScreen.swift in Sources */,
 				3A39D28CBF7C193D408456E2 /* CompletionEffect.swift in Sources */,
 				276AEE6B3AD81C56666A02A9 /* DailyChallengeApp.swift in Sources */,
+				DBD54EBB6AF11875617CF0B9 /* GoalEditors.swift in Sources */,
 				2FA5F67FD464004C9349D34C /* GoalWords.swift in Sources */,
 				BBDD3F15B6B638223CC8418E /* HistoryScreen.swift in Sources */,
 				D0745E75260518924130896F /* JugDrawing.swift in Sources */,

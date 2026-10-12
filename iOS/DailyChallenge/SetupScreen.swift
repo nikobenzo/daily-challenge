@@ -3,13 +3,17 @@ import ChallengeSyncKit
 import SwiftUI
 
 /// Shown only after the server confirmed this account has no challenge yet (an existing
-/// one is adopted by sync instead). Start date and zone cannot change once started.
+/// one is adopted by sync instead). Start date and zone cannot change once started; the
+/// daily five start as the standard targets, and any row can be changed here or later in
+/// Account › Daily goals. Accepting them is still one tap on Start challenge.
 struct SetupScreen: View {
     @Bindable var tracker: TrackerModel
     @State private var startDate = Date()
     /// Defaults to the phone's zone.
     @State private var timeZone = TimeZone.current
     @State private var choosingZone = false
+    @State private var targets = Challenge.Targets.standard
+    @State private var editing: GoalField?
 
     var body: some View {
         let dates = ChallengeDates(timeZone: timeZone)
@@ -24,16 +28,18 @@ struct SetupScreen: View {
                         .font(Theme.Fonts.link).foregroundStyle(Theme.textSecondary)
                 }
                 .padding(.top, Theme.Space.xl)
-                HStack(spacing: 0) {
-                    requirement("drop.fill", "4,000 ml", detail: "4 litres of water", tint: Theme.water)
-                    requirement("dumbbell", "45 min", detail: "45-minute workout, home or gym")
-                    requirement("figure.walk", "45 min", detail: "45-minute walk")
-                    requirement("leaf", "Clean diet", detail: "Clean diet, your own rules")
-                    requirement("book", "10 pages", detail: "10 Bible pages")
+                VStack(alignment: .leading, spacing: 4) {
+                    Eyebrow(text: "Your daily five", font: Theme.Fonts.caption)
+                        .accessibilityAddTraits(.isHeader)
+                    GoalRows(targets: targets) { editing = $0 }
+                    Text("Change any of these now, or later in Account.")
+                        .font(Theme.Fonts.caption).foregroundStyle(Theme.textTertiary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                .padding(.horizontal, Theme.Space.xs)
-                .padding(.vertical, Theme.Space.l)
+                .padding(.horizontal, Theme.Size.sectionHorizontal)
+                .padding(.top, Theme.Space.l)
+                .padding(.bottom, Theme.Space.s)
+                .id("fixture-setup-goals")
                 HairlineDivider()
                 VStack(spacing: 0) {
                     DatePicker(selection: $startDate, in: ...tracker.now, displayedComponents: .date) {
@@ -65,7 +71,7 @@ struct SetupScreen: View {
                 }
                 .padding(.horizontal, Theme.Size.sectionHorizontal)
                 HairlineDivider()
-                Button { tracker.startChallenge(on: startDate, timeZone: timeZone) } label: {
+                Button { tracker.startChallenge(on: startDate, timeZone: timeZone, targets: targets) } label: {
                     Label("Start challenge", systemImage: "play.fill")
                 }
                 .buttonStyle(PrimaryPillStyle(height: Theme.Size.largePill, font: Theme.Fonts.appName))
@@ -81,27 +87,26 @@ struct SetupScreen: View {
         .sheet(isPresented: $choosingZone) {
             TimeZoneSheet(selection: $timeZone, now: tracker.now)
         }
+        .sheet(item: $editing) { field in
+            NavigationStack {
+                GoalEditor(field: field, targets: targets, footnote: "Applies from your start date. You can change it later in Account.") {
+                    targets = $0
+                    return nil
+                }
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { editing = nil } } }
+            }
+        }
+        #if DEBUG
+        .onAppear { editing = PhoneFixtures.editingGoal }
+        #endif
     }
 
     private var rules: String {
         "Days follow \(timeZone.identifier), midnight to midnight, including daylight saving. "
             + "The start date and time zone can't be changed after you start. "
+            + "Your daily goals can change later; earlier days keep the goals they had. "
             + "Closed unfinished days break the streak. Tracking continues beyond 75. "
             + "Use the same account on your Mac: activity saves on this iPhone first, then syncs."
-    }
-
-    private func requirement(_ symbol: String, _ label: String, detail: String, tint: Color = Theme.textPrimary) -> some View {
-        VStack(spacing: 8) {
-            Circle().stroke(Theme.ringTrack, lineWidth: Theme.Size.ringStroke)
-                .padding(Theme.Size.ringStroke / 2)
-                .frame(width: 56, height: 56)
-                .overlay { Image(systemName: symbol).font(.system(size: 17, weight: .semibold)).foregroundStyle(tint) }
-            Eyebrow(text: label, color: Theme.textSecondary, font: Theme.Fonts.ringLabel, tracking: Theme.Tracking.ringLabel)
-                .lineLimit(1).minimumScaleFactor(0.7)
-        }
-        .frame(maxWidth: .infinity)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(detail)
     }
 }
 
