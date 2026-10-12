@@ -10,6 +10,8 @@ Follow the [exact hosted migration/install steps and two-Mac checklist](../docs/
 
 `20261010000100_extras_action_kinds.sql` widens that action-kind check to the three daily checklist extras kinds; apply it after abuse limits and before releasing the build with extras, following the [extras update](../docs/production-sync.md#extras-update-owner-only-once).
 
+`20261012000100_custom_targets_action_kinds.sql` widens the action-kind check again, to the kinds for custom daily targets and recurring extras (`setTarget`, `setWater`, `scheduleExtra`), and bounds their payloads no more strictly than the clients do. Apply it after account deletion and before releasing any build that writes those kinds, following the [custom goals update](../docs/production-sync.md#custom-goals-update-owner-only-once).
+
 `20261011000100_account_deletion.sql` makes deleting an Auth user cascade to that owner's challenge and events, and adds `delete_own_account()`, which lets a signed-in user delete only their own account with the publishable key (in-app account deletion on the iPhone). Apply it after the extras migration and before external testing or App Review, following [account deletion](../docs/production-sync.md#account-deletion-owner-only-once-before-app-review).
 
 Production SELECT/INSERT policies require the authenticated owner on both tables. Composite foreign keys and RLS protect event children and undo references; client UPDATE/DELETE and receipt-time forgery are denied, and rows are removed only by deleting their own account. The local harness tests both schemas. Existing local tracking remains usable with pending/error status if production tables are not deployed; empty-device setup waits for a successful server check.

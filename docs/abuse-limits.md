@@ -6,7 +6,7 @@ The publishable key inside every release is public by design, and sign-ups are o
 | --- | --- |
 | Event size | `activity` at most 1,024 bytes as stored text. The largest real event, an undo with every key, is about 250 bytes; the longest `deviceID` the schema allows brings it to about 340. |
 | Event keys | Only `id`, `day`, `recordedAt`, `action`, `undonePourID` and `deviceID`. |
-| Action kind | Exactly one of `pour`, `undoLatestPour`, `setHabit`, `setDiet` (and, after the [extras update](production-sync.md#extras-update-owner-only-once), `defineExtra`, `archiveExtra`, `setExtra`). A malformed row would otherwise be unreadable for that account on every Mac (the app skips such a row and reports it in the sync status). |
+| Action kind | Exactly one of `pour`, `undoLatestPour`, `setHabit`, `setDiet` (and, after the [extras update](production-sync.md#extras-update-owner-only-once), `defineExtra`, `archiveExtra`, `setExtra`; after the [custom goals update](production-sync.md#custom-goals-update-owner-only-once), `setTarget`, `setWater`, `scheduleExtra`, whose payloads are also bounded). A malformed row would otherwise be unreadable for that account on every Mac (the app skips such a row and reports it in the sync status). |
 | Event dates | `day` and `recordedAt` between 0 and 3.2e9 seconds after 2001-01-01, so 2001 to 2102. |
 | Challenge settings | `start_time` between 2020-01-01 and 2100-01-01 (Unix seconds); a year-1 start would hang streak derivation. `time_zone` at most 64 characters; IANA names are at most about 32. |
 | Row caps | 10,000 `challenge_events` and 200 `sync_probe_entries` per owner. A 75-day challenge produces a few thousand events at most. |
@@ -90,7 +90,7 @@ select conrelid::regclass, conname, convalidated from pg_constraint
 select tgrelid::regclass, tgname from pg_trigger where tgname like '%_row_cap';
 ```
 
-After the [extras update](production-sync.md#extras-update-owner-only-once) the action-kind constraint is named `challenge_events_action_kind_v2`, so that row of the constraint query appears under the new name.
+After the [extras update](production-sync.md#extras-update-owner-only-once) the action-kind constraint is named `challenge_events_action_kind_v2`, and after the [custom goals update](production-sync.md#custom-goals-update-owner-only-once) `challenge_events_action_kind_v3`, so that row of the constraint query appears under the newest name. The custom goals update also adds `challenge_events_set_target`, `challenge_events_set_water` and `challenge_events_schedule_extra`; add them to the query to see them.
 
 Expected: RLS `true` on all three tables; no publication rows; exactly four grant rows, all for `authenticated`: `SELECT` on the three tables and `INSERT` on `sync_probe_entries` (the challenge tables' `INSERT` grants are column-level and do not appear here), and nothing for `anon`; functions `enforce_owner_row_cap` (plus the sign-up hook, if added), each with `prosecdef` false; six constraints, all `convalidated` true; two row-cap triggers.
 
