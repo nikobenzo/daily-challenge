@@ -334,8 +334,17 @@ class SupabaseChallengeTransport(private val http: SupabaseHttp, private val aut
         val ordered = events.filter { it.activity.undonePourID == null } + events.filter { it.activity.undonePourID != null }
         for (batch in ordered.chunked(200)) {
             val session = validate(ownerID)
-            rest("POST", "challenge_events", session, listOf("on_conflict" to "owner_id,id"),
-                JsonArray(batch.map(Wire::encode)), IGNORE_DUPLICATES)
+            try {
+                rest("POST", "challenge_events", session, listOf("on_conflict" to "owner_id,id"),
+                    JsonArray(batch.map(Wire::encode)), IGNORE_DUPLICATES)
+            } catch (error: PostgrestException) {
+                // 23514 on the action-kind check: the server predates `setTarget`, `setWater` and
+                // `scheduleExtra` (20261012000100). The batch stays pending; nothing is lost.
+                if (error.code == "23514" && "challenge_events_action_kind" in (error.message ?: "")) {
+                    throw ChallengeSyncException(ChallengeSyncError.SERVER_NEEDS_CUSTOM_GOALS_UPDATE)
+                }
+                throw error
+            }
         }
     }
 

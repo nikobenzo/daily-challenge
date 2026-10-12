@@ -266,6 +266,28 @@ class SupabaseWireTest {
     }
 
     @Test
+    fun anUploadRefusedByTheOldActionKindCheckAsksForTheCustomGoalsUpdate() = runTest {
+        val transport = SupabaseChallengeTransport(http, auth())
+        val day = ChallengeCalendar(ZoneId.of("Europe/Jersey")).startOfDay(syncDate)
+        val event = ChallengeEvent(owner, UUID.randomUUID(), Activity(UUID.randomUUID(), day, syncDate, Action.SetWater(3_000, 250), null, "DEVICE"))
+        server.enqueue(json(400, """{"code":"23514","details":"Failing row contains (...).","hint":null,"message":"new row for relation \"challenge_events\" violates check constraint \"challenge_events_action_kind_v2\""}"""))
+        try {
+            transport.upload(listOf(event), owner)
+            fail("uploaded")
+        } catch (error: ChallengeSyncException) {
+            assertEquals(ChallengeSyncError.SERVER_NEEDS_CUSTOM_GOALS_UPDATE, error.error)
+        }
+        // Any other check keeps its own words.
+        server.enqueue(json(400, """{"code":"23514","details":null,"hint":null,"message":"new row for relation \"challenge_events\" violates check constraint \"challenge_events_set_water\""}"""))
+        try {
+            transport.upload(listOf(event), owner)
+            fail("uploaded")
+        } catch (error: PostgrestException) {
+            assertEquals("23514", error.code)
+        }
+    }
+
+    @Test
     fun accountDeletionCallsTheRpcAndExplainsAMissingMigration() = runTest {
         val deletion = SupabaseAccountDeletion(http, auth())
         server.enqueue(MockResponse().setResponseCode(204))

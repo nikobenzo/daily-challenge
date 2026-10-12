@@ -311,7 +311,8 @@ class Tracker(
         changed()
     }
 
-    fun addWater(amount: Long = 450) = record { Action.Pour(amount) }
+    /** Pours `amount`, or without one the glass size in force on the selected day. */
+    fun addWater(amount: Long? = null) = record { Action.Pour(amount ?: it?.targets?.water?.glass ?: Targets.STANDARD.water.glass) }
 
     fun addCustomWater(text: String) {
         val amount = text.trim().toLongOrNull()
@@ -377,6 +378,22 @@ class Tracker(
         changed()
     }
 
+    // MARK: Daily goals
+
+    /** The targets in force today, which Account's Daily goals edits. */
+    val todayTargets: Targets get() = challenge?.targets(now) ?: Targets.STANDARD
+
+    /**
+     * Changes the daily goals from today on (earlier days keep theirs): one `setWater` or
+     * `setTarget` per value that differs from today's, in one commit. Null once saved (or when
+     * nothing changed), otherwise the reason nothing was saved.
+     */
+    fun setGoals(targets: Targets): String? {
+        refresh()
+        val challenge = store?.challenge ?: return ChallengeStoreError.NOT_STARTED.message
+        return recordSettings(targets.changes(challenge.targets(now)))
+    }
+
     // MARK: Extras
 
     /** Still to do today, in creation order: what Manage extras lists and the cap counts. */
@@ -389,25 +406,39 @@ class Tracker(
     }
 
     /** Each returns null once saved, otherwise the reason nothing was saved. */
-    fun addExtra(title: String): String? = defineExtra(UUID.randomUUID(), title)
-    fun renameExtra(id: UUID, title: String): String? = defineExtra(id, title)
-    fun archiveExtra(id: UUID): String? = recordExtraSetting(Action.ArchiveExtra(id))
-
-    private fun defineExtra(id: UUID, title: String): String? {
+    fun addExtra(title: String, schedule: ExtraSchedule = ExtraSchedule.Once): String? {
+        val id = UUID.randomUUID()
         val clean = Challenge.extraTitle(title) ?: return ChallengeError.INVALID_EXTRA_TITLE.message
-        return recordExtraSetting(Action.DefineExtra(id, clean))
+        // Defined and scheduled in one commit, so a repeating extra never exists as a to-do.
+        return recordSettings(listOfNotNull(Action.DefineExtra(id, clean), schedule.takeIf { it != ExtraSchedule.Once }?.action(id)))
+    }
+    fun renameExtra(id: UUID, title: String): String? {
+        val clean = Challenge.extraTitle(title) ?: return ChallengeError.INVALID_EXTRA_TITLE.message
+        return recordSettings(listOf(Action.DefineExtra(id, clean)))
+    }
+    fun archiveExtra(id: UUID): String? = recordSettings(listOf(Action.ArchiveExtra(id)))
+    /** How it repeats from today on; earlier days keep how they showed. */
+    fun scheduleExtra(id: UUID, schedule: ExtraSchedule): String? = recordSettings(listOf(schedule.action(id)))
+    /** Manage extras' edit: its name and how it repeats, in one commit; unchanged values record nothing. */
+    fun editExtra(id: UUID, title: String, schedule: ExtraSchedule): String? {
+        val clean = Challenge.extraTitle(title) ?: return ChallengeError.INVALID_EXTRA_TITLE.message
+        return recordSettings(listOf(Action.DefineExtra(id, clean), schedule.action(id)))
     }
 
-    /** Adding, renaming and archiving belong to the challenge, so they are recorded on today. */
-    private fun recordExtraSetting(action: Action): String? {
+    /**
+     * Goals and extras settings belong to the challenge, so they are recorded on today, all or
+     * none. A rename to the same title or a schedule already in force records nothing.
+     */
+    private fun recordSettings(actions: List<Action>): String? {
         refresh()
         if (store?.challenge == null) return ChallengeStoreError.NOT_STARTED.message
+        if (actions.isEmpty()) return null
         return try {
             transact { candidate ->
-                if (action is Action.DefineExtra &&
-                    candidate.challenge?.allExtras?.firstOrNull { it.id == action.id && !it.isArchived }?.title == action.title
-                ) return@transact
-                candidate.record(action, now, now)
+                val extras = candidate.challenge?.allExtras.orEmpty()
+                candidate.record(actions.filterNot { action ->
+                    action is Action.DefineExtra && extras.firstOrNull { it.id == action.id && !it.isArchived }?.title == action.title
+                }, now, now)
             }
             requestSync()
             null

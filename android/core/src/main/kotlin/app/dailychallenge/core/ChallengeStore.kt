@@ -19,6 +19,7 @@ class ChallengeStoreException(val error: ChallengeStoreError) : Exception(error.
 
 enum class ChallengeSyncError(val message: String) {
     SERVER_NEEDS_TIME_ZONE_UPDATE("The server needs the timezone update before this challenge can sync. Your entries are safe on this phone."),
+    SERVER_NEEDS_CUSTOM_GOALS_UPDATE("The server needs the update for custom goals and repeating extras before your changes can sync. Your entries are safe on this phone."),
     CONFLICTING_CHALLENGE("Different challenges were found for this account. Sync stopped; both histories are preserved."),
     INVALID_RECORD("A challenge sync record is invalid or conflicts with saved history. Nothing was replaced."),
     WRONG_OWNER("The sync session or record belongs to another account. Nothing was merged."),
@@ -91,6 +92,23 @@ class ChallengeStore(private val ownerID: UUID, directory: File) {
         val pending = if (current.challenge.allActivities.none { it.id == result }) current.pendingIDs + result else current.pendingIDs
         commit(current.copy(challenge = next, pendingIDs = pending))
         return result
+    }
+
+    /**
+     * Several edits in one commit, in order: all are recorded or, when one is refused, none.
+     * Actions that need no recording are skipped. Returns the IDs recorded.
+     */
+    fun record(actions: List<Action>, on: Double, at: Double): List<UUID> {
+        val current = snapshot ?: throw ChallengeStoreException(ChallengeStoreError.NOT_STARTED)
+        var next = current.copy(challenge = current.challenge.copy())
+        val recorded = ArrayList<UUID>()
+        for (action in actions) {
+            val result = next.challenge.record(action, on, at, nextID(at, next), current.deviceID) ?: continue
+            recorded += result
+            next = next.copy(pendingIDs = next.pendingIDs + result)
+        }
+        if (recorded.isNotEmpty()) commit(next)
+        return recorded
     }
 
     fun merge(remote: ChallengeRecord, events: List<ChallengeEvent>) {
