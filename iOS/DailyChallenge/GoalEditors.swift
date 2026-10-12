@@ -513,7 +513,7 @@ struct PhoneDailyGoalsView: View {
         NavigationStack(path: $path) {
             PhoneScreen {
                 GlassCard {
-                    GoalRows(targets: tracker.currentTargets) { path.append($0) }
+                    GoalRows(targets: tracker.todayTargets) { path.append($0) }
                         .padding(.horizontal, Theme.Size.sectionHorizontal)
                 }
                 Text(Self.appliesFrom(tracker))
@@ -528,7 +528,7 @@ struct PhoneDailyGoalsView: View {
             .navigationTitle("Daily goals").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
             .navigationDestination(for: GoalField.self) { field in
-                GoalEditor(field: field, targets: tracker.currentTargets, footnote: Self.appliesFrom(tracker)) {
+                GoalEditor(field: field, targets: tracker.todayTargets, footnote: Self.appliesFrom(tracker)) {
                     tracker.setTargets($0)
                 }
             }

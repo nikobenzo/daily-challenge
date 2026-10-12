@@ -101,7 +101,7 @@ import Testing
     let tracker = goalsFixture(.todayGoals, directory: directory).tracker
     let streak = tracker.streaks?.current
     #expect(tracker.summary?.targets == PhoneFixtures.customTargets)
-    #expect(tracker.currentTargets == PhoneFixtures.customTargets)
+    #expect(tracker.todayTargets == PhoneFixtures.customTargets)
     tracker.addWater()
     #expect(tracker.summary?.waterMillilitres == 2_580, "+ pours today's 330 ml glass")
     tracker.addWater(); tracker.addWater()
@@ -120,7 +120,7 @@ import Testing
     let tracker = goalsFixture(.goalsUnmigrated, directory: directory).tracker
     await tracker.sync(force: true)
     #expect(tracker.syncError == ChallengeSyncError.serverNeedsCustomGoalsUpdate.errorDescription)
-    #expect(tracker.currentTargets == PhoneFixtures.customTargets)
+    #expect(tracker.todayTargets == PhoneFixtures.customTargets)
     #expect((tracker.store?.pendingCount ?? 0) > 0)
 }
 

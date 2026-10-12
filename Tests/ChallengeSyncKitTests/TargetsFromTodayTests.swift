@@ -25,7 +25,7 @@ private let yoga = Challenge.Target(name: "Yoga", amount: 30, unit: .minutes, ic
         #expect(model.setTargets(.standard) == ChallengeStoreError.notStarted.localizedDescription)
         let start = clock.now.addingTimeInterval(-2 * 86_400)
         model.startChallenge(on: start, timeZone: TimeZone(identifier: "Europe/London")!)
-        #expect(model.currentTargets == .standard)
+        #expect(model.todayTargets == .standard)
         #expect(model.setTargets(.standard) == nil)
         #expect(model.history.isEmpty, "Unchanged targets record nothing")
 
@@ -33,7 +33,7 @@ private let yoga = Challenge.Target(name: "Yoga", amount: 30, unit: .minutes, ic
         next.walk = yoga
         next.water = Challenge.WaterTarget(goal: 3_000, glass: 330)
         #expect(model.setTargets(next) == nil)
-        #expect(model.currentTargets == next)
+        #expect(model.todayTargets == next)
         #expect(model.history.count == 2, "One event per changed value, on today")
         #expect(model.challenge?.targets(on: start) == .standard)
         #expect(model.challenge?.targets(on: start.addingTimeInterval(86_400)) == .standard)
@@ -55,7 +55,7 @@ private let yoga = Challenge.Target(name: "Yoga", amount: 30, unit: .minutes, ic
 
         let reopened = TrackerModel(directory: directory, clock: { clock.now })
         reopened.activate(ownerID: owner)
-        #expect(reopened.currentTargets == next)
+        #expect(reopened.todayTargets == next)
         #expect(reopened.store?.pendingCount == model.store?.pendingCount)
     }
 }
@@ -76,7 +76,7 @@ private let yoga = Challenge.Target(name: "Yoga", amount: 30, unit: .minutes, ic
         next.diet = Challenge.Target(name: "No sugar", amount: 5, unit: .minutes)
         #expect(model.setTargets(next) == ChallengeError.invalidTarget.localizedDescription)
         #expect(model.history.isEmpty, "A refused change writes none of its values")
-        #expect(model.currentTargets == .standard)
+        #expect(model.todayTargets == .standard)
     }
 }
 
