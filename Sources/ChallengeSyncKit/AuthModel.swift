@@ -84,6 +84,9 @@ public final class AuthModel {
     public private(set) var status = "Restoring session…"
     public private(set) var errorMessage: String?
     public private(set) var configurationReady = false
+    /// False until the saved session (if any) has been read at launch, so first-run
+    /// guidance never flashes for someone who is about to be signed back in.
+    public private(set) var sessionRestored = false
     /// Guidance for the current sign-up or reset step, such as where a code was sent.
     public private(set) var notice: String?
     public private(set) var resendAvailableAt: Date?
@@ -121,6 +124,7 @@ public final class AuthModel {
         } catch {
             status = "Configuration unavailable"
             errorMessage = missingConfiguration
+            sessionRestored = true
         }
     }
 
@@ -138,6 +142,7 @@ public final class AuthModel {
         self.ownerID = fixtureOwnerID
         self.signedInEmail = fixtureOwnerID == nil ? nil : email
         self.configurationReady = true
+        self.sessionRestored = true
         self.status = "Offline appearance fixture"
     }
 
@@ -170,6 +175,8 @@ public final class AuthModel {
             for await (_, session) in client.auth.authStateChanges {
                 if holdingRecoverySession { continue }
                 activate(session)
+                // The first event is the saved session, or nil when there is none.
+                sessionRestored = true
             }
         }
     }

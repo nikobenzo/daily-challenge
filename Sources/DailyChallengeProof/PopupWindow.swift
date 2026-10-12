@@ -31,6 +31,8 @@ final class PopupController: NSObject {
 
     /// Open from the click until close() starts the fade-out.
     private(set) var isOpen = false
+    /// Runs each time the popup opens (the welcome window ticks its first step).
+    var onOpen: (() -> Void)?
     var statusButton: NSStatusBarButton? { statusItem.button }
 
     @objc func toggle() {
@@ -70,6 +72,7 @@ final class PopupController: NSObject {
             MainActor.assumeIsolated { self?.close() }
         })
         updateGlyph()
+        onOpen?()
     }
 
     func close() {

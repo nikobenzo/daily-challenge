@@ -75,6 +75,7 @@ final class ProofModel {
     var status: String { account.status }
     var errorMessage: String? { account.errorMessage }
     var configurationReady: Bool { account.configurationReady }
+    var sessionRestored: Bool { account.sessionRestored }
     var notice: String? { account.notice }
     var resendAvailableAt: Date? { account.resendAvailableAt }
     var canResend: Bool { account.canResend }

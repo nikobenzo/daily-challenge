@@ -23,10 +23,24 @@ import SwiftUI
 ///     DAILY_CHALLENGE_POPUP_PROBE_SCREEN=sign-in|setup|today|today-extras|today-carryover|history|account   (today)
 ///     DAILY_CHALLENGE_POPUP_PROBE_APPEARANCE=light|dark                        (light)
 ///     DAILY_CHALLENGE_POPUP_PROBE_STEPS=history,account,today|extras           (none)
+///
+/// The welcome screens (scripts/test-first-launch.sh) leave the status item alone: they
+/// report every window the launch opened and capture the welcome window, if any.
+/// `welcome` is a new person (signed out), `welcome-signed-in` is signed in with no
+/// challenge, `welcome-done` then starts the challenge to capture the celebration,
+/// `welcome-existing` is signed in with a challenge and `welcome-upgraded` is signed out
+/// with a challenge file already on this Mac; the last two must open no window at all.
+///     DAILY_CHALLENGE_POPUP_PROBE_REDUCE_MOTION=1                              (system setting)
 @MainActor
 struct PopupProbe {
     enum Screen: String {
         case signIn = "sign-in", setup, today, todayExtras = "today-extras", todayCarryOver = "today-carryover", history, account
+        case welcome, welcomeSignedIn = "welcome-signed-in", welcomeDone = "welcome-done"
+        case welcomeExisting = "welcome-existing", welcomeUpgraded = "welcome-upgraded"
+
+        var isWelcome: Bool { rawValue.hasPrefix("welcome") }
+        var signedIn: Bool { ![.signIn, .welcome, .welcomeUpgraded].contains(self) }
+        var hasChallenge: Bool { ![.signIn, .setup, .welcome, .welcomeSignedIn, .welcomeDone].contains(self) }
     }
     enum Step: Equatable {
         case section(TrackerSection)
@@ -52,7 +66,9 @@ struct PopupProbe {
     let screen: Screen
     let appearance: AppearancePreference
     let steps: [Step]
-    var name: String { "\(screen.rawValue)-\(appearance.rawValue)" }
+    /// Fixture-only Reduce Motion for the welcome window; nil follows the system.
+    let reduceMotion: Bool?
+    var name: String { "\(screen.rawValue)-\(appearance.rawValue)\(reduceMotion == true ? "-reduce-motion" : "")" }
 
     init?(environment: [String: String], bundleID: String?) {
         guard let path = environment["DAILY_CHALLENGE_POPUP_PROBE"], !path.isEmpty,
@@ -61,6 +77,7 @@ struct PopupProbe {
         screen = environment["DAILY_CHALLENGE_POPUP_PROBE_SCREEN"].flatMap(Screen.init) ?? .today
         appearance = environment["DAILY_CHALLENGE_POPUP_PROBE_APPEARANCE"].flatMap(AppearancePreference.init) ?? .light
         steps = (environment["DAILY_CHALLENGE_POPUP_PROBE_STEPS"] ?? "").split(separator: ",").compactMap(Step.init)
+        reduceMotion = environment["DAILY_CHALLENGE_POPUP_PROBE_REDUCE_MOTION"] == "1" ? true : nil
     }
 
     var section: TrackerSection {
@@ -74,15 +91,16 @@ struct PopupProbe {
     /// The same offline fixtures as the committed renders: 8 October 2026 at noon,
     /// Day 1 with 900 ml (Day 3 for the carry-over), in a fresh data folder inside the
     /// probe directory.
-    func models() -> (auth: ProofModel, tracker: TrackerModel, appearance: AppAppearance) {
+    func models() -> (auth: ProofModel, tracker: TrackerModel, appearance: AppAppearance, defaults: UserDefaults, directory: URL) {
         let data = directory.appendingPathComponent("data-\(name)", isDirectory: true)
         try? FileManager.default.removeItem(at: data)
         let clock = Clock(ISO8601DateFormatter().date(from: "2026-10-08T12:00:00Z")!)
         let owner = UUID(uuidString: "0F1C5000-0000-4000-8000-000000000001")!
-        let auth = ProofModel(fixtureOwnerID: screen == .signIn ? nil : owner, directory: data)
+        let auth = ProofModel(fixtureOwnerID: screen.signedIn ? owner : nil, directory: data)
         let tracker = TrackerModel(directory: data, clock: { clock.now })
-        tracker.activate(ownerID: auth.ownerID)
-        if screen != .signIn, screen != .setup {
+        // An upgraded install: a challenge saved on this Mac by an account now signed out.
+        tracker.activate(ownerID: screen == .welcomeUpgraded ? owner : auth.ownerID)
+        if screen.hasChallenge {
             let start = screen == .todayCarryOver ? Self.carryOverStart(clock.now) : clock.now
             tracker.startChallenge(on: start, timeZone: Challenge.legacyTimeZone)
             tracker.addWater()
@@ -90,11 +108,12 @@ struct PopupProbe {
         }
         if screen == .todayExtras { Self.seedExtras(tracker) }
         if screen == .todayCarryOver { Self.seedCarryOver(tracker, clock: clock) }
+        if screen == .welcomeUpgraded { tracker.activate(ownerID: nil) }
         let defaults = UserDefaults(suiteName: Self.defaultsSuite)!
         defaults.removePersistentDomain(forName: Self.defaultsSuite)
         let appearance = AppAppearance(defaults: defaults)
         appearance.preference = self.appearance
-        return (auth, tracker, appearance)
+        return (auth, tracker, appearance, defaults, data)
     }
 
     /// Three extras, one ticked: Today's Extras section in the same fixture as the renders.
@@ -166,6 +185,61 @@ struct PopupProbe {
         finish(failure: popup.isOpen ? "Escape did not close the popup." : nil)
     }
 
+    /// The welcome screens: what the launch opened, the welcome window, and for
+    /// `welcome-done` the celebration after Start challenge and the window closing itself.
+    func runWelcome(_ popup: PopupController, welcome: WelcomeController, tracker: TrackerModel) async {
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try? await Task.sleep(for: .seconds(1.5))
+        var report: [String: Any] = ["macOS": ProcessInfo.processInfo.operatingSystemVersionString,
+                                     "launchWindows": Self.windows(), "firstRun": "\(welcome.state.decision)"]
+        if let window = welcome.window {
+            report["capture"] = await capture(window, as: name)
+            report["welcomeFrame"] = Self.rect(window.frame)
+            report["statusItem"] = popup.statusButton?.window.map { Self.rect($0.frame) } ?? []
+        }
+        if screen == .welcomeDone, let window = welcome.window {
+            // The welcome window's own button, then Start challenge in the popup it opened.
+            welcome.model.openPopup(nil)
+            try? await Task.sleep(for: .milliseconds(600))
+            report["popupOpened"] = popup.isOpen
+            tracker.startChallenge(on: tracker.now, timeZone: Challenge.legacyTimeZone)
+            try? await Task.sleep(for: .seconds(1.1))
+            _ = await capture(window, as: "\(name)-celebration")
+            try? await Task.sleep(for: .seconds(ConfettiBurst.duration))
+            _ = await capture(window, as: "\(name)-settled")
+            let deadline = Date().addingTimeInterval(10)
+            while welcome.window != nil, Date() < deadline { try? await Task.sleep(for: .milliseconds(100)) }
+            report["closedItself"] = welcome.window == nil
+            report["firstRunAfter"] = "\(welcome.state.decision)"
+            report["windowsAfter"] = Self.windows()
+        }
+        if let data = try? JSONSerialization.data(withJSONObject: report, options: [.prettyPrinted, .sortedKeys]) {
+            try? data.write(to: directory.appendingPathComponent("\(name).json"))
+        }
+        popup.close()
+        try? await Task.sleep(for: .milliseconds(300))
+        finish(failure: nil)
+    }
+
+    /// Every window the app has, visible or not, and whatever SwiftUI or AppKit opened.
+    static func windows() -> [[String: Any]] {
+        NSApp.windows.map { window in
+            ["class": NSStringFromClass(type(of: window)), "title": window.title, "visible": window.isVisible,
+             "frame": rect(window.frame), "level": window.level.rawValue]
+        }
+    }
+
+    /// A window's WindowServer image, or its own rendering without screen recording.
+    private func capture(_ window: NSWindow, as label: String) async -> String {
+        let png = directory.appendingPathComponent("\(label).png")
+        if await captureWindow(window, to: png) != nil { return "window-server" }
+        guard let root = window.contentView?.superview ?? window.contentView,
+              let cached = root.bitmapImageRepForCachingDisplay(in: root.bounds) else { return "none" }
+        root.cacheDisplay(in: root.bounds, to: cached)
+        try? cached.representation(using: .png, properties: [:])?.write(to: png)
+        return "cacheDisplay"
+    }
+
     private func finish(failure: String?) {
         if let failure {
             try? Data((failure + "\n").utf8).write(to: directory.appendingPathComponent("\(name)-FAILED.txt"))
@@ -208,7 +282,7 @@ struct PopupProbe {
     }
 
     /// The WindowServer's composite of the popup window alone, without its desktop.
-    private func captureWindow(_ panel: PopupPanel, to url: URL) async -> NSBitmapImageRep? {
+    private func captureWindow(_ panel: NSWindow, to url: URL) async -> NSBitmapImageRep? {
         try? FileManager.default.removeItem(at: url)
         guard let process = Self.screencapture(["-o", "-l\(panel.windowNumber)", url.path]) else { return nil }
         await Self.wait(for: process)
@@ -313,5 +387,5 @@ struct PopupProbe {
         ]
     }
 
-    private static func rect(_ rect: CGRect) -> [Double] { [rect.minX, rect.minY, rect.width, rect.height].map(Double.init) }
+    static func rect(_ rect: CGRect) -> [Double] { [rect.minX, rect.minY, rect.width, rect.height].map(Double.init) }
 }
