@@ -37,31 +37,35 @@ also name the app as it appears on the listing ("Daily Challenge"). The deletion
 Android lines of the privacy policy go live when `site/` reaches `main` and the Pages workflow
 runs ([site/README.md](../site/README.md)); open both URLs before pasting them.
 
-## Short description (78 / 80)
+## Short description (71 / 80)
 
 ```text
-A 75-day challenge tracker: water, workout, walk, diet and reading, every day.
+A 75-day challenge tracker with five daily goals you can make your own.
 ```
 
-## Full description (1,479 / 4,000)
+## Full description (2,281 / 4,000)
 
 ```text
 Daily Challenge keeps a 75-day challenge simple. Every day you have five things to do. Log them in a few taps, and see your streak grow.
 
-THE FIVE DAILY REQUIREMENTS
-• Water: a drawn jug fills as you log pours towards 4 litres. Add 450 ml in one tap, or log any amount.
-• Workout and walk: mark each one done, or undo it.
+YOUR DAILY FIVE
+Start with the standard five, or make them your own.
+• Water: a drawn jug fills as you log glasses towards your goal, 4 litres by default. Add a glass in one tap (450 ml unless you change it), or log any amount.
+• Workout and walk: by default a 45-minute workout and a 45-minute walk. Mark each one done, or undo it.
 • Diet: mark the day as pending, clean or missed.
-• Bible reading: tick it off when you have read.
+• Reading: by default 10 Bible pages. Tick it off when you have read.
+
+MAKE THEM YOURS
+Rename the two activities and the reading goal, with an optional amount, unit and icon. Pick a preset such as yoga, Pilates, stretching or audiobook, or type your own. Rename your diet. Set your own water goal from 1 to 5 litres and the size of your glass. Choose them when you start, and change them later from today: earlier days keep the goals they had. There are always five, the 75 days stay the same, and every goal has to be met for a day to count.
 
 YOUR STREAK
 See your current streak out of 75, your best streak, and milestones along the way. Tracking carries on after day 75.
 
 EXTRAS
-Add up to ten personal to-dos of your own. They carry over, marked Late, until you finish them. Extras never count towards a complete day or your streak.
+Add up to ten personal extras of your own. A one-off extra carries over, marked Late, until you finish it. An extra can also repeat: every day, on weekdays, on days you choose, or every few days. A repeating extra is never late. Extras never count towards a complete day or your streak.
 
 HOME SCREEN WIDGETS
-Log water, tick your requirements and check off extras without opening the app.
+Log a glass of water, tick your goals under their own names and check off extras without opening the app.
 
 HISTORY
 Open the monthly calendar to see every day at a glance, and tap Edit this day to fix a missed tick or a pour you forgot.
@@ -109,6 +113,13 @@ sample address `sam@example.com`. Drop `05-account-light.png` (five screenshots 
 recapture Account from the reviewer test account if that reads badly. Phone screenshots are enough to
 publish; tablet and other form factors are optional.
 
+Follow-up: these captures predate the daily goals editors. `04-setup-light.png` shows the old setup
+without the "Your daily five" rows, and none shows Account > Daily goals or a repeating extra.
+Recapture from the emulator fixtures in `docs/screenshots/android/goals/` before the production
+listing; the standard five still shown elsewhere is accurate as the default. The listing text
+describes your own goals and repeating extras, so apply
+`20261012000100_custom_targets_action_kinds.sql` first ([owner step](production-sync.md#custom-goals-update-owner-only-once)).
+
 ## App content (Policy > App content)
 
 | Form | Answer |
@@ -152,8 +163,8 @@ sharing.
 | --- | --- | --- |
 | Personal info › Email address | Sign-in email | App functionality, Account management |
 | Personal info › User IDs | The account ID that links the challenge rows to the account | App functionality, Account management |
-| Health and fitness › Fitness info | Water amounts, workout, walk, diet and reading marks, start date and time zone | App functionality |
-| App activity › Other user-generated content | The names of the user's extras | App functionality |
+| Health and fitness › Fitness info | Water amounts, workout, walk, diet and reading marks, start date and time zone, and the water goal and glass size the user chose | App functionality |
+| App activity › Other user-generated content | The names of the user's extras and of their own goals, with the amounts, units and icons chosen, and how an extra repeats | App functionality |
 | Device or other IDs › Device or other IDs | A random ID created per install and attached to each synced entry; not an advertising or hardware ID | App functionality |
 
 Not collected: location, contacts, photos, videos, audio, files, calendar, messages, web browsing,
@@ -213,15 +224,17 @@ commit its password.
 | Any other information | Text below |
 
 ```text
-Daily Challenge is a personal tracker for a 75-day daily challenge: water (4 litres), workout,
-walk, diet and reading, plus optional personal to-dos ("extras").
+Daily Challenge is a personal tracker for a 75-day daily challenge. The standard five daily goals
+are water (4 litres), a 45-minute workout, a 45-minute walk, diet and reading (10 Bible pages); the
+user can rename the activities, reading and diet, and set their own water goal and glass size, in
+setup or later from today. Optional personal extras can repeat on chosen days.
 
 Sign in on the first screen with the email and password above. The account already has a challenge
 in progress, so no setup is needed. New accounts are created in the app with an emailed code; the
 reviewer account does not need one.
 
-Try: Today (tap + 450 ml, tick a requirement), History (calendar, Edit this day), Account (water
-reminders, appearance, Manage extras). Notifications are optional local water reminders, requested
+Try: Today (tap + for a glass, tick a requirement), History (calendar, Edit this day), Account
+(Daily goals, water reminders, appearance, Manage extras, where an extra can be set to repeat). Notifications are optional local water reminders, requested
 only when reminders are turned on (Android 13 and later).
 
 Account deletion: Account > Delete account (permanently deletes the account and its data). Please

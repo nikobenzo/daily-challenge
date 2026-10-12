@@ -4,7 +4,7 @@ Drafts for App Store Connect. Nothing here has been entered, uploaded or submitt
 available in **all countries and regions**, and the wording is generic ("75-day challenge"): the "75 Hard"
 trademark is not used anywhere in the app or this listing.
 
-Limits and requirements were checked on developer.apple.com on 11 October 2026:
+Limits and requirements were checked on developer.apple.com on 11 October 2026 (counts below re-measured on 12 October 2026 for the custom goals text):
 
 - [Platform version information](https://developer.apple.com/help/app-store-connect/reference/app-information/platform-version-information): promotional text 170 characters, description 4,000, keywords 100 bytes (each keyword over two characters; do not repeat the app name or use other apps' names), review notes 4,000 bytes, support URL must lead to real contact information.
 - [App information](https://developer.apple.com/help/app-store-connect/reference/app-information/app-information): name 2 to 30 characters, subtitle up to 30, privacy policy URL required for iOS apps, primary and optional secondary category, age rating required.
@@ -22,32 +22,36 @@ Limits and requirements were checked on developer.apple.com on 11 October 2026:
 
 Check in App Store Connect that "Daily Challenge" is free to claim; if not, add a suffix such as "Daily Challenge: 75 Days".
 
-## Promotional text (166 / 170)
+## Promotional text (154 / 170)
 
-Log four litres of water, your workout, walk, diet and reading each day. Watch your streak grow toward 75 days, with Home Screen widgets that let you tick things off.
+Five daily goals for your 75-day challenge: use the standard set or make them your own. Log water, add repeating extras, and tick things off from widgets.
 
-## Description (1431 / 4,000)
+## Description (2,233 / 4,000)
 
 ```text
 Daily Challenge keeps a 75-day challenge simple. Every day you have five things to do. Log them in a few taps, and see your streak grow.
 
-THE FIVE DAILY REQUIREMENTS
-• Water: a drawn jug fills as you log pours towards 4 litres. Add 450 ml in one tap, or log any amount.
-• Workout and walk: mark each one done, or undo it.
+YOUR DAILY FIVE
+Start with the standard five, or make them your own.
+• Water: a drawn jug fills as you log glasses towards your goal, 4 litres by default. Add a glass in one tap (450 ml unless you change it), or log any amount.
+• Workout and walk: by default a 45-minute workout and a 45-minute walk. Mark each one done, or undo it.
 • Diet: mark the day as pending, clean or missed.
-• Bible reading: tick it off when you have read.
+• Reading: by default 10 Bible pages. Tick it off when you have read.
+
+MAKE THEM YOURS
+Rename the two activities and the reading goal, with an optional amount, unit and icon. Pick a preset such as yoga, Pilates, stretching or audiobook, or type your own. Rename your diet. Set your own water goal from 1 to 5 litres and the size of your glass. Choose them when you start, and change them later from today: earlier days keep the goals they had. There are always five, the 75 days stay the same, and every goal has to be met for a day to count.
 
 YOUR STREAK
 See your current streak out of 75, your best streak, and milestones along the way. Tracking carries on after day 75.
 
 EXTRAS
-Add up to ten personal to-dos of your own. They carry over, marked Late, until you finish them. Extras never count towards a complete day or your streak.
+Add up to ten personal extras of your own. A one-off extra carries over, marked Late, until you finish it. An extra can also repeat: every day, on weekdays, on days you choose, or every few days. A repeating extra is never late. Extras never count towards a complete day or your streak.
 
 HISTORY
 Open the monthly calendar to see every day at a glance, and tap Edit this day to fix a missed tick or a pour you forgot.
 
 HOME SCREEN AND LOCK SCREEN WIDGETS
-Log water, tick your requirements and check off extras without opening the app. A Lock Screen ring shows today's water.
+Log a glass of water, tick your goals under their own names and check off extras without opening the app. A Lock Screen ring shows today's water.
 
 WATER REMINDERS
 Optional reminders at the times you choose, which stop once you reach your goal.
@@ -59,6 +63,19 @@ PRIVATE BY DESIGN
 No ads, no tracking and no analytics. You can delete your account and all of your data inside the app.
 
 Free, with no purchases.
+```
+
+## What's New (draft for the next iPhone version, 630 / 4,000)
+
+The first App Store version needs no What's New text. Use this for the update that adds your own goals and repeating extras; check the version number against the build when it is uploaded.
+
+```text
+Make the challenge yours.
+
+• Choose your own daily five when you start, or change them later from today. Rename the two activities and the reading goal with an amount, unit and icon, rename your diet, and set your own water goal (1 to 5 litres) and glass size. The standard five are still one tap. Earlier days keep the goals they had.
+• Extras can now repeat: every day, on weekdays, on days you choose, or every few days. A repeating extra is never late.
+• The + button and the Water widget pour your own glass size, and the widgets show your goal names.
+• The 75 days are unchanged, and a missed day still restarts your streak.
 ```
 
 ## Keywords (92 / 100 bytes)
@@ -119,8 +136,8 @@ analytics SDK (its dependencies are `supabase-swift` and its support packages).
 | Data type | Collected for | Linked to the user | Used for tracking |
 | --- | --- | --- | --- |
 | Contact Info › Email Address | App Functionality (sign-in, account emails) | Yes | No |
-| Health & Fitness › Fitness (water amounts, workout, walk, diet and reading marks) | App Functionality | Yes | No |
-| User Content › Other User Content (names of the user's extras) | App Functionality | Yes | No |
+| Health & Fitness › Fitness (water amounts, workout, walk, diet and reading marks, and the water goal and glass size the user chose) | App Functionality | Yes | No |
+| User Content › Other User Content (names of the user's extras and of their own goals, with the amounts, units and icons chosen) | App Functionality | Yes | No |
 | Identifiers › User ID (account ID) | App Functionality | Yes | No |
 | Identifiers › Device ID (random per-install ID attached to each synced entry, never an advertising ID) | App Functionality | Yes | No |
 
@@ -139,8 +156,10 @@ matches this table.
 ## App Review notes (draft, 4,000 bytes max)
 
 ```text
-Daily Challenge is a personal tracker for a 75-day daily challenge: water (4 litres), workout, walk, diet,
-reading, plus optional personal to-dos ("extras").
+Daily Challenge is a personal tracker for a 75-day daily challenge. The standard five daily goals are
+water (4 litres), a 45-minute workout, a 45-minute walk, diet and reading (10 Bible pages); the user can
+rename the activities, reading and diet, and set their own water goal and glass size, in setup or later
+from today. Optional personal extras can repeat on chosen days.
 
 Sign in with the demo account (email and password in the fields below). The account already has a challenge in progress, so no setup is
 needed.
@@ -149,8 +168,8 @@ needed.
 
 New accounts are created in the app with an emailed code (no links). The demo account does not need one.
 
-Features to try: Today (tap + 450 ml, tick a requirement), History (calendar, Edit this day), Account
-(water reminders, appearance, Manage extras). Widgets: add "Daily Challenge" widgets from the Home Screen gallery;
+Features to try: Today (tap + for a glass, tick a requirement), History (calendar, Edit this day), Account
+(Daily goals, water reminders, appearance, Manage extras, where an extra can be set to repeat). Widgets: add "Daily Challenge" widgets from the Home Screen gallery;
 they read the same data and need no extra sign-in.
 
 Account deletion: Account > Delete account (permanently deletes the account and its data).
@@ -200,6 +219,9 @@ Upload an App Store build with `bash scripts/ios-archive.sh --app-store`
 cannot be submitted.
 
 ## Open items
+
+- **Custom goals need the server update.** The Description, What's New and review notes describe your own goals and repeating extras. Apply `20261012000100_custom_targets_action_kinds.sql` once before any build that writes them reaches the demo account or the public ([owner step](production-sync.md#custom-goals-update-owner-only-once)), and re-check the wording against that build.
+- **Screenshots predate the editors.** The five captures in [Screenshots](#screenshots) still show the standard five, which stays accurate as the default, but none shows setup rows, Account > Daily goals or a repeating extra. Raw simulator captures of those exist in `docs/screenshots/ios/` (`goals-*`, [evidence](ios-custom-goals-evidence.md)); composing new marketing frames from them is a follow-up.
 
 - **Account deletion** is in the iPhone app (Account > Delete account, landed in 184a0f1), matching the privacy policy and review notes. Re-check the wording against the released build.
 - **Privacy manifest:** done. `iOS/DailyChallenge/PrivacyInfo.xcprivacy` and `iOS/DailyChallengeWidgets/PrivacyInfo.xcprivacy` exist and `scripts/ios-archive.sh --check` verifies them in the archive. Re-check them against the App Privacy answers before submitting.

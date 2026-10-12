@@ -8,7 +8,7 @@
 
 <p align="center">
   <b>A calm, native tracker for your 75-day challenge.</b><br>
-  Five daily goals, one tap each, in your Mac menu bar and on your iPhone.
+  Five daily goals, one tap each, in your Mac menu bar and on your iPhone. Keep the standard five or make them your own.
 </p>
 
 <p align="center">
@@ -29,7 +29,7 @@
 
 <br>
 
-Daily Challenge keeps a 75-day challenge simple. Every day you aim for **four litres of water, a workout, a walk, your diet and Bible reading**. Tick each one off as you go, watch the water jug fill, and let the app keep count of your streak. Add a few personal to-dos on top if you like. Your Mac and iPhone stay in sync through one account, and everything still works offline.
+Daily Challenge keeps a 75-day challenge simple. Every day you aim for five goals. The standard five are **four litres of water, a 45-minute workout, a 45-minute walk, a clean diet and Bible reading**, and you can make them your own: rename the activities, reading and diet, and set your own water goal and glass size. Tick each one off as you go, watch the water jug fill, and let the app keep count of your streak. Add a few personal extras on top if you like, and let them repeat. Your Mac and iPhone stay in sync through one account, and everything still works offline.
 
 ## Features
 
@@ -37,11 +37,11 @@ Daily Challenge keeps a 75-day challenge simple. Every day you aim for **four li
   <tr>
     <td width="50%" valign="top">
       <b>💧 Water you can see</b><br>
-      A drawn 4 L jug fills with every <b>+ 450 ml</b> pour. Undo the last one or log a custom amount.
+      A drawn jug fills with every <b>+</b> pour, 450 ml unless you change your glass size. Undo the last one or log a custom amount.
     </td>
     <td width="50%" valign="top">
       <b>✅ Five goals, one tap each</b><br>
-      Workout, walk, diet and Bible reading sit beside water as rings. A day is complete when all five are done.
+      Workout, walk, diet and reading sit beside water as rings. A day is complete when all five are done.
     </td>
   </tr>
   <tr>
@@ -50,14 +50,24 @@ Daily Challenge keeps a 75-day challenge simple. Every day you aim for **four li
       See your current and best streak, browse a calendar of completed days, and fix a past day on purpose with a clear edit mode.
     </td>
     <td valign="top">
-      <b>📝 Extras</b><br>
-      Add up to ten personal to-dos, such as stretching or journaling. They never affect your streak, and unfinished ones carry over with a Late label.
+      <b>📝 Extras that repeat</b><br>
+      Add up to ten personal extras, such as stretching or journaling. Repeat them every day, on weekdays, on days you choose or every few days. They never affect your streak, and unfinished one-off extras carry over with a Late label.
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <b>🎯 Goals that are yours</b><br>
+      Start with the standard five or rename the two activities, the reading and the diet, with an optional amount, unit and icon. Pick a preset such as yoga, Pilates, stretching or audiobook, or type your own. Set a water goal from 1 to 5 litres and your glass size, in setup or later from today. Earlier days keep the goals they had.
+    </td>
+    <td valign="top">
+      <b>📅 The 75 days stay fixed</b><br>
+      Whatever you choose, there are always five goals, every one has to be met for a day to count, and a missed day restarts your streak.
     </td>
   </tr>
   <tr>
     <td valign="top">
       <b>📱 Home Screen widgets</b><br>
-      Log water, tick goals and check extras straight from the Home Screen, even with the app closed or offline. A water ring is available on the Lock Screen.
+      Log water, tick goals under their own names and check extras straight from the Home Screen, even with the app closed or offline. A water ring is available on the Lock Screen.
     </td>
     <td valign="top">
       <b>🔄 Mac and iPhone in sync</b><br>
@@ -67,7 +77,7 @@ Daily Challenge keeps a 75-day challenge simple. Every day you aim for **four li
   <tr>
     <td valign="top">
       <b>🔔 Gentle water reminders</b><br>
-      Optional reminders at an interval and daily window you choose. They stop once you reach four litres.
+      Optional reminders at an interval and daily window you choose. They stop once you reach your water goal.
     </td>
     <td valign="top">
       <b>🌗 Feels at home</b><br>

@@ -1,6 +1,6 @@
 # Daily Challenge for Mac: getting started
 
-Daily Challenge lives in your Mac's menu bar and tracks the five daily habits: 4 litres of water, a 45-minute workout, a 45-minute walk, a clean diet and 10 pages of Bible reading. It needs a Mac running macOS 14 or later.
+Daily Challenge lives in your Mac's menu bar and tracks your five daily habits. The standard five are 4 litres of water, a 45-minute workout, a 45-minute walk, a clean diet and 10 pages of Bible reading, and you can make them your own (step 5). It needs a Mac running macOS 14 or later.
 
 > **Note for whoever shares this guide:** send the notarized `build/DailyChallenge.zip` made by `bash scripts/build-proof.sh` (not an `--adhoc` build). The steps below assume that build.
 
@@ -35,9 +35,11 @@ You are now signed in. Use the same email and password if you install the app on
 
 If the welcome window is still open, it now says **Choose your start date**; click it, or click the drop. Pick your start date (today is fine). Check the **Time zone**: it starts as your Mac's, and each challenge day runs midnight to midnight there. To change it, click it and type your city. You can't change the start date or time zone later, so pick the place you'll mostly be. Then click **Start challenge**.
 
+The setup screen also shows **Your daily five**: the standard five, ready to accept as they are. To make them your own first, click a row. You can rename the two activities, the reading and the diet (a preset such as yoga, Pilates, stretching or audiobook, or your own words), add an amount, unit and icon, and set your own water goal (1 to 5 litres) and glass size. The 75 days, and the rule that every goal has to be met for a day to count, stay the same. You can change your goals later too: click **Account**, then **Daily goals**. A change applies from today, and earlier days keep the goals they had.
+
 ![Setup screen](screenshots/time-zone/setup-new-york-light.png)
 
-You will see the water jug and the five daily items. [Screenshot: Today tab] The welcome window celebrates with confetti, then closes by itself; it does not come back.
+You will see the water jug and your five daily items. [Screenshot: Today tab] The welcome window celebrates with confetti, then closes by itself; it does not come back.
 
 ![Welcome window after starting](screenshots/onboarding/welcome-done-light-celebration.png)
 
@@ -58,7 +60,7 @@ If you installed a copy before automatic updates were added (version 0.2.0 or ea
 
 ## Every day
 
-Click the drop, press **+450 ml** for each glass, and tick workout, walk, diet and Bible reading. All five done means the day counts. Miss one and the streak restarts. The **History** tab lets you fix a day you forgot to log.
+Click the drop, press **+** for each glass (450 ml unless you changed your glass size), and tick your activities, diet and reading. All five done means the day counts. Miss one and the streak restarts. The **History** tab lets you fix a day you forgot to log. You can also add **extras**, up to ten personal items that never affect your streak. Choose how often an extra appears: once, every day, on weekdays, on days you choose or every few days.
 
 ## Forgot your password?
 
