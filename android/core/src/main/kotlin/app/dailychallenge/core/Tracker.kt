@@ -96,7 +96,8 @@ class Tracker(
         val date = clock()
         val nextDay = dates.calendar.addDays(date, 1)
         fun water(day: Double): Long? = challenge?.summary(day, date)?.takeIf { it.status != DayStatus.OUTSIDE_CHALLENGE }?.waterMillilitres
-        reminders?.refresh(water(date), water(nextDay), dates.zone)
+        fun goal(day: Double): Long = (challenge?.targets(day) ?: Targets.STANDARD).water.goal
+        reminders?.refresh(water(date), water(nextDay), dates.zone, goal(date), goal(nextDay))
     }
 
     val canStartChallenge: Boolean get() = !syncActive || (setupChecked && !isSyncing && syncError == null)
@@ -283,7 +284,8 @@ class Tracker(
     fun dismissError() { errorMessage = null; changed() }
     fun clearCelebration() { celebration = null; changed() }
 
-    fun startChallenge(date: LocalDate, zone: ZoneId) {
+    /** `targets` other than the standard five are recorded on the start day in the same commit as the settings. */
+    fun startChallenge(date: LocalDate, zone: ZoneId, targets: Targets = Targets.STANDARD) {
         refresh()
         if (!canStartChallenge) {
             errorMessage = "Check the server before setup. Existing local history can still be used offline."
@@ -298,7 +300,7 @@ class Tracker(
         }
         if (store == null) return
         try {
-            transact { it.start(calendar.startOf(date), zone) }
+            transact { it.start(calendar.startOf(date), zone, targets, now) }
             errorMessage = null
             showToday()
             setupChecked = false

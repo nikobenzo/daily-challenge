@@ -31,6 +31,31 @@ private func errorName(_ error: any Error) -> String {
 
 private func statusName(_ status: Challenge.DayStatus) -> String { status.rawValue }
 
+/// "once", "weekdays 1 2 3" or "every 2", as the vectors write a repeat rule.
+private func scheduleName(_ schedule: Challenge.ExtraSchedule) -> String {
+    switch schedule {
+    case .once: "once"
+    case .weekdays(let days): (["weekdays"] + days.sorted().map(String.init)).joined(separator: " ")
+    case .every(let interval): "every \(interval)"
+    }
+}
+
+/// A slot's or water's expected target; every field is given, null for none.
+private func expectTargets(_ targets: Challenge.Targets, _ want: [String: Any], _ comment: Comment) {
+    for (key, value) in want {
+        let fields = value as! [String: Any]
+        func optional<T>(_ field: String) -> T? { fields[field] is NSNull ? nil : fields[field] as? T }
+        if key == "water" {
+            #expect(targets.water == .init(goal: fields["goal"] as! Int, glass: fields["glass"] as! Int), comment)
+        } else {
+            let target = targets[Challenge.TargetSlot(rawValue: key)!]
+            #expect(target == .init(name: fields["name"] as! String, amount: optional("amount"),
+                                    unit: (optional("unit") as String?).map { Challenge.TargetUnit(rawValue: $0)! },
+                                    icon: optional("icon")), comment)
+        }
+    }
+}
+
 @Test func parityRuleCasesMatchChallengeCore() throws {
     for vector in list("cases") {
         let name = vector["name"] as! String
@@ -75,6 +100,10 @@ private func statusName(_ status: Challenge.DayStatus) -> String { status.rawVal
                 if let value = step["extrasDone"] as? Int { #expect(summary.extrasDone == value, where_) }
                 if let value = step["extrasTotal"] as? Int { #expect(summary.extrasTotal == value, where_) }
                 if let value = step["allExtrasDone"] as? Bool { #expect(summary.allExtrasDone == value, where_) }
+                if let value = step["targets"] as? [String: Any] {
+                    expectTargets(summary.targets, value, where_)
+                    #expect(summary.targets == challenge.targets(on: date(step["on"])), where_)
+                }
                 if let value = step["extras"] as? [String] {
                     let shown = summary.extras.map { extra in
                         extra.title + (summary.completedExtras.contains(extra.id) ? " ✓" : "") + (summary.isLate(extra) ? " late" : "")
@@ -106,6 +135,7 @@ private func statusName(_ status: Challenge.DayStatus) -> String { status.rawVal
                     #expect(extra.firstDay == date(want["firstDay"]), where_)
                     #expect(extra.completedOn == (want["completedOn"] is NSNull ? nil : date(want["completedOn"])), where_)
                     #expect(extra.archivedFrom == (want["archivedFrom"] is NSNull ? nil : date(want["archivedFrom"])), where_)
+                    #expect(scheduleName(extra.schedule) == want["schedule"] as? String ?? "once", where_)
                 }
             case "shownExtras":
                 #expect(challenge.extras(asOf: date(step["asOf"])).map(\.id) == (step["ids"] as! [String]).map(uuid), where_)
@@ -159,6 +189,12 @@ private func sortedJSON(kind: String, value: Any) throws -> String {
     }
     for entry in list("titles") {
         #expect(Challenge.extraTitle(entry["raw"] as! String) == entry["title"] as? String, "\(entry["raw"]!)")
+    }
+    for entry in list("targetNames") {
+        #expect(Challenge.targetName(entry["raw"] as! String) == entry["name"] as? String, "\(entry["raw"]!)")
+    }
+    for entry in list("icons") {
+        #expect(Challenge.isIconID(entry["id"] as! String) == entry["valid"] as! Bool, "\(entry["id"]!)")
     }
     for entry in list("clockWarnings") {
         let activity = Challenge.Activity(id: UUID(), day: date(entry["recordedAt"]), recordedAt: date(entry["recordedAt"]),

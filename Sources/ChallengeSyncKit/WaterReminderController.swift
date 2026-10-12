@@ -125,8 +125,10 @@ public final class WaterReminderController {
     @ObservationIgnored private let center: any WaterNotificationCenter
     @ObservationIgnored private let clock: () -> Date
     @ObservationIgnored private var waterByDay: [Date: Int] = [:]
+    @ObservationIgnored private var goalByDay: [Date: Int] = [:]
     private var calendar: Calendar { Challenge.calendar(for: timeZone) }
     private var water: Int? { waterByDay[calendar.startOfDay(for: clock())] }
+    private var goal: Int { goalByDay[calendar.startOfDay(for: clock())] ?? Challenge.Targets.standard.water.goal }
     @ObservationIgnored private var asleep = false
     @ObservationIgnored private var revision = 0
     @ObservationIgnored private var requestAuthorization = false
@@ -153,7 +155,7 @@ public final class WaterReminderController {
         case .allowed:
             if !settings.enabled { return "Permission allowed · Reminders off on this \(wording.device)." }
             if water == nil { return "Permission allowed · Waiting for a local challenge." }
-            if water! >= 4_000 { return "Permission allowed · Today's water goal met." }
+            if water! >= goal { return "Permission allowed · Today's water goal met." }
             return "Permission allowed · Reminders enabled on this \(wording.device). Delivery depends on \(wording.system) and Focus."
         }
     }
@@ -167,7 +169,10 @@ public final class WaterReminderController {
         changed()
     }
 
-    public func refresh(waterMillilitres: Int?, nextDayWaterMillilitres: Int? = nil, timeZone: TimeZone) {
+    /// Each day's total and its own goal: reminders stop for a day once its goal is met.
+    public func refresh(waterMillilitres: Int?, nextDayWaterMillilitres: Int? = nil,
+                        waterGoal: Int = Challenge.Targets.standard.water.goal,
+                        nextDayWaterGoal: Int = Challenge.Targets.standard.water.goal, timeZone: TimeZone) {
         let zoneChanged = self.timeZone != timeZone
         self.timeZone = timeZone
         let day = calendar.startOfDay(for: clock())
@@ -175,8 +180,10 @@ public final class WaterReminderController {
         var totals: [Date: Int] = [:]
         totals[day] = waterMillilitres
         totals[nextDay] = nextDayWaterMillilitres
-        let totalsChanged = waterByDay != totals || zoneChanged
+        let goals = [day: waterGoal, nextDay: nextDayWaterGoal]
+        let totalsChanged = waterByDay != totals || goalByDay != goals || zoneChanged
         waterByDay = totals
+        goalByDay = goals
         changed(cancel: totalsChanged)
     }
 
@@ -218,6 +225,7 @@ public final class WaterReminderController {
             let zone = timeZone
             let upcoming = WaterReminderPlanner(timeZone: zone, clock: { now }).upcoming(
                 settings: settings, through: policy.horizon(from: now),
+                goal: { goalByDay[$0] ?? Challenge.Targets.standard.water.goal },
                 waterMillilitres: { waterByDay[$0] })
             let planned = policy == .nextSlot ? Array(upcoming.prefix(1)) : Array(upcoming.prefix(ReminderPolicy.queuedLimit))
             let desired = !asleep && permission == .allowed ? planned : []

@@ -54,6 +54,24 @@ def diet(state): return {"setDiet": {"_0": state}}
 def define(extra, title): return {"defineExtra": {"id": extra, "title": title}}
 def archive(extra): return {"archiveExtra": {"id": extra}}
 def tick(extra, done=True): return {"setExtra": {"id": extra, "completed": done}}
+def target(slot, name, amount=None, unit=None, icon=None):
+    value = {"_0": slot, "name": name}
+    if amount is not None: value |= {"amount": amount, "unit": unit}
+    if icon is not None: value["icon"] = icon
+    return {"setTarget": value}
+def water(goal, glass): return {"setWater": {"goal": goal, "pour": glass}}
+def schedule(extra, weekdays=None, every=None):
+    value = {"id": extra}
+    if weekdays is not None: value["weekdays"] = weekdays
+    if every is not None: value["every"] = every
+    return {"scheduleExtra": value}
+
+
+# A summary's expected targets: {"water": {...}} and slot -> {...}, every field given.
+def slot(name, amount=None, unit=None, icon=None): return {"name": name, "amount": amount, "unit": unit, "icon": icon}
+def goal(goal, glass): return {"goal": goal, "glass": glass}
+STANDARD = {"water": goal(4000, 450), "workout": slot("Workout", 45, "minutes"), "walk": slot("Walk", 45, "minutes"),
+            "diet": slot("Diet"), "bibleReading": slot("Bible", 10, "pages")}
 HABITS = ["workout", "walk", "bibleReading"]
 
 
@@ -437,13 +455,244 @@ cases.append(case("the carry-over rolls at the challenge zone's midnight", late_
     summary(past_midnight, past_midnight, extras=["Stretch late"]),
 ], zone="Australia/Sydney"))
 
+# Custom daily targets (custom goals plan, P1a): dated events, resolved per day.
+DAY5, DAY6 = plus(DAY1, 4 * 86400), plus(DAY1, 5 * 86400)
+D4, D5, D6 = (day_start(JERSEY, d) for d in (DAY4, DAY5, DAY6))
+
+
+def glasses(count, on, at=None): return [record(pour(450), on, at) for _ in range(count)]
+
+
+def complete_with(on, at, millilitres):
+    return [record(pour(millilitres), on, at)] + [record(habit(h), on, at) for h in HABITS] + [record(diet("clean"), on, at)]
+
+
+cases.append(case("without target events a day uses the standard five", DAY1, [
+    summary(DAY1, targets=STANDARD), summary(DAY1, DAY3, targets=STANDARD),
+] + glasses(8, DAY1) + [summary(DAY1, water=3600, waterComplete=False)]))
+
+YOGA = target("walk", "Yoga", 30, "minutes", "yoga")
+AUDIO = target("bibleReading", "Audiobook", 20, "minutes", "headphones")
+custom = {"water": goal(3000, 250), "walk": slot("Yoga", 30, "minutes", "yoga"),
+          "bibleReading": slot("Audiobook", 20, "minutes", "headphones"), "workout": STANDARD["workout"], "diet": STANDARD["diet"]}
+cases.append(case("setup targets dated a past start day apply from that day", DAY1, [
+    record(water(3000, 250), DAY1, DAY3), record(YOGA, DAY1, DAY3), record(AUDIO, DAY1, DAY3),
+    summary(DAY1, DAY3, targets=custom), summary(DAY2, DAY3, targets=custom), summary(DAY3, DAY3, targets=custom),
+] + glasses(7, DAY1, DAY3) + [
+    summary(DAY1, DAY3, water=3150, waterComplete=True),
+] + [record(habit(h), DAY1, DAY3) for h in HABITS] + [record(diet("clean"), DAY1, DAY3),
+    summary(DAY1, DAY3, complete=True, status="complete"), streaks(DAY3, 0, best=1)]))
+
+cases.append(case("a change from today leaves earlier days on their own targets", DAY1, [
+    record(target("diet", "No sugar"), DAY2, DAY2), record(water(3000, 500), DAY2, DAY2),
+    summary(DAY1, DAY2, targets=STANDARD),
+    summary(DAY2, DAY2, targets=STANDARD | {"water": goal(3000, 500), "diet": slot("No sugar")}),
+    summary(DAY3, DAY3, targets=STANDARD | {"water": goal(3000, 500), "diet": slot("No sugar")}),
+] + glasses(7, DAY1, DAY2) + glasses(7, DAY2, DAY2) + [
+    summary(DAY1, DAY2, water=3150, waterComplete=False), summary(DAY2, DAY2, water=3150, waterComplete=True),
+]))
+
+early, late_ = uid(), uid()
+same_slot = [activity(early, D2, DAY2, target("walk", "Yoga"), "PHONE"),
+             activity(late_, D2, plus(DAY2, 60), target("walk", "Pilates", 30, "minutes"), "MAC")]
+tie = [activity(uid(), D2, plus(DAY2, 120), target("workout", "Run", 30, "minutes", "run"), "B-DEVICE"),
+       activity(uid(), D2, plus(DAY2, 120), target("workout", "Swim", 30, "minutes", "swim"), "A-DEVICE")]
+for name, batch in [("in order", same_slot + tie), ("reversed", list(reversed(same_slot + tie)))]:
+    cases.append(case(f"two devices changing one slot on one day resolve by event order ({name})", DAY1, [
+        merge(batch),
+        summary(DAY2, DAY2, targets=STANDARD | {"walk": slot("Pilates", 30, "minutes"), "workout": slot("Run", 30, "minutes", "run")}),
+        summary(DAY1, DAY2, targets=STANDARD),
+    ]))
+
+cases.append(case("two devices changing different slots both survive", DAY1, [
+    merge([activity(uid(), D1, DAY1, target("walk", "Yoga"), "PHONE")]),
+    merge([activity(uid(), D1, plus(DAY1, 1), water(2500, 330), "MAC"),
+           activity(uid(), D1, plus(DAY1, 2), target("bibleReading", "Book", 2, "chapters", "book"), "MAC")]),
+    summary(DAY1, targets=STANDARD | {"walk": slot("Yoga"), "water": goal(2500, 330),
+                                      "bibleReading": slot("Book", 2, "chapters", "book")}),
+]))
+
+cases.append(case("the latest dated change wins even when an earlier-dated one is recorded later", DAY1, [
+    record(water(3000, 250), DAY2, DAY2), record(water(2000, 250), DAY1, DAY3),
+    record(target("walk", "Yoga"), DAY2, DAY2), record(target("walk", "Pilates"), DAY1, DAY3),
+    summary(DAY1, DAY3, targets=STANDARD | {"water": goal(2000, 250), "walk": slot("Pilates")}),
+    summary(DAY2, DAY3, targets=STANDARD | {"water": goal(3000, 250), "walk": slot("Yoga")}),
+    summary(DAY3, DAY3, targets=STANDARD | {"water": goal(3000, 250), "walk": slot("Yoga")}),
+]))
+
+cases.append(case("lowering today's goal completes water and raising it un-completes today", DAY1,
+    complete_with(DAY1, DAY1, 3150) + [
+        summary(DAY1, waterComplete=False, status="inProgress"),
+        record(water(3000, 250), DAY1), summary(DAY1, waterComplete=True, complete=True, status="complete"), streaks(DAY1, 1),
+        record(water(3500, 250), DAY1), summary(DAY1, waterComplete=False, complete=False, status="inProgress"), streaks(DAY1, 0),
+    ]))
+
+cases.append(case("a streak runs across goal changes and each day keeps its own goal", DAY1,
+    complete_with(DAY1, DAY4, 4000) + [record(water(3000, 250), DAY2, DAY2)] + complete_with(DAY2, DAY4, 3000)
+    + [record(water(5000, 1000), DAY3, DAY3)] + complete_with(DAY3, DAY4, 5000) + complete_with(DAY4, DAY4, 4999) + [
+        streaks(DAY4, 3, best=3), summary(DAY4, waterComplete=False),
+        record(pour(1), DAY4), streaks(DAY4, 4, best=4, milestones=[]),
+    ]))
+
+cases.append(case("a correction on a past day is judged by that day's goal", DAY1, [
+    record(water(3000, 250), DAY3, DAY3),
+] + complete_with(DAY1, DAY3, 3150) + complete_with(DAY3, DAY3, 3150) + [
+    summary(DAY1, DAY3, waterComplete=False, status="missed"), summary(DAY3, DAY3, waterComplete=True, status="complete"),
+    record(pour(850), DAY1, DAY3), summary(DAY1, DAY3, water=4000, status="complete"),
+]))
+
+cases.append(case("recording refuses invalid targets and changes nothing", DAY1, [
+    record(target("walk", "Yoga", 301, "minutes"), DAY1, error="invalidTarget"),
+    record(target("walk", " Yoga"), DAY1, error="invalidTarget"),
+    record(target("walk", "x" * 21), DAY1, error="invalidTarget"),
+    record(target("diet", "No sugar", 1, "pages"), DAY1, error="invalidTarget"),
+    record(target("walk", "Yoga", icon="Yoga"), DAY1, error="invalidTarget"),
+    record({"setTarget": {"_0": "walk", "name": "Yoga", "amount": 30}}, DAY1, error="invalidTarget"),
+    record(water(999, 250), DAY1, error="invalidTarget"), record(water(5001, 250), DAY1, error="invalidTarget"),
+    record(water(3000, 49), DAY1, error="invalidTarget"), record(water(1000, 1001), DAY1, error="invalidTarget"),
+    record(water(3000, 250), DAY2, DAY1, error="dateOutsideChallenge"),
+    record(target("walk", "Yoga", icon="trampoline"), DAY1),
+    record(target("walk", "x" * 20, 1000, "steps"), DAY1), record(water(1000, 1000), DAY1), record(water(5000, 50), DAY1),
+    summary(DAY1, targets=STANDARD | {"walk": slot("x" * 20, 1000, "steps"), "water": goal(5000, 50)}),
+]))
+
+# Recurring extras (P1b): scheduleExtra sets the rule from its day; never late.
+s1, s2 = uid(), uid()
+cases.append(case("an extra repeating every day shows each day, ticked per day, never late", DAY1, [
+    record(define(s1, "Stretch"), DAY1), record(schedule(s1, every=1), DAY1), record(define(s2, "Book dentist"), DAY1),
+    summary(DAY1, DAY4, extras=["Stretch", "Book dentist"]),
+    record(tick(s1), DAY2, DAY4), record(tick(s1), DAY3, DAY4),
+    summary(DAY2, DAY4, extras=["Stretch ✓", "Book dentist late"], extrasDone=1, extrasTotal=2),
+    summary(DAY3, DAY4, extras=["Stretch ✓", "Book dentist late"]), summary(DAY4, DAY4, extras=["Stretch", "Book dentist late"]),
+    record(tick(s2), DAY4), record(tick(s1), DAY4), summary(DAY4, DAY4, extras=["Stretch ✓", "Book dentist ✓ late"], allExtrasDone=True),
+    {"op": "openExtras", "asOf": DAY4, "ids": [s1]},
+    {"op": "allExtras", "extras": [
+        {"id": s1, "title": "Stretch", "firstDay": D1, "completedOn": None, "archivedFrom": None, "schedule": "every 1"},
+        {"id": s2, "title": "Book dentist", "firstDay": D1, "completedOn": D4, "archivedFrom": None, "schedule": "once"}]},
+    summary(DAY4, DAY4, complete=False),
+]))
+
+for z, y, m, d in [("Europe/Jersey", 2026, 10, 23), ("America/New_York", 2026, 10, 30), ("Australia/Sydney", 2026, 10, 2)]:
+    e = uid()
+    days = [local(z, y, m, d + i) for i in range(4)]  # a Friday, then Saturday to Monday across the change
+    cases.append(case(f"a weekday extra follows the zone's calendar across daylight saving ({z})", days[0], [
+        record(define(e, "Pack lunch"), days[0]), record(schedule(e, weekdays=[1, 2, 3, 4, 5]), days[0]),
+        summary(days[0], days[3], extras=["Pack lunch"]), summary(days[1], days[3], extras=[]),
+        summary(days[2], days[3], extras=[]), summary(days[3], days[3], extras=["Pack lunch"]),
+        {"op": "openExtras", "asOf": days[2], "ids": [e]},
+    ], zone=z))
+
+e = uid()
+cases.append(case("every N days counts from the day the rule was set; earlier days keep the to-do", DAY1, [
+    record(define(e, "Water plants"), DAY1), summary(DAY1, DAY1, extras=["Water plants"]),
+    record(schedule(e, every=2), DAY2, DAY2),
+    summary(DAY1, DAY6, extras=["Water plants"]), summary(DAY2, DAY6, extras=["Water plants"]),
+    summary(DAY3, DAY6, extras=[]), summary(DAY4, DAY6, extras=["Water plants"]), summary(DAY5, DAY6, extras=[]),
+    summary(DAY6, DAY6, extras=["Water plants"]),
+    {"op": "allExtras", "extras": [{"id": e, "title": "Water plants", "firstDay": D1, "completedOn": None,
+                                    "archivedFrom": None, "schedule": "every 2"}]},
+]))
+
+e = uid()
+cases.append(case("a schedule change applies from its day and archive ends a repeating extra", DAY1, [
+    record(define(e, "Gym class"), DAY1), record(schedule(e, weekdays=[4]), DAY1),  # Thursdays
+    summary(DAY1, DAY1, extras=["Gym class"]), record(schedule(e, weekdays=[4]), DAY2, DAY2, returns=None),
+    record(schedule(e, weekdays=[6, 7]), DAY2, DAY2),  # weekends from Friday
+    summary(DAY1, DAY4, extras=["Gym class"]), summary(DAY2, DAY4, extras=[]), summary(DAY3, DAY4, extras=["Gym class"]),
+    summary(DAY4, DAY4, extras=["Gym class"]),
+    record(archive(e), DAY4, DAY4), summary(DAY3, DAY4, extras=["Gym class"]), summary(DAY4, DAY4, extras=[]),
+    {"op": "openExtras", "asOf": DAY4, "ids": []},
+    record(schedule(e, every=1), DAY4, error="archivedExtra"),
+    {"op": "allExtras", "extras": [{"id": e, "title": "Gym class", "firstDay": D1, "completedOn": None,
+                                    "archivedFrom": D4, "schedule": "weekdays 6 7"}]},
+]))
+
+e = uid()
+cases.append(case("a repeating extra switched back to a to-do is a fresh open to-do from that day", DAY1, [
+    record(define(e, "Stretch"), DAY1), record(schedule(e, every=1), DAY1), record(tick(e), DAY1),
+    record(schedule(e), DAY2, DAY2), record(schedule(e), DAY2, DAY2, returns=None),
+    summary(DAY1, DAY4, extras=["Stretch ✓"]), summary(DAY2, DAY4, extras=["Stretch"]),
+    summary(DAY3, DAY4, extras=["Stretch late"]),
+    record(tick(e), DAY3, DAY4), summary(DAY3, DAY4, extras=["Stretch ✓ late"]), summary(DAY4, DAY4, extras=[]),
+    {"op": "openExtras", "asOf": DAY4, "ids": []}, {"op": "openExtras", "asOf": DAY2, "ids": [e]},
+    {"op": "allExtras", "extras": [{"id": e, "title": "Stretch", "firstDay": D1, "completedOn": D3,
+                                    "archivedFrom": None, "schedule": "once"}]},
+]))
+
+e, other = uid(), uid()
+first_rule, second_rule = uid(), uid()
+batch = [activity(uid(), D2, DAY2, define(e, "Read"), "MAC"),
+         # Both apply from the definition day; the later dated one wins although recorded first.
+         activity(uid(), D2, plus(DAY2, -7200), schedule(e, weekdays=[5]), "PHONE"),
+         activity(uid(), D1, plus(DAY2, -3600), schedule(e, weekdays=[4]), "PHONE"),
+         # A tick from before the definition day is history only for a repeating extra.
+         activity(uid(), D1, plus(DAY2, -100), tick(e), "PHONE"),
+         activity(first_rule, D3, DAY3, schedule(e, every=3), "PHONE"),
+         activity(second_rule, D3, DAY3, schedule(e, weekdays=[6]), "TABLET"),  # same time: device ID orders
+         activity(uid(), D3, DAY3, define(other, "Journal"), "MAC")]
+for name, events in [("in order", batch), ("reversed", list(reversed(batch)))]:
+    cases.append(case(f"schedules from several devices apply from the definition day, then by event order ({name})", DAY1, [
+        merge(events),
+        summary(DAY1, DAY4, extras=[]), summary(DAY2, DAY4, extras=["Read"]),  # Friday, from the definition day
+        summary(DAY3, DAY6, extras=["Read", "Journal"]), summary(DAY4, DAY6, extras=["Journal late"]),
+        summary(DAY6, DAY6, extras=["Journal late"]),  # every 3 days would show Read here
+        {"op": "allExtras", "extras": [
+            {"id": e, "title": "Read", "firstDay": D2, "completedOn": None, "archivedFrom": None, "schedule": "weekdays 6"},
+            {"id": other, "title": "Journal", "firstDay": D3, "completedOn": None, "archivedFrom": None, "schedule": "once"}]},
+    ]))
+
+e = uid()
+cases.append(case("a to-do rule after a to-do changes nothing, so a done to-do stays done", DAY1, [
+    merge([activity(uid(), D1, DAY1, define(e, "Stretch"), "MAC"), activity(uid(), D2, DAY2, schedule(e, every=1), "MAC"),
+           activity(uid(), D3, DAY3, schedule(e), "PHONE"), activity(uid(), D3, plus(DAY3, 60), tick(e), "PHONE"),
+           # The Mac, offline since day 2, also turns it back into a to-do a day later.
+           activity(uid(), D4, DAY4, schedule(e), "MAC")]),
+    summary(DAY2, DAY5, extras=["Stretch"]), summary(DAY3, DAY5, extras=["Stretch ✓"]),
+    summary(DAY4, DAY5, extras=[]), summary(DAY5, DAY5, extras=[]),
+    {"op": "allExtras", "extras": [{"id": e, "title": "Stretch", "firstDay": D1, "completedOn": D3,
+                                    "archivedFrom": None, "schedule": "once"}]},
+]))
+
+ids = [uid() for _ in range(10)]
+steps = [record(define(x, f"Extra {i}"), DAY1) for i, x in enumerate(ids)]
+steps += [record(tick(ids[0]), DAY1), record(tick(ids[1]), DAY1), {"op": "openExtrasCount", "asOf": DAY1, "count": 8},
+          record(schedule(ids[0], every=1), DAY1), {"op": "openExtrasCount", "asOf": DAY1, "count": 9},
+          record(define(uid(), "Tenth"), DAY1), {"op": "openExtrasCount", "asOf": DAY1, "count": 10},
+          record(define(uid(), "Eleventh"), DAY1, error="tooManyExtras"),
+          record(schedule(ids[1], weekdays=[1]), DAY1, error="tooManyExtras"),
+          record(schedule(ids[2], every=2), DAY1), {"op": "openExtrasCount", "asOf": DAY1, "count": 10},
+          record(archive(ids[0]), DAY2, DAY2), {"op": "openExtrasCount", "asOf": DAY2, "count": 9},
+          record(schedule(ids[1], weekdays=[1]), DAY2, DAY2), {"op": "openExtrasCount", "asOf": DAY2, "count": 10}]
+cases.append(case("the cap counts open to-dos and active repeating extras", DAY1, steps))
+
+e = uid()
+cases.append(case("scheduling refuses unknown extras and invalid rules", DAY1, [
+    record(schedule(uid(), every=1), DAY1, error="unknownExtra"),
+    record(define(e, "Stretch"), DAY1),
+    record(schedule(e, every=0), DAY1, error="invalidSchedule"), record(schedule(e, every=31), DAY1, error="invalidSchedule"),
+    record(schedule(e, weekdays=[]), DAY1, error="invalidSchedule"), record(schedule(e, weekdays=[0]), DAY1, error="invalidSchedule"),
+    record(schedule(e, weekdays=[8]), DAY1, error="invalidSchedule"), record(schedule(e, weekdays=[1, 1]), DAY1, error="invalidSchedule"),
+    record(schedule(e, weekdays=[1], every=2), DAY1, error="invalidSchedule"),
+    record(schedule(e), DAY1, returns=None),
+    merge([activity(uid(), D1, DAY1, schedule(uid(), every=1), "MacB")], error="unknownExtra"),
+    record(schedule(e, every=30), DAY1), record(schedule(e, weekdays=[7, 1, 2, 3, 4, 5, 6]), DAY1),
+    {"op": "allExtras", "extras": [{"id": e, "title": "Stretch", "firstDay": D1, "completedOn": None,
+                                    "archivedFrom": None, "schedule": "weekdays 1 2 3 4 5 6 7"}]},
+]))
+
 # Wire format. "sorted" is the exact text Swift's JSONEncoder writes with .sortedKeys.
 E1 = "E1E1E1E1-0000-4000-8000-000000000001"
 A1 = "AAAAAAAA-0000-4000-8000-000000000001"
 P1 = "BBBBBBBB-0000-4000-8000-000000000001"
 encoding = []
 for action in [pour(450), UNDO, habit("walk"), habit("bibleReading", False), diet("clean"), diet("missed"),
-               define(E1, "Stretch"), define(E1, "Lire 10 pages / jour é"), archive(E1), tick(E1), tick(E1, False)]:
+               define(E1, "Stretch"), define(E1, "Lire 10 pages / jour é"), archive(E1), tick(E1), tick(E1, False),
+               target("walk", "Yoga", 30, "minutes", "yoga"), target("bibleReading", "Audiobook", 20, "minutes", "headphones"),
+               target("workout", "Gym"), target("diet", "No sugar"), target("walk", "Steps", 10000, "steps"),
+               target("bibleReading", "😀" * 20, 500, "pages"), target("workout", "Run", icon="run"),
+               target("walk", "Café / parc", 2, "kilometres"), target("walk", "Hike", 60, "miles"), target("bibleReading", "Psalms", 50, "chapters"),
+               water(3000, 250), water(5000, 1000), water(1000, 50),
+               schedule(E1, weekdays=[1, 2, 3, 4, 5]), schedule(E1, weekdays=[7]), schedule(E1, every=1), schedule(E1, every=30), schedule(E1)]:
     encoding.append({"kind": "action", "value": action})
 encoding += [
     {"kind": "activity", "value": activity(A1, "2026-10-07T23:00:00Z", "2026-10-08T12:00:00Z", pour(450), "D3V1C3-A")},
@@ -473,13 +722,43 @@ spellings = [
      "sorted": json.dumps({"id": A1, "owner_id": P1, "start_time": 1791414000, "time_zone": "Europe/Jersey"},
                           sort_keys=True, separators=(",", ":")).replace("/", "\\/")},
 ]
+# Nil values are left out, null and unknown inner keys are ignored, weekday order is kept.
+for value, written in [
+    ({"setTarget": {"_0": "diet", "name": "Diet", "amount": None, "unit": None, "icon": None}}, target("diet", "Diet")),
+    ({"setTarget": {"_0": "walk", "name": "Yoga", "colour": "red"}}, target("walk", "Yoga")),
+    ({"scheduleExtra": {"id": E1.lower(), "weekdays": [5, 1], "every": None}}, schedule(E1, weekdays=[5, 1])),
+    ({"setWater": {"goal": 3000, "pour": 250, "note": 1}}, water(3000, 250)),
+]:
+    spellings.append({"kind": "activity", "value": {"id": A1, "day": 781484400, "recordedAt": 781527600, "action": value, "deviceID": "x"},
+                      "sorted": json.dumps({"action": written, "day": 781484400, "deviceID": "x", "id": A1, "recordedAt": 781527600},
+                                           sort_keys=True, separators=(",", ":"), ensure_ascii=False)})
 
 good = {"id": A1, "day": 781484400, "recordedAt": 781527600, "deviceID": "x"}
 rejected = [{"kind": "activity", "value": {**good, "action": action}} for action in [
     {"pour": {"_0": 450}, "setDiet": {"_0": "clean"}}, {}, {"drinkCoffee": {}}, {"pour": {"_0": "450"}},
     {"pour": {"_0": 450.5}}, {"pour": {}}, {"setHabit": {"_0": "nap", "completed": True}}, {"setHabit": {"_0": "walk"}},
     {"setHabit": {"_0": "walk", "completed": "true"}}, {"setDiet": {"_0": "Clean"}}, {"defineExtra": {"id": E1}},
-    {"setExtra": {"id": "1234", "completed": True}}, {"undoLatestPour": True}, "pour"]]
+    {"setExtra": {"id": "1234", "completed": True}}, {"undoLatestPour": True}, "pour",
+    # Targets and schedules outside the shared rules (the server refuses them too).
+    target("water", "Water"), target("yoga", "Yoga"), target("walk", ""), target("walk", " Yoga"), target("walk", "Yoga "),
+    target("walk", "Line\nbreak"), target("walk", "Tab\there"), target("walk", "x" * 21), target("walk", "👨‍👩‍👧"),
+    target("walk", "e\u0301\u0302\u0303\u0304" * 20),
+    {"setTarget": {"_0": "walk", "name": "Yoga", "amount": 30}}, {"setTarget": {"_0": "walk", "name": "Yoga", "unit": "minutes"}},
+    target("walk", "Yoga", 30, "hours"), target("walk", "Yoga", 4, "minutes"), target("walk", "Yoga", 301, "minutes"),
+    target("walk", "Yoga", 0, "pages"), target("walk", "Yoga", 501, "pages"), target("walk", "Yoga", 51, "chapters"),
+    target("walk", "Yoga", 101, "kilometres"), target("walk", "Yoga", 61, "miles"), target("walk", "Yoga", 999, "steps"),
+    target("walk", "Yoga", 50001, "steps"), {"setTarget": {"_0": "walk", "name": "Yoga", "amount": "30", "unit": "minutes"}},
+    {"setTarget": {"_0": "walk", "name": "Yoga", "amount": 30.5, "unit": "minutes"}}, target("diet", "No sugar", 1, "pages"),
+    target("walk", "Yoga", icon="Yoga"), target("walk", "Yoga", icon=""), target("walk", "Yoga", icon="a" * 17),
+    target("walk", "Yoga", icon="run2"), {"setTarget": {"_0": "walk"}}, {"setTarget": {"name": "Yoga"}},
+    {"setTarget": {"_0": "walk", "name": 7}}, {"setTarget": "walk"},
+    water(999, 250), water(5001, 250), water(3000, 49), water(3000, 1001), water(1000, 1001), {"setWater": {"goal": 3000}},
+    {"setWater": {"pour": 250}}, {"setWater": {"goal": "3000", "pour": 250}}, {"setWater": {"goal": 3000.5, "pour": 250}},
+    {"scheduleExtra": {"id": "not-a-uuid", "every": 2}}, {"scheduleExtra": {"every": 2}}, schedule(E1, every=0),
+    schedule(E1, every=31), schedule(E1, every=-1), schedule(E1, weekdays=[]), schedule(E1, weekdays=[0]),
+    schedule(E1, weekdays=[8]), schedule(E1, weekdays=[1, 1]), schedule(E1, weekdays=[1, 2, 3, 4, 5, 6, 7, 1]),
+    schedule(E1, weekdays=[1], every=2), {"scheduleExtra": {"id": E1, "weekdays": 1}}, {"scheduleExtra": {"id": E1, "every": "2"}},
+    {"setTarget": {"_0": "walk", "name": "Yoga"}, "setWater": {"goal": 3000, "pour": 250}}]]
 rejected += [{"kind": "activity", "value": value} for value in [
     {**good, "id": "1234", "action": pour(450)}, {**good, "day": "781484400", "action": pour(450)},
     {key: v for key, v in good.items() if key != "recordedAt"} | {"action": pour(450)},
@@ -505,6 +784,16 @@ titles = [{"raw": raw, "title": title} for raw, title in [
     ("👍🏽" * 40, "👍🏽" * 40), ("👍🏽" * 41, None), ("👨‍👩‍👧", None), (" Padded ", "Padded"),
     ("Zero​width", None), ("Line separated", None), ("Café crème", "Café crème")]]
 
+# A slot's stored name: like an extra's title but at most 20 characters and 80 Unicode scalars.
+target_names = [{"raw": raw, "name": name} for raw, name in [
+    ("  Yoga \n", "Yoga"), ("x" * 20, "x" * 20), ("x" * 21, None), ("", None), ("   ", None), ("Two\nlines", None),
+    ("Tab\there", None), ("é" * 20, "é" * 20), ("👍🏽" * 20, "👍🏽" * 20), ("👍🏽" * 21, None), ("👨‍👩‍👧", None),
+    ("e\u0301\u0302\u0303" * 20, "e\u0301\u0302\u0303" * 20), ("e\u0301\u0302\u0303\u0304" * 20, None),
+    ("Zero\u200bwidth", None), ("No sugar", "No sugar"), ("Café crème", "Café crème")]]
+
+icons = [{"id": i, "valid": v} for i, v in [("yoga", True), ("a", True), ("a" * 16, True), ("a" * 17, False), ("", False),
+                                              ("Yoga", False), ("run2", False), ("dumb-bell", False), ("é", False)]]
+
 clock = [{"recordedAt": "2026-10-08T12:00:00Z", "receivedAt": received, "warning": warning} for received, warning in [
     ("2026-10-08T11:54:59Z", True), ("2026-10-08T11:55:00Z", False), ("2026-10-08T12:00:00Z", False),
     ("2026-10-08T13:00:00Z", False), ("2026-10-09T12:00:00Z", False),
@@ -513,7 +802,8 @@ clock = [{"recordedAt": "2026-10-08T12:00:00Z", "receivedAt": received, "warning
 out = {"about": "Generated by test-vectors/generate.py; run by the Swift and Android tests. Instants are ISO 8601 "
                 "or, inside wire activities, seconds since 2001-01-01T00:00:00Z.",
        "cases": cases, "encoding": encoding, "spellings": spellings, "rejected": rejected,
-       "records": records, "zones": zones, "titles": titles, "clockWarnings": clock}
+       "records": records, "zones": zones, "titles": titles, "targetNames": target_names, "icons": icons,
+       "clockWarnings": clock}
 path = Path(__file__).with_name("challenge-rules.json")
 path.write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n")
 print(f"{path.name}: {len(cases)} cases, {len(encoding)} encodings, {len(rejected)} rejections")

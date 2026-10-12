@@ -80,14 +80,24 @@ public struct ChallengeStore {
         }
     }
 
-    public mutating func start(on date: Date, timeZone: TimeZone) throws {
+    /// Targets other than the standard five become one `setWater` or `setTarget` event
+    /// per changed value, dated the start day and committed with the settings, so setup
+    /// is never half written. `now` is when they are recorded.
+    public mutating func start(on date: Date, timeZone: TimeZone, targets: Challenge.Targets = .standard,
+                               at now: Date = Date()) throws {
         guard challenge == nil else { throw ChallengeStoreError.alreadyStarted }
         guard Challenge.canonicalTimeZone(timeZone.identifier) != nil else { throw ChallengeSyncError.invalidRecord }
         let challenge = Challenge(ownerID: ownerID, startDate: date, timeZone: timeZone)
-        try commit(Snapshot(version: 2, challenge: challenge,
+        var next = Snapshot(version: 2, challenge: challenge,
                             record: ChallengeRecord(ownerID: ownerID, startDate: challenge.startDate,
                                                     timeZone: challenge.timeZone),
-                            deviceID: UUID().uuidString, pendingIDs: [], headerPending: true, clockWarning: false))
+                            deviceID: UUID().uuidString, pendingIDs: [], headerPending: true, clockWarning: false)
+        for action in targets.changes() {
+            let id = nextID(at: now, snapshot: next)
+            try next.challenge.record(action, on: challenge.startDate, at: now, id: id, deviceID: next.deviceID)
+            next.pendingIDs!.insert(id)
+        }
+        try commit(next)
     }
 
     @discardableResult

@@ -14,10 +14,11 @@ public enum ChallengeBackupError: LocalizedError {
 public struct ChallengeBackup: Codable, Sendable {
     /// Version 2 adds the challenge's timezone to its settings. Version-1 files
     /// predate per-challenge zones and import as Jersey challenges. Version 3 may hold
-    /// extras events (`defineExtra`, `archiveExtra`, `setExtra`), which an app that
-    /// supports only up to version 2 cannot read: it reports an unsupported version
-    /// rather than a malformed file. Every export is written as the current version.
-    public static let currentVersion = 3
+    /// extras events (`defineExtra`, `archiveExtra`, `setExtra`), and version 4 target
+    /// and schedule events (`setTarget`, `setWater`, `scheduleExtra`). An app that
+    /// supports only earlier versions cannot read them: it reports an unsupported
+    /// version rather than a malformed file. Every export is written as the current version.
+    public static let currentVersion = 4
     public static let supportedVersions = 1...currentVersion
     public let formatVersion: Int
     public let settings: ChallengeRecord

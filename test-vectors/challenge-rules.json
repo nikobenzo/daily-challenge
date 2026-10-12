@@ -28598,6 +28598,3850 @@
      ]
     }
    ]
+  },
+  {
+   "name": "without target events a day uses the standard five",
+   "timeZone": "Europe/Jersey",
+   "owner": "6F1C2A43-0B55-4B5E-9F3D-2C1A7E9B4D10",
+   "start": "2026-10-08T12:00:00Z",
+   "steps": [
+    {
+     "op": "summary",
+     "on": "2026-10-08T12:00:00Z",
+     "asOf": "2026-10-08T12:00:00Z",
+     "targets": {
+      "water": {
+       "goal": 4000,
+       "glass": 450
+      },
+      "workout": {
+       "name": "Workout",
+       "amount": 45,
+       "unit": "minutes",
+       "icon": null
+      },
+      "walk": {
+       "name": "Walk",
+       "amount": 45,
+       "unit": "minutes",
+       "icon": null
+      },
+      "diet": {
+       "name": "Diet",
+       "amount": null,
+       "unit": null,
+       "icon": null
+      },
+      "bibleReading": {
+       "name": "Bible",
+       "amount": 10,
+       "unit": "pages",
+       "icon": null
+      }
+     }
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-08T12:00:00Z",
+     "asOf": "2026-10-10T12:00:00Z",
+     "targets": {
+      "water": {
+       "goal": 4000,
+       "glass": 450
+      },
+      "workout": {
+       "name": "Workout",
+       "amount": 45,
+       "unit": "minutes",
+       "icon": null
+      },
+      "walk": {
+       "name": "Walk",
+       "amount": 45,
+       "unit": "minutes",
+       "icon": null
+      },
+      "diet": {
+       "name": "Diet",
+       "amount": null,
+       "unit": null,
+       "icon": null
+      },
+      "bibleReading": {
+       "name": "Bible",
+       "amount": 10,
+       "unit": "pages",
+       "icon": null
+      }
+     }
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000904"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000905"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000906"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000907"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000908"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000909"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000090A"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000090B"
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-08T12:00:00Z",
+     "asOf": "2026-10-08T12:00:00Z",
+     "water": 3600,
+     "waterComplete": false
+    }
+   ]
+  },
+  {
+   "name": "setup targets dated a past start day apply from that day",
+   "timeZone": "Europe/Jersey",
+   "owner": "6F1C2A43-0B55-4B5E-9F3D-2C1A7E9B4D10",
+   "start": "2026-10-08T12:00:00Z",
+   "steps": [
+    {
+     "op": "record",
+     "action": {
+      "setWater": {
+       "goal": 3000,
+       "pour": 250
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000090C"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setTarget": {
+       "_0": "walk",
+       "name": "Yoga",
+       "amount": 30,
+       "unit": "minutes",
+       "icon": "yoga"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000090D"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setTarget": {
+       "_0": "bibleReading",
+       "name": "Audiobook",
+       "amount": 20,
+       "unit": "minutes",
+       "icon": "headphones"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000090E"
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-08T12:00:00Z",
+     "asOf": "2026-10-10T12:00:00Z",
+     "targets": {
+      "water": {
+       "goal": 3000,
+       "glass": 250
+      },
+      "walk": {
+       "name": "Yoga",
+       "amount": 30,
+       "unit": "minutes",
+       "icon": "yoga"
+      },
+      "bibleReading": {
+       "name": "Audiobook",
+       "amount": 20,
+       "unit": "minutes",
+       "icon": "headphones"
+      },
+      "workout": {
+       "name": "Workout",
+       "amount": 45,
+       "unit": "minutes",
+       "icon": null
+      },
+      "diet": {
+       "name": "Diet",
+       "amount": null,
+       "unit": null,
+       "icon": null
+      }
+     }
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-09T12:00:00Z",
+     "asOf": "2026-10-10T12:00:00Z",
+     "targets": {
+      "water": {
+       "goal": 3000,
+       "glass": 250
+      },
+      "walk": {
+       "name": "Yoga",
+       "amount": 30,
+       "unit": "minutes",
+       "icon": "yoga"
+      },
+      "bibleReading": {
+       "name": "Audiobook",
+       "amount": 20,
+       "unit": "minutes",
+       "icon": "headphones"
+      },
+      "workout": {
+       "name": "Workout",
+       "amount": 45,
+       "unit": "minutes",
+       "icon": null
+      },
+      "diet": {
+       "name": "Diet",
+       "amount": null,
+       "unit": null,
+       "icon": null
+      }
+     }
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-10T12:00:00Z",
+     "asOf": "2026-10-10T12:00:00Z",
+     "targets": {
+      "water": {
+       "goal": 3000,
+       "glass": 250
+      },
+      "walk": {
+       "name": "Yoga",
+       "amount": 30,
+       "unit": "minutes",
+       "icon": "yoga"
+      },
+      "bibleReading": {
+       "name": "Audiobook",
+       "amount": 20,
+       "unit": "minutes",
+       "icon": "headphones"
+      },
+      "workout": {
+       "name": "Workout",
+       "amount": 45,
+       "unit": "minutes",
+       "icon": null
+      },
+      "diet": {
+       "name": "Diet",
+       "amount": null,
+       "unit": null,
+       "icon": null
+      }
+     }
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000090F"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000910"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000911"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000912"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000913"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000914"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000915"
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-08T12:00:00Z",
+     "asOf": "2026-10-10T12:00:00Z",
+     "water": 3150,
+     "waterComplete": true
+    },
+    {
+     "op": "record",
+     "action": {
+      "setHabit": {
+       "_0": "workout",
+       "completed": true
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000916"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setHabit": {
+       "_0": "walk",
+       "completed": true
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000917"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setHabit": {
+       "_0": "bibleReading",
+       "completed": true
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000918"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setDiet": {
+       "_0": "clean"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000919"
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-08T12:00:00Z",
+     "asOf": "2026-10-10T12:00:00Z",
+     "complete": true,
+     "status": "complete"
+    },
+    {
+     "op": "streaks",
+     "asOf": "2026-10-10T12:00:00Z",
+     "current": 0,
+     "best": 1
+    }
+   ]
+  },
+  {
+   "name": "a change from today leaves earlier days on their own targets",
+   "timeZone": "Europe/Jersey",
+   "owner": "6F1C2A43-0B55-4B5E-9F3D-2C1A7E9B4D10",
+   "start": "2026-10-08T12:00:00Z",
+   "steps": [
+    {
+     "op": "record",
+     "action": {
+      "setTarget": {
+       "_0": "diet",
+       "name": "No sugar"
+      }
+     },
+     "on": "2026-10-09T12:00:00Z",
+     "at": "2026-10-09T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000091A"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setWater": {
+       "goal": 3000,
+       "pour": 500
+      }
+     },
+     "on": "2026-10-09T12:00:00Z",
+     "at": "2026-10-09T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000091B"
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-08T12:00:00Z",
+     "asOf": "2026-10-09T12:00:00Z",
+     "targets": {
+      "water": {
+       "goal": 4000,
+       "glass": 450
+      },
+      "workout": {
+       "name": "Workout",
+       "amount": 45,
+       "unit": "minutes",
+       "icon": null
+      },
+      "walk": {
+       "name": "Walk",
+       "amount": 45,
+       "unit": "minutes",
+       "icon": null
+      },
+      "diet": {
+       "name": "Diet",
+       "amount": null,
+       "unit": null,
+       "icon": null
+      },
+      "bibleReading": {
+       "name": "Bible",
+       "amount": 10,
+       "unit": "pages",
+       "icon": null
+      }
+     }
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-09T12:00:00Z",
+     "asOf": "2026-10-09T12:00:00Z",
+     "targets": {
+      "water": {
+       "goal": 3000,
+       "glass": 500
+      },
+      "workout": {
+       "name": "Workout",
+       "amount": 45,
+       "unit": "minutes",
+       "icon": null
+      },
+      "walk": {
+       "name": "Walk",
+       "amount": 45,
+       "unit": "minutes",
+       "icon": null
+      },
+      "diet": {
+       "name": "No sugar",
+       "amount": null,
+       "unit": null,
+       "icon": null
+      },
+      "bibleReading": {
+       "name": "Bible",
+       "amount": 10,
+       "unit": "pages",
+       "icon": null
+      }
+     }
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-10T12:00:00Z",
+     "asOf": "2026-10-10T12:00:00Z",
+     "targets": {
+      "water": {
+       "goal": 3000,
+       "glass": 500
+      },
+      "workout": {
+       "name": "Workout",
+       "amount": 45,
+       "unit": "minutes",
+       "icon": null
+      },
+      "walk": {
+       "name": "Walk",
+       "amount": 45,
+       "unit": "minutes",
+       "icon": null
+      },
+      "diet": {
+       "name": "No sugar",
+       "amount": null,
+       "unit": null,
+       "icon": null
+      },
+      "bibleReading": {
+       "name": "Bible",
+       "amount": 10,
+       "unit": "pages",
+       "icon": null
+      }
+     }
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-09T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000091C"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-09T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000091D"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-09T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000091E"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-09T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000091F"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-09T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000920"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-09T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000921"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-09T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000922"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-09T12:00:00Z",
+     "at": "2026-10-09T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000923"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-09T12:00:00Z",
+     "at": "2026-10-09T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000924"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-09T12:00:00Z",
+     "at": "2026-10-09T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000925"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-09T12:00:00Z",
+     "at": "2026-10-09T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000926"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-09T12:00:00Z",
+     "at": "2026-10-09T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000927"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-09T12:00:00Z",
+     "at": "2026-10-09T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000928"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 450
+      }
+     },
+     "on": "2026-10-09T12:00:00Z",
+     "at": "2026-10-09T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000929"
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-08T12:00:00Z",
+     "asOf": "2026-10-09T12:00:00Z",
+     "water": 3150,
+     "waterComplete": false
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-09T12:00:00Z",
+     "asOf": "2026-10-09T12:00:00Z",
+     "water": 3150,
+     "waterComplete": true
+    }
+   ]
+  },
+  {
+   "name": "two devices changing one slot on one day resolve by event order (in order)",
+   "timeZone": "Europe/Jersey",
+   "owner": "6F1C2A43-0B55-4B5E-9F3D-2C1A7E9B4D10",
+   "start": "2026-10-08T12:00:00Z",
+   "steps": [
+    {
+     "op": "merge",
+     "events": [
+      {
+       "id": "00000000-0000-4000-8000-00000000092A",
+       "day": 813193200,
+       "recordedAt": 813240000,
+       "action": {
+        "setTarget": {
+         "_0": "walk",
+         "name": "Yoga"
+        }
+       },
+       "deviceID": "PHONE"
+      },
+      {
+       "id": "00000000-0000-4000-8000-00000000092B",
+       "day": 813193200,
+       "recordedAt": 813240060,
+       "action": {
+        "setTarget": {
+         "_0": "walk",
+         "name": "Pilates",
+         "amount": 30,
+         "unit": "minutes"
+        }
+       },
+       "deviceID": "MAC"
+      },
+      {
+       "id": "00000000-0000-4000-8000-00000000092C",
+       "day": 813193200,
+       "recordedAt": 813240120,
+       "action": {
+        "setTarget": {
+         "_0": "workout",
+         "name": "Run",
+         "amount": 30,
+         "unit": "minutes",
+         "icon": "run"
+        }
+       },
+       "deviceID": "B-DEVICE"
+      },
+      {
+       "id": "00000000-0000-4000-8000-00000000092D",
+       "day": 813193200,
+       "recordedAt": 813240120,
+       "action": {
+        "setTarget": {
+         "_0": "workout",
+         "name": "Swim",
+         "amount": 30,
+         "unit": "minutes",
+         "icon": "swim"
+        }
+       },
+       "deviceID": "A-DEVICE"
+      }
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-09T12:00:00Z",
+     "asOf": "2026-10-09T12:00:00Z",
+     "targets": {
+      "water": {
+       "goal": 4000,
+       "glass": 450
+      },
+      "workout": {
+       "name": "Run",
+       "amount": 30,
+       "unit": "minutes",
+       "icon": "run"
+      },
+      "walk": {
+       "name": "Pilates",
+       "amount": 30,
+       "unit": "minutes",
+       "icon": null
+      },
+      "diet": {
+       "name": "Diet",
+       "amount": null,
+       "unit": null,
+       "icon": null
+      },
+      "bibleReading": {
+       "name": "Bible",
+       "amount": 10,
+       "unit": "pages",
+       "icon": null
+      }
+     }
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-08T12:00:00Z",
+     "asOf": "2026-10-09T12:00:00Z",
+     "targets": {
+      "water": {
+       "goal": 4000,
+       "glass": 450
+      },
+      "workout": {
+       "name": "Workout",
+       "amount": 45,
+       "unit": "minutes",
+       "icon": null
+      },
+      "walk": {
+       "name": "Walk",
+       "amount": 45,
+       "unit": "minutes",
+       "icon": null
+      },
+      "diet": {
+       "name": "Diet",
+       "amount": null,
+       "unit": null,
+       "icon": null
+      },
+      "bibleReading": {
+       "name": "Bible",
+       "amount": 10,
+       "unit": "pages",
+       "icon": null
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "two devices changing one slot on one day resolve by event order (reversed)",
+   "timeZone": "Europe/Jersey",
+   "owner": "6F1C2A43-0B55-4B5E-9F3D-2C1A7E9B4D10",
+   "start": "2026-10-08T12:00:00Z",
+   "steps": [
+    {
+     "op": "merge",
+     "events": [
+      {
+       "id": "00000000-0000-4000-8000-00000000092D",
+       "day": 813193200,
+       "recordedAt": 813240120,
+       "action": {
+        "setTarget": {
+         "_0": "workout",
+         "name": "Swim",
+         "amount": 30,
+         "unit": "minutes",
+         "icon": "swim"
+        }
+       },
+       "deviceID": "A-DEVICE"
+      },
+      {
+       "id": "00000000-0000-4000-8000-00000000092C",
+       "day": 813193200,
+       "recordedAt": 813240120,
+       "action": {
+        "setTarget": {
+         "_0": "workout",
+         "name": "Run",
+         "amount": 30,
+         "unit": "minutes",
+         "icon": "run"
+        }
+       },
+       "deviceID": "B-DEVICE"
+      },
+      {
+       "id": "00000000-0000-4000-8000-00000000092B",
+       "day": 813193200,
+       "recordedAt": 813240060,
+       "action": {
+        "setTarget": {
+         "_0": "walk",
+         "name": "Pilates",
+         "amount": 30,
+         "unit": "minutes"
+        }
+       },
+       "deviceID": "MAC"
+      },
+      {
+       "id": "00000000-0000-4000-8000-00000000092A",
+       "day": 813193200,
+       "recordedAt": 813240000,
+       "action": {
+        "setTarget": {
+         "_0": "walk",
+         "name": "Yoga"
+        }
+       },
+       "deviceID": "PHONE"
+      }
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-09T12:00:00Z",
+     "asOf": "2026-10-09T12:00:00Z",
+     "targets": {
+      "water": {
+       "goal": 4000,
+       "glass": 450
+      },
+      "workout": {
+       "name": "Run",
+       "amount": 30,
+       "unit": "minutes",
+       "icon": "run"
+      },
+      "walk": {
+       "name": "Pilates",
+       "amount": 30,
+       "unit": "minutes",
+       "icon": null
+      },
+      "diet": {
+       "name": "Diet",
+       "amount": null,
+       "unit": null,
+       "icon": null
+      },
+      "bibleReading": {
+       "name": "Bible",
+       "amount": 10,
+       "unit": "pages",
+       "icon": null
+      }
+     }
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-08T12:00:00Z",
+     "asOf": "2026-10-09T12:00:00Z",
+     "targets": {
+      "water": {
+       "goal": 4000,
+       "glass": 450
+      },
+      "workout": {
+       "name": "Workout",
+       "amount": 45,
+       "unit": "minutes",
+       "icon": null
+      },
+      "walk": {
+       "name": "Walk",
+       "amount": 45,
+       "unit": "minutes",
+       "icon": null
+      },
+      "diet": {
+       "name": "Diet",
+       "amount": null,
+       "unit": null,
+       "icon": null
+      },
+      "bibleReading": {
+       "name": "Bible",
+       "amount": 10,
+       "unit": "pages",
+       "icon": null
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "two devices changing different slots both survive",
+   "timeZone": "Europe/Jersey",
+   "owner": "6F1C2A43-0B55-4B5E-9F3D-2C1A7E9B4D10",
+   "start": "2026-10-08T12:00:00Z",
+   "steps": [
+    {
+     "op": "merge",
+     "events": [
+      {
+       "id": "00000000-0000-4000-8000-00000000092E",
+       "day": 813106800,
+       "recordedAt": 813153600,
+       "action": {
+        "setTarget": {
+         "_0": "walk",
+         "name": "Yoga"
+        }
+       },
+       "deviceID": "PHONE"
+      }
+     ]
+    },
+    {
+     "op": "merge",
+     "events": [
+      {
+       "id": "00000000-0000-4000-8000-00000000092F",
+       "day": 813106800,
+       "recordedAt": 813153601,
+       "action": {
+        "setWater": {
+         "goal": 2500,
+         "pour": 330
+        }
+       },
+       "deviceID": "MAC"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000930",
+       "day": 813106800,
+       "recordedAt": 813153602,
+       "action": {
+        "setTarget": {
+         "_0": "bibleReading",
+         "name": "Book",
+         "amount": 2,
+         "unit": "chapters",
+         "icon": "book"
+        }
+       },
+       "deviceID": "MAC"
+      }
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-08T12:00:00Z",
+     "asOf": "2026-10-08T12:00:00Z",
+     "targets": {
+      "water": {
+       "goal": 2500,
+       "glass": 330
+      },
+      "workout": {
+       "name": "Workout",
+       "amount": 45,
+       "unit": "minutes",
+       "icon": null
+      },
+      "walk": {
+       "name": "Yoga",
+       "amount": null,
+       "unit": null,
+       "icon": null
+      },
+      "diet": {
+       "name": "Diet",
+       "amount": null,
+       "unit": null,
+       "icon": null
+      },
+      "bibleReading": {
+       "name": "Book",
+       "amount": 2,
+       "unit": "chapters",
+       "icon": "book"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "the latest dated change wins even when an earlier-dated one is recorded later",
+   "timeZone": "Europe/Jersey",
+   "owner": "6F1C2A43-0B55-4B5E-9F3D-2C1A7E9B4D10",
+   "start": "2026-10-08T12:00:00Z",
+   "steps": [
+    {
+     "op": "record",
+     "action": {
+      "setWater": {
+       "goal": 3000,
+       "pour": 250
+      }
+     },
+     "on": "2026-10-09T12:00:00Z",
+     "at": "2026-10-09T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000931"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setWater": {
+       "goal": 2000,
+       "pour": 250
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000932"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setTarget": {
+       "_0": "walk",
+       "name": "Yoga"
+      }
+     },
+     "on": "2026-10-09T12:00:00Z",
+     "at": "2026-10-09T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000933"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setTarget": {
+       "_0": "walk",
+       "name": "Pilates"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000934"
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-08T12:00:00Z",
+     "asOf": "2026-10-10T12:00:00Z",
+     "targets": {
+      "water": {
+       "goal": 2000,
+       "glass": 250
+      },
+      "workout": {
+       "name": "Workout",
+       "amount": 45,
+       "unit": "minutes",
+       "icon": null
+      },
+      "walk": {
+       "name": "Pilates",
+       "amount": null,
+       "unit": null,
+       "icon": null
+      },
+      "diet": {
+       "name": "Diet",
+       "amount": null,
+       "unit": null,
+       "icon": null
+      },
+      "bibleReading": {
+       "name": "Bible",
+       "amount": 10,
+       "unit": "pages",
+       "icon": null
+      }
+     }
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-09T12:00:00Z",
+     "asOf": "2026-10-10T12:00:00Z",
+     "targets": {
+      "water": {
+       "goal": 3000,
+       "glass": 250
+      },
+      "workout": {
+       "name": "Workout",
+       "amount": 45,
+       "unit": "minutes",
+       "icon": null
+      },
+      "walk": {
+       "name": "Yoga",
+       "amount": null,
+       "unit": null,
+       "icon": null
+      },
+      "diet": {
+       "name": "Diet",
+       "amount": null,
+       "unit": null,
+       "icon": null
+      },
+      "bibleReading": {
+       "name": "Bible",
+       "amount": 10,
+       "unit": "pages",
+       "icon": null
+      }
+     }
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-10T12:00:00Z",
+     "asOf": "2026-10-10T12:00:00Z",
+     "targets": {
+      "water": {
+       "goal": 3000,
+       "glass": 250
+      },
+      "workout": {
+       "name": "Workout",
+       "amount": 45,
+       "unit": "minutes",
+       "icon": null
+      },
+      "walk": {
+       "name": "Yoga",
+       "amount": null,
+       "unit": null,
+       "icon": null
+      },
+      "diet": {
+       "name": "Diet",
+       "amount": null,
+       "unit": null,
+       "icon": null
+      },
+      "bibleReading": {
+       "name": "Bible",
+       "amount": 10,
+       "unit": "pages",
+       "icon": null
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "lowering today's goal completes water and raising it un-completes today",
+   "timeZone": "Europe/Jersey",
+   "owner": "6F1C2A43-0B55-4B5E-9F3D-2C1A7E9B4D10",
+   "start": "2026-10-08T12:00:00Z",
+   "steps": [
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 3150
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000935"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setHabit": {
+       "_0": "workout",
+       "completed": true
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000936"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setHabit": {
+       "_0": "walk",
+       "completed": true
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000937"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setHabit": {
+       "_0": "bibleReading",
+       "completed": true
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000938"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setDiet": {
+       "_0": "clean"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000939"
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-08T12:00:00Z",
+     "asOf": "2026-10-08T12:00:00Z",
+     "waterComplete": false,
+     "status": "inProgress"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setWater": {
+       "goal": 3000,
+       "pour": 250
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000093A"
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-08T12:00:00Z",
+     "asOf": "2026-10-08T12:00:00Z",
+     "waterComplete": true,
+     "complete": true,
+     "status": "complete"
+    },
+    {
+     "op": "streaks",
+     "asOf": "2026-10-08T12:00:00Z",
+     "current": 1
+    },
+    {
+     "op": "record",
+     "action": {
+      "setWater": {
+       "goal": 3500,
+       "pour": 250
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000093B"
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-08T12:00:00Z",
+     "asOf": "2026-10-08T12:00:00Z",
+     "waterComplete": false,
+     "complete": false,
+     "status": "inProgress"
+    },
+    {
+     "op": "streaks",
+     "asOf": "2026-10-08T12:00:00Z",
+     "current": 0
+    }
+   ]
+  },
+  {
+   "name": "a streak runs across goal changes and each day keeps its own goal",
+   "timeZone": "Europe/Jersey",
+   "owner": "6F1C2A43-0B55-4B5E-9F3D-2C1A7E9B4D10",
+   "start": "2026-10-08T12:00:00Z",
+   "steps": [
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 4000
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000093C"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setHabit": {
+       "_0": "workout",
+       "completed": true
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000093D"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setHabit": {
+       "_0": "walk",
+       "completed": true
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000093E"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setHabit": {
+       "_0": "bibleReading",
+       "completed": true
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000093F"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setDiet": {
+       "_0": "clean"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000940"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setWater": {
+       "goal": 3000,
+       "pour": 250
+      }
+     },
+     "on": "2026-10-09T12:00:00Z",
+     "at": "2026-10-09T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000941"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 3000
+      }
+     },
+     "on": "2026-10-09T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000942"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setHabit": {
+       "_0": "workout",
+       "completed": true
+      }
+     },
+     "on": "2026-10-09T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000943"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setHabit": {
+       "_0": "walk",
+       "completed": true
+      }
+     },
+     "on": "2026-10-09T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000944"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setHabit": {
+       "_0": "bibleReading",
+       "completed": true
+      }
+     },
+     "on": "2026-10-09T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000945"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setDiet": {
+       "_0": "clean"
+      }
+     },
+     "on": "2026-10-09T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000946"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setWater": {
+       "goal": 5000,
+       "pour": 1000
+      }
+     },
+     "on": "2026-10-10T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000947"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 5000
+      }
+     },
+     "on": "2026-10-10T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000948"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setHabit": {
+       "_0": "workout",
+       "completed": true
+      }
+     },
+     "on": "2026-10-10T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000949"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setHabit": {
+       "_0": "walk",
+       "completed": true
+      }
+     },
+     "on": "2026-10-10T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000094A"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setHabit": {
+       "_0": "bibleReading",
+       "completed": true
+      }
+     },
+     "on": "2026-10-10T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000094B"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setDiet": {
+       "_0": "clean"
+      }
+     },
+     "on": "2026-10-10T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000094C"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 4999
+      }
+     },
+     "on": "2026-10-11T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000094D"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setHabit": {
+       "_0": "workout",
+       "completed": true
+      }
+     },
+     "on": "2026-10-11T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000094E"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setHabit": {
+       "_0": "walk",
+       "completed": true
+      }
+     },
+     "on": "2026-10-11T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000094F"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setHabit": {
+       "_0": "bibleReading",
+       "completed": true
+      }
+     },
+     "on": "2026-10-11T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000950"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setDiet": {
+       "_0": "clean"
+      }
+     },
+     "on": "2026-10-11T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000951"
+    },
+    {
+     "op": "streaks",
+     "asOf": "2026-10-11T12:00:00Z",
+     "current": 3,
+     "best": 3
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-11T12:00:00Z",
+     "asOf": "2026-10-11T12:00:00Z",
+     "waterComplete": false
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 1
+      }
+     },
+     "on": "2026-10-11T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000952"
+    },
+    {
+     "op": "streaks",
+     "asOf": "2026-10-11T12:00:00Z",
+     "current": 4,
+     "best": 4,
+     "milestones": []
+    }
+   ]
+  },
+  {
+   "name": "a correction on a past day is judged by that day's goal",
+   "timeZone": "Europe/Jersey",
+   "owner": "6F1C2A43-0B55-4B5E-9F3D-2C1A7E9B4D10",
+   "start": "2026-10-08T12:00:00Z",
+   "steps": [
+    {
+     "op": "record",
+     "action": {
+      "setWater": {
+       "goal": 3000,
+       "pour": 250
+      }
+     },
+     "on": "2026-10-10T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000953"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 3150
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000954"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setHabit": {
+       "_0": "workout",
+       "completed": true
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000955"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setHabit": {
+       "_0": "walk",
+       "completed": true
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000956"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setHabit": {
+       "_0": "bibleReading",
+       "completed": true
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000957"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setDiet": {
+       "_0": "clean"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000958"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 3150
+      }
+     },
+     "on": "2026-10-10T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000959"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setHabit": {
+       "_0": "workout",
+       "completed": true
+      }
+     },
+     "on": "2026-10-10T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000095A"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setHabit": {
+       "_0": "walk",
+       "completed": true
+      }
+     },
+     "on": "2026-10-10T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000095B"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setHabit": {
+       "_0": "bibleReading",
+       "completed": true
+      }
+     },
+     "on": "2026-10-10T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000095C"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setDiet": {
+       "_0": "clean"
+      }
+     },
+     "on": "2026-10-10T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000095D"
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-08T12:00:00Z",
+     "asOf": "2026-10-10T12:00:00Z",
+     "waterComplete": false,
+     "status": "missed"
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-10T12:00:00Z",
+     "asOf": "2026-10-10T12:00:00Z",
+     "waterComplete": true,
+     "status": "complete"
+    },
+    {
+     "op": "record",
+     "action": {
+      "pour": {
+       "_0": 850
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-10T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000095E"
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-08T12:00:00Z",
+     "asOf": "2026-10-10T12:00:00Z",
+     "water": 4000,
+     "status": "complete"
+    }
+   ]
+  },
+  {
+   "name": "recording refuses invalid targets and changes nothing",
+   "timeZone": "Europe/Jersey",
+   "owner": "6F1C2A43-0B55-4B5E-9F3D-2C1A7E9B4D10",
+   "start": "2026-10-08T12:00:00Z",
+   "steps": [
+    {
+     "op": "record",
+     "action": {
+      "setTarget": {
+       "_0": "walk",
+       "name": "Yoga",
+       "amount": 301,
+       "unit": "minutes"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000095F",
+     "error": "invalidTarget"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setTarget": {
+       "_0": "walk",
+       "name": " Yoga"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000960",
+     "error": "invalidTarget"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setTarget": {
+       "_0": "walk",
+       "name": "xxxxxxxxxxxxxxxxxxxxx"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000961",
+     "error": "invalidTarget"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setTarget": {
+       "_0": "diet",
+       "name": "No sugar",
+       "amount": 1,
+       "unit": "pages"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000962",
+     "error": "invalidTarget"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setTarget": {
+       "_0": "walk",
+       "name": "Yoga",
+       "icon": "Yoga"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000963",
+     "error": "invalidTarget"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setTarget": {
+       "_0": "walk",
+       "name": "Yoga",
+       "amount": 30
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000964",
+     "error": "invalidTarget"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setWater": {
+       "goal": 999,
+       "pour": 250
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000965",
+     "error": "invalidTarget"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setWater": {
+       "goal": 5001,
+       "pour": 250
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000966",
+     "error": "invalidTarget"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setWater": {
+       "goal": 3000,
+       "pour": 49
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000967",
+     "error": "invalidTarget"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setWater": {
+       "goal": 1000,
+       "pour": 1001
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000968",
+     "error": "invalidTarget"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setWater": {
+       "goal": 3000,
+       "pour": 250
+      }
+     },
+     "on": "2026-10-09T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000969",
+     "error": "dateOutsideChallenge"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setTarget": {
+       "_0": "walk",
+       "name": "Yoga",
+       "icon": "trampoline"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000096A"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setTarget": {
+       "_0": "walk",
+       "name": "xxxxxxxxxxxxxxxxxxxx",
+       "amount": 1000,
+       "unit": "steps"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000096B"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setWater": {
+       "goal": 1000,
+       "pour": 1000
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000096C"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setWater": {
+       "goal": 5000,
+       "pour": 50
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000096D"
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-08T12:00:00Z",
+     "asOf": "2026-10-08T12:00:00Z",
+     "targets": {
+      "water": {
+       "goal": 5000,
+       "glass": 50
+      },
+      "workout": {
+       "name": "Workout",
+       "amount": 45,
+       "unit": "minutes",
+       "icon": null
+      },
+      "walk": {
+       "name": "xxxxxxxxxxxxxxxxxxxx",
+       "amount": 1000,
+       "unit": "steps",
+       "icon": null
+      },
+      "diet": {
+       "name": "Diet",
+       "amount": null,
+       "unit": null,
+       "icon": null
+      },
+      "bibleReading": {
+       "name": "Bible",
+       "amount": 10,
+       "unit": "pages",
+       "icon": null
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "an extra repeating every day shows each day, ticked per day, never late",
+   "timeZone": "Europe/Jersey",
+   "owner": "6F1C2A43-0B55-4B5E-9F3D-2C1A7E9B4D10",
+   "start": "2026-10-08T12:00:00Z",
+   "steps": [
+    {
+     "op": "record",
+     "action": {
+      "defineExtra": {
+       "id": "00000000-0000-4000-8000-00000000096E",
+       "title": "Stretch"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000970"
+    },
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-00000000096E",
+       "every": 1
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000971"
+    },
+    {
+     "op": "record",
+     "action": {
+      "defineExtra": {
+       "id": "00000000-0000-4000-8000-00000000096F",
+       "title": "Book dentist"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000972"
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-08T12:00:00Z",
+     "asOf": "2026-10-11T12:00:00Z",
+     "extras": [
+      "Stretch",
+      "Book dentist"
+     ]
+    },
+    {
+     "op": "record",
+     "action": {
+      "setExtra": {
+       "id": "00000000-0000-4000-8000-00000000096E",
+       "completed": true
+      }
+     },
+     "on": "2026-10-09T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000973"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setExtra": {
+       "id": "00000000-0000-4000-8000-00000000096E",
+       "completed": true
+      }
+     },
+     "on": "2026-10-10T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000974"
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-09T12:00:00Z",
+     "asOf": "2026-10-11T12:00:00Z",
+     "extras": [
+      "Stretch ✓",
+      "Book dentist late"
+     ],
+     "extrasDone": 1,
+     "extrasTotal": 2
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-10T12:00:00Z",
+     "asOf": "2026-10-11T12:00:00Z",
+     "extras": [
+      "Stretch ✓",
+      "Book dentist late"
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-11T12:00:00Z",
+     "asOf": "2026-10-11T12:00:00Z",
+     "extras": [
+      "Stretch",
+      "Book dentist late"
+     ]
+    },
+    {
+     "op": "record",
+     "action": {
+      "setExtra": {
+       "id": "00000000-0000-4000-8000-00000000096F",
+       "completed": true
+      }
+     },
+     "on": "2026-10-11T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000975"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setExtra": {
+       "id": "00000000-0000-4000-8000-00000000096E",
+       "completed": true
+      }
+     },
+     "on": "2026-10-11T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000976"
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-11T12:00:00Z",
+     "asOf": "2026-10-11T12:00:00Z",
+     "extras": [
+      "Stretch ✓",
+      "Book dentist ✓ late"
+     ],
+     "allExtrasDone": true
+    },
+    {
+     "op": "openExtras",
+     "asOf": "2026-10-11T12:00:00Z",
+     "ids": [
+      "00000000-0000-4000-8000-00000000096E"
+     ]
+    },
+    {
+     "op": "allExtras",
+     "extras": [
+      {
+       "id": "00000000-0000-4000-8000-00000000096E",
+       "title": "Stretch",
+       "firstDay": "2026-10-07T23:00:00Z",
+       "completedOn": null,
+       "archivedFrom": null,
+       "schedule": "every 1"
+      },
+      {
+       "id": "00000000-0000-4000-8000-00000000096F",
+       "title": "Book dentist",
+       "firstDay": "2026-10-07T23:00:00Z",
+       "completedOn": "2026-10-10T23:00:00Z",
+       "archivedFrom": null,
+       "schedule": "once"
+      }
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-11T12:00:00Z",
+     "asOf": "2026-10-11T12:00:00Z",
+     "complete": false
+    }
+   ]
+  },
+  {
+   "name": "a weekday extra follows the zone's calendar across daylight saving (Europe/Jersey)",
+   "timeZone": "Europe/Jersey",
+   "owner": "6F1C2A43-0B55-4B5E-9F3D-2C1A7E9B4D10",
+   "start": "2026-10-23T11:00:00Z",
+   "steps": [
+    {
+     "op": "record",
+     "action": {
+      "defineExtra": {
+       "id": "00000000-0000-4000-8000-000000000977",
+       "title": "Pack lunch"
+      }
+     },
+     "on": "2026-10-23T11:00:00Z",
+     "at": "2026-10-23T11:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000978"
+    },
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-000000000977",
+       "weekdays": [
+        1,
+        2,
+        3,
+        4,
+        5
+       ]
+      }
+     },
+     "on": "2026-10-23T11:00:00Z",
+     "at": "2026-10-23T11:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000979"
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-23T11:00:00Z",
+     "asOf": "2026-10-26T12:00:00Z",
+     "extras": [
+      "Pack lunch"
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-24T11:00:00Z",
+     "asOf": "2026-10-26T12:00:00Z",
+     "extras": []
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-25T12:00:00Z",
+     "asOf": "2026-10-26T12:00:00Z",
+     "extras": []
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-26T12:00:00Z",
+     "asOf": "2026-10-26T12:00:00Z",
+     "extras": [
+      "Pack lunch"
+     ]
+    },
+    {
+     "op": "openExtras",
+     "asOf": "2026-10-25T12:00:00Z",
+     "ids": [
+      "00000000-0000-4000-8000-000000000977"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "a weekday extra follows the zone's calendar across daylight saving (America/New_York)",
+   "timeZone": "America/New_York",
+   "owner": "6F1C2A43-0B55-4B5E-9F3D-2C1A7E9B4D10",
+   "start": "2026-10-30T16:00:00Z",
+   "steps": [
+    {
+     "op": "record",
+     "action": {
+      "defineExtra": {
+       "id": "00000000-0000-4000-8000-00000000097A",
+       "title": "Pack lunch"
+      }
+     },
+     "on": "2026-10-30T16:00:00Z",
+     "at": "2026-10-30T16:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000097B"
+    },
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-00000000097A",
+       "weekdays": [
+        1,
+        2,
+        3,
+        4,
+        5
+       ]
+      }
+     },
+     "on": "2026-10-30T16:00:00Z",
+     "at": "2026-10-30T16:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000097C"
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-30T16:00:00Z",
+     "asOf": "2026-11-02T17:00:00Z",
+     "extras": [
+      "Pack lunch"
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-31T16:00:00Z",
+     "asOf": "2026-11-02T17:00:00Z",
+     "extras": []
+    },
+    {
+     "op": "summary",
+     "on": "2026-11-01T17:00:00Z",
+     "asOf": "2026-11-02T17:00:00Z",
+     "extras": []
+    },
+    {
+     "op": "summary",
+     "on": "2026-11-02T17:00:00Z",
+     "asOf": "2026-11-02T17:00:00Z",
+     "extras": [
+      "Pack lunch"
+     ]
+    },
+    {
+     "op": "openExtras",
+     "asOf": "2026-11-01T17:00:00Z",
+     "ids": [
+      "00000000-0000-4000-8000-00000000097A"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "a weekday extra follows the zone's calendar across daylight saving (Australia/Sydney)",
+   "timeZone": "Australia/Sydney",
+   "owner": "6F1C2A43-0B55-4B5E-9F3D-2C1A7E9B4D10",
+   "start": "2026-10-02T02:00:00Z",
+   "steps": [
+    {
+     "op": "record",
+     "action": {
+      "defineExtra": {
+       "id": "00000000-0000-4000-8000-00000000097D",
+       "title": "Pack lunch"
+      }
+     },
+     "on": "2026-10-02T02:00:00Z",
+     "at": "2026-10-02T02:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000097E"
+    },
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-00000000097D",
+       "weekdays": [
+        1,
+        2,
+        3,
+        4,
+        5
+       ]
+      }
+     },
+     "on": "2026-10-02T02:00:00Z",
+     "at": "2026-10-02T02:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000097F"
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-02T02:00:00Z",
+     "asOf": "2026-10-05T01:00:00Z",
+     "extras": [
+      "Pack lunch"
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-03T02:00:00Z",
+     "asOf": "2026-10-05T01:00:00Z",
+     "extras": []
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-04T01:00:00Z",
+     "asOf": "2026-10-05T01:00:00Z",
+     "extras": []
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-05T01:00:00Z",
+     "asOf": "2026-10-05T01:00:00Z",
+     "extras": [
+      "Pack lunch"
+     ]
+    },
+    {
+     "op": "openExtras",
+     "asOf": "2026-10-04T01:00:00Z",
+     "ids": [
+      "00000000-0000-4000-8000-00000000097D"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "every N days counts from the day the rule was set; earlier days keep the to-do",
+   "timeZone": "Europe/Jersey",
+   "owner": "6F1C2A43-0B55-4B5E-9F3D-2C1A7E9B4D10",
+   "start": "2026-10-08T12:00:00Z",
+   "steps": [
+    {
+     "op": "record",
+     "action": {
+      "defineExtra": {
+       "id": "00000000-0000-4000-8000-000000000980",
+       "title": "Water plants"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000981"
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-08T12:00:00Z",
+     "asOf": "2026-10-08T12:00:00Z",
+     "extras": [
+      "Water plants"
+     ]
+    },
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-000000000980",
+       "every": 2
+      }
+     },
+     "on": "2026-10-09T12:00:00Z",
+     "at": "2026-10-09T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000982"
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-08T12:00:00Z",
+     "asOf": "2026-10-13T12:00:00Z",
+     "extras": [
+      "Water plants"
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-09T12:00:00Z",
+     "asOf": "2026-10-13T12:00:00Z",
+     "extras": [
+      "Water plants"
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-10T12:00:00Z",
+     "asOf": "2026-10-13T12:00:00Z",
+     "extras": []
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-11T12:00:00Z",
+     "asOf": "2026-10-13T12:00:00Z",
+     "extras": [
+      "Water plants"
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-12T12:00:00Z",
+     "asOf": "2026-10-13T12:00:00Z",
+     "extras": []
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-13T12:00:00Z",
+     "asOf": "2026-10-13T12:00:00Z",
+     "extras": [
+      "Water plants"
+     ]
+    },
+    {
+     "op": "allExtras",
+     "extras": [
+      {
+       "id": "00000000-0000-4000-8000-000000000980",
+       "title": "Water plants",
+       "firstDay": "2026-10-07T23:00:00Z",
+       "completedOn": null,
+       "archivedFrom": null,
+       "schedule": "every 2"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "a schedule change applies from its day and archive ends a repeating extra",
+   "timeZone": "Europe/Jersey",
+   "owner": "6F1C2A43-0B55-4B5E-9F3D-2C1A7E9B4D10",
+   "start": "2026-10-08T12:00:00Z",
+   "steps": [
+    {
+     "op": "record",
+     "action": {
+      "defineExtra": {
+       "id": "00000000-0000-4000-8000-000000000983",
+       "title": "Gym class"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000984"
+    },
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-000000000983",
+       "weekdays": [
+        4
+       ]
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000985"
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-08T12:00:00Z",
+     "asOf": "2026-10-08T12:00:00Z",
+     "extras": [
+      "Gym class"
+     ]
+    },
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-000000000983",
+       "weekdays": [
+        4
+       ]
+      }
+     },
+     "on": "2026-10-09T12:00:00Z",
+     "at": "2026-10-09T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000986",
+     "returns": null
+    },
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-000000000983",
+       "weekdays": [
+        6,
+        7
+       ]
+      }
+     },
+     "on": "2026-10-09T12:00:00Z",
+     "at": "2026-10-09T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000987"
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-08T12:00:00Z",
+     "asOf": "2026-10-11T12:00:00Z",
+     "extras": [
+      "Gym class"
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-09T12:00:00Z",
+     "asOf": "2026-10-11T12:00:00Z",
+     "extras": []
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-10T12:00:00Z",
+     "asOf": "2026-10-11T12:00:00Z",
+     "extras": [
+      "Gym class"
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-11T12:00:00Z",
+     "asOf": "2026-10-11T12:00:00Z",
+     "extras": [
+      "Gym class"
+     ]
+    },
+    {
+     "op": "record",
+     "action": {
+      "archiveExtra": {
+       "id": "00000000-0000-4000-8000-000000000983"
+      }
+     },
+     "on": "2026-10-11T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000988"
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-10T12:00:00Z",
+     "asOf": "2026-10-11T12:00:00Z",
+     "extras": [
+      "Gym class"
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-11T12:00:00Z",
+     "asOf": "2026-10-11T12:00:00Z",
+     "extras": []
+    },
+    {
+     "op": "openExtras",
+     "asOf": "2026-10-11T12:00:00Z",
+     "ids": []
+    },
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-000000000983",
+       "every": 1
+      }
+     },
+     "on": "2026-10-11T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000989",
+     "error": "archivedExtra"
+    },
+    {
+     "op": "allExtras",
+     "extras": [
+      {
+       "id": "00000000-0000-4000-8000-000000000983",
+       "title": "Gym class",
+       "firstDay": "2026-10-07T23:00:00Z",
+       "completedOn": null,
+       "archivedFrom": "2026-10-10T23:00:00Z",
+       "schedule": "weekdays 6 7"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "a repeating extra switched back to a to-do is a fresh open to-do from that day",
+   "timeZone": "Europe/Jersey",
+   "owner": "6F1C2A43-0B55-4B5E-9F3D-2C1A7E9B4D10",
+   "start": "2026-10-08T12:00:00Z",
+   "steps": [
+    {
+     "op": "record",
+     "action": {
+      "defineExtra": {
+       "id": "00000000-0000-4000-8000-00000000098A",
+       "title": "Stretch"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000098B"
+    },
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-00000000098A",
+       "every": 1
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000098C"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setExtra": {
+       "id": "00000000-0000-4000-8000-00000000098A",
+       "completed": true
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000098D"
+    },
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-00000000098A"
+      }
+     },
+     "on": "2026-10-09T12:00:00Z",
+     "at": "2026-10-09T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000098E"
+    },
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-00000000098A"
+      }
+     },
+     "on": "2026-10-09T12:00:00Z",
+     "at": "2026-10-09T12:00:00Z",
+     "id": "00000000-0000-4000-8000-00000000098F",
+     "returns": null
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-08T12:00:00Z",
+     "asOf": "2026-10-11T12:00:00Z",
+     "extras": [
+      "Stretch ✓"
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-09T12:00:00Z",
+     "asOf": "2026-10-11T12:00:00Z",
+     "extras": [
+      "Stretch"
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-10T12:00:00Z",
+     "asOf": "2026-10-11T12:00:00Z",
+     "extras": [
+      "Stretch late"
+     ]
+    },
+    {
+     "op": "record",
+     "action": {
+      "setExtra": {
+       "id": "00000000-0000-4000-8000-00000000098A",
+       "completed": true
+      }
+     },
+     "on": "2026-10-10T12:00:00Z",
+     "at": "2026-10-11T12:00:00Z",
+     "id": "00000000-0000-4000-8000-000000000990"
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-10T12:00:00Z",
+     "asOf": "2026-10-11T12:00:00Z",
+     "extras": [
+      "Stretch ✓ late"
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-11T12:00:00Z",
+     "asOf": "2026-10-11T12:00:00Z",
+     "extras": []
+    },
+    {
+     "op": "openExtras",
+     "asOf": "2026-10-11T12:00:00Z",
+     "ids": []
+    },
+    {
+     "op": "openExtras",
+     "asOf": "2026-10-09T12:00:00Z",
+     "ids": [
+      "00000000-0000-4000-8000-00000000098A"
+     ]
+    },
+    {
+     "op": "allExtras",
+     "extras": [
+      {
+       "id": "00000000-0000-4000-8000-00000000098A",
+       "title": "Stretch",
+       "firstDay": "2026-10-07T23:00:00Z",
+       "completedOn": "2026-10-09T23:00:00Z",
+       "archivedFrom": null,
+       "schedule": "once"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "schedules from several devices apply from the definition day, then by event order (in order)",
+   "timeZone": "Europe/Jersey",
+   "owner": "6F1C2A43-0B55-4B5E-9F3D-2C1A7E9B4D10",
+   "start": "2026-10-08T12:00:00Z",
+   "steps": [
+    {
+     "op": "merge",
+     "events": [
+      {
+       "id": "00000000-0000-4000-8000-000000000995",
+       "day": 813193200,
+       "recordedAt": 813240000,
+       "action": {
+        "defineExtra": {
+         "id": "00000000-0000-4000-8000-000000000991",
+         "title": "Read"
+        }
+       },
+       "deviceID": "MAC"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000996",
+       "day": 813193200,
+       "recordedAt": 813232800,
+       "action": {
+        "scheduleExtra": {
+         "id": "00000000-0000-4000-8000-000000000991",
+         "weekdays": [
+          5
+         ]
+        }
+       },
+       "deviceID": "PHONE"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000997",
+       "day": 813106800,
+       "recordedAt": 813236400,
+       "action": {
+        "scheduleExtra": {
+         "id": "00000000-0000-4000-8000-000000000991",
+         "weekdays": [
+          4
+         ]
+        }
+       },
+       "deviceID": "PHONE"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000998",
+       "day": 813106800,
+       "recordedAt": 813239900,
+       "action": {
+        "setExtra": {
+         "id": "00000000-0000-4000-8000-000000000991",
+         "completed": true
+        }
+       },
+       "deviceID": "PHONE"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000993",
+       "day": 813279600,
+       "recordedAt": 813326400,
+       "action": {
+        "scheduleExtra": {
+         "id": "00000000-0000-4000-8000-000000000991",
+         "every": 3
+        }
+       },
+       "deviceID": "PHONE"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000994",
+       "day": 813279600,
+       "recordedAt": 813326400,
+       "action": {
+        "scheduleExtra": {
+         "id": "00000000-0000-4000-8000-000000000991",
+         "weekdays": [
+          6
+         ]
+        }
+       },
+       "deviceID": "TABLET"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000999",
+       "day": 813279600,
+       "recordedAt": 813326400,
+       "action": {
+        "defineExtra": {
+         "id": "00000000-0000-4000-8000-000000000992",
+         "title": "Journal"
+        }
+       },
+       "deviceID": "MAC"
+      }
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-08T12:00:00Z",
+     "asOf": "2026-10-11T12:00:00Z",
+     "extras": []
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-09T12:00:00Z",
+     "asOf": "2026-10-11T12:00:00Z",
+     "extras": [
+      "Read"
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-10T12:00:00Z",
+     "asOf": "2026-10-13T12:00:00Z",
+     "extras": [
+      "Read",
+      "Journal"
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-11T12:00:00Z",
+     "asOf": "2026-10-13T12:00:00Z",
+     "extras": [
+      "Journal late"
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-13T12:00:00Z",
+     "asOf": "2026-10-13T12:00:00Z",
+     "extras": [
+      "Journal late"
+     ]
+    },
+    {
+     "op": "allExtras",
+     "extras": [
+      {
+       "id": "00000000-0000-4000-8000-000000000991",
+       "title": "Read",
+       "firstDay": "2026-10-08T23:00:00Z",
+       "completedOn": null,
+       "archivedFrom": null,
+       "schedule": "weekdays 6"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000992",
+       "title": "Journal",
+       "firstDay": "2026-10-09T23:00:00Z",
+       "completedOn": null,
+       "archivedFrom": null,
+       "schedule": "once"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "schedules from several devices apply from the definition day, then by event order (reversed)",
+   "timeZone": "Europe/Jersey",
+   "owner": "6F1C2A43-0B55-4B5E-9F3D-2C1A7E9B4D10",
+   "start": "2026-10-08T12:00:00Z",
+   "steps": [
+    {
+     "op": "merge",
+     "events": [
+      {
+       "id": "00000000-0000-4000-8000-000000000999",
+       "day": 813279600,
+       "recordedAt": 813326400,
+       "action": {
+        "defineExtra": {
+         "id": "00000000-0000-4000-8000-000000000992",
+         "title": "Journal"
+        }
+       },
+       "deviceID": "MAC"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000994",
+       "day": 813279600,
+       "recordedAt": 813326400,
+       "action": {
+        "scheduleExtra": {
+         "id": "00000000-0000-4000-8000-000000000991",
+         "weekdays": [
+          6
+         ]
+        }
+       },
+       "deviceID": "TABLET"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000993",
+       "day": 813279600,
+       "recordedAt": 813326400,
+       "action": {
+        "scheduleExtra": {
+         "id": "00000000-0000-4000-8000-000000000991",
+         "every": 3
+        }
+       },
+       "deviceID": "PHONE"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000998",
+       "day": 813106800,
+       "recordedAt": 813239900,
+       "action": {
+        "setExtra": {
+         "id": "00000000-0000-4000-8000-000000000991",
+         "completed": true
+        }
+       },
+       "deviceID": "PHONE"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000997",
+       "day": 813106800,
+       "recordedAt": 813236400,
+       "action": {
+        "scheduleExtra": {
+         "id": "00000000-0000-4000-8000-000000000991",
+         "weekdays": [
+          4
+         ]
+        }
+       },
+       "deviceID": "PHONE"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000996",
+       "day": 813193200,
+       "recordedAt": 813232800,
+       "action": {
+        "scheduleExtra": {
+         "id": "00000000-0000-4000-8000-000000000991",
+         "weekdays": [
+          5
+         ]
+        }
+       },
+       "deviceID": "PHONE"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000995",
+       "day": 813193200,
+       "recordedAt": 813240000,
+       "action": {
+        "defineExtra": {
+         "id": "00000000-0000-4000-8000-000000000991",
+         "title": "Read"
+        }
+       },
+       "deviceID": "MAC"
+      }
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-08T12:00:00Z",
+     "asOf": "2026-10-11T12:00:00Z",
+     "extras": []
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-09T12:00:00Z",
+     "asOf": "2026-10-11T12:00:00Z",
+     "extras": [
+      "Read"
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-10T12:00:00Z",
+     "asOf": "2026-10-13T12:00:00Z",
+     "extras": [
+      "Read",
+      "Journal"
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-11T12:00:00Z",
+     "asOf": "2026-10-13T12:00:00Z",
+     "extras": [
+      "Journal late"
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-13T12:00:00Z",
+     "asOf": "2026-10-13T12:00:00Z",
+     "extras": [
+      "Journal late"
+     ]
+    },
+    {
+     "op": "allExtras",
+     "extras": [
+      {
+       "id": "00000000-0000-4000-8000-000000000991",
+       "title": "Read",
+       "firstDay": "2026-10-08T23:00:00Z",
+       "completedOn": null,
+       "archivedFrom": null,
+       "schedule": "weekdays 6"
+      },
+      {
+       "id": "00000000-0000-4000-8000-000000000992",
+       "title": "Journal",
+       "firstDay": "2026-10-09T23:00:00Z",
+       "completedOn": null,
+       "archivedFrom": null,
+       "schedule": "once"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "a to-do rule after a to-do changes nothing, so a done to-do stays done",
+   "timeZone": "Europe/Jersey",
+   "owner": "6F1C2A43-0B55-4B5E-9F3D-2C1A7E9B4D10",
+   "start": "2026-10-08T12:00:00Z",
+   "steps": [
+    {
+     "op": "merge",
+     "events": [
+      {
+       "id": "00000000-0000-4000-8000-00000000099B",
+       "day": 813106800,
+       "recordedAt": 813153600,
+       "action": {
+        "defineExtra": {
+         "id": "00000000-0000-4000-8000-00000000099A",
+         "title": "Stretch"
+        }
+       },
+       "deviceID": "MAC"
+      },
+      {
+       "id": "00000000-0000-4000-8000-00000000099C",
+       "day": 813193200,
+       "recordedAt": 813240000,
+       "action": {
+        "scheduleExtra": {
+         "id": "00000000-0000-4000-8000-00000000099A",
+         "every": 1
+        }
+       },
+       "deviceID": "MAC"
+      },
+      {
+       "id": "00000000-0000-4000-8000-00000000099D",
+       "day": 813279600,
+       "recordedAt": 813326400,
+       "action": {
+        "scheduleExtra": {
+         "id": "00000000-0000-4000-8000-00000000099A"
+        }
+       },
+       "deviceID": "PHONE"
+      },
+      {
+       "id": "00000000-0000-4000-8000-00000000099E",
+       "day": 813279600,
+       "recordedAt": 813326460,
+       "action": {
+        "setExtra": {
+         "id": "00000000-0000-4000-8000-00000000099A",
+         "completed": true
+        }
+       },
+       "deviceID": "PHONE"
+      },
+      {
+       "id": "00000000-0000-4000-8000-00000000099F",
+       "day": 813366000,
+       "recordedAt": 813412800,
+       "action": {
+        "scheduleExtra": {
+         "id": "00000000-0000-4000-8000-00000000099A"
+        }
+       },
+       "deviceID": "MAC"
+      }
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-09T12:00:00Z",
+     "asOf": "2026-10-12T12:00:00Z",
+     "extras": [
+      "Stretch"
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-10T12:00:00Z",
+     "asOf": "2026-10-12T12:00:00Z",
+     "extras": [
+      "Stretch ✓"
+     ]
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-11T12:00:00Z",
+     "asOf": "2026-10-12T12:00:00Z",
+     "extras": []
+    },
+    {
+     "op": "summary",
+     "on": "2026-10-12T12:00:00Z",
+     "asOf": "2026-10-12T12:00:00Z",
+     "extras": []
+    },
+    {
+     "op": "allExtras",
+     "extras": [
+      {
+       "id": "00000000-0000-4000-8000-00000000099A",
+       "title": "Stretch",
+       "firstDay": "2026-10-07T23:00:00Z",
+       "completedOn": "2026-10-09T23:00:00Z",
+       "archivedFrom": null,
+       "schedule": "once"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "the cap counts open to-dos and active repeating extras",
+   "timeZone": "Europe/Jersey",
+   "owner": "6F1C2A43-0B55-4B5E-9F3D-2C1A7E9B4D10",
+   "start": "2026-10-08T12:00:00Z",
+   "steps": [
+    {
+     "op": "record",
+     "action": {
+      "defineExtra": {
+       "id": "00000000-0000-4000-8000-0000000009A0",
+       "title": "Extra 0"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009AA"
+    },
+    {
+     "op": "record",
+     "action": {
+      "defineExtra": {
+       "id": "00000000-0000-4000-8000-0000000009A1",
+       "title": "Extra 1"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009AB"
+    },
+    {
+     "op": "record",
+     "action": {
+      "defineExtra": {
+       "id": "00000000-0000-4000-8000-0000000009A2",
+       "title": "Extra 2"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009AC"
+    },
+    {
+     "op": "record",
+     "action": {
+      "defineExtra": {
+       "id": "00000000-0000-4000-8000-0000000009A3",
+       "title": "Extra 3"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009AD"
+    },
+    {
+     "op": "record",
+     "action": {
+      "defineExtra": {
+       "id": "00000000-0000-4000-8000-0000000009A4",
+       "title": "Extra 4"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009AE"
+    },
+    {
+     "op": "record",
+     "action": {
+      "defineExtra": {
+       "id": "00000000-0000-4000-8000-0000000009A5",
+       "title": "Extra 5"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009AF"
+    },
+    {
+     "op": "record",
+     "action": {
+      "defineExtra": {
+       "id": "00000000-0000-4000-8000-0000000009A6",
+       "title": "Extra 6"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009B0"
+    },
+    {
+     "op": "record",
+     "action": {
+      "defineExtra": {
+       "id": "00000000-0000-4000-8000-0000000009A7",
+       "title": "Extra 7"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009B1"
+    },
+    {
+     "op": "record",
+     "action": {
+      "defineExtra": {
+       "id": "00000000-0000-4000-8000-0000000009A8",
+       "title": "Extra 8"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009B2"
+    },
+    {
+     "op": "record",
+     "action": {
+      "defineExtra": {
+       "id": "00000000-0000-4000-8000-0000000009A9",
+       "title": "Extra 9"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009B3"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setExtra": {
+       "id": "00000000-0000-4000-8000-0000000009A0",
+       "completed": true
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009B4"
+    },
+    {
+     "op": "record",
+     "action": {
+      "setExtra": {
+       "id": "00000000-0000-4000-8000-0000000009A1",
+       "completed": true
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009B5"
+    },
+    {
+     "op": "openExtrasCount",
+     "asOf": "2026-10-08T12:00:00Z",
+     "count": 8
+    },
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-0000000009A0",
+       "every": 1
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009B6"
+    },
+    {
+     "op": "openExtrasCount",
+     "asOf": "2026-10-08T12:00:00Z",
+     "count": 9
+    },
+    {
+     "op": "record",
+     "action": {
+      "defineExtra": {
+       "id": "00000000-0000-4000-8000-0000000009B7",
+       "title": "Tenth"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009B8"
+    },
+    {
+     "op": "openExtrasCount",
+     "asOf": "2026-10-08T12:00:00Z",
+     "count": 10
+    },
+    {
+     "op": "record",
+     "action": {
+      "defineExtra": {
+       "id": "00000000-0000-4000-8000-0000000009B9",
+       "title": "Eleventh"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009BA",
+     "error": "tooManyExtras"
+    },
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-0000000009A1",
+       "weekdays": [
+        1
+       ]
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009BB",
+     "error": "tooManyExtras"
+    },
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-0000000009A2",
+       "every": 2
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009BC"
+    },
+    {
+     "op": "openExtrasCount",
+     "asOf": "2026-10-08T12:00:00Z",
+     "count": 10
+    },
+    {
+     "op": "record",
+     "action": {
+      "archiveExtra": {
+       "id": "00000000-0000-4000-8000-0000000009A0"
+      }
+     },
+     "on": "2026-10-09T12:00:00Z",
+     "at": "2026-10-09T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009BD"
+    },
+    {
+     "op": "openExtrasCount",
+     "asOf": "2026-10-09T12:00:00Z",
+     "count": 9
+    },
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-0000000009A1",
+       "weekdays": [
+        1
+       ]
+      }
+     },
+     "on": "2026-10-09T12:00:00Z",
+     "at": "2026-10-09T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009BE"
+    },
+    {
+     "op": "openExtrasCount",
+     "asOf": "2026-10-09T12:00:00Z",
+     "count": 10
+    }
+   ]
+  },
+  {
+   "name": "scheduling refuses unknown extras and invalid rules",
+   "timeZone": "Europe/Jersey",
+   "owner": "6F1C2A43-0B55-4B5E-9F3D-2C1A7E9B4D10",
+   "start": "2026-10-08T12:00:00Z",
+   "steps": [
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-0000000009C0",
+       "every": 1
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009C1",
+     "error": "unknownExtra"
+    },
+    {
+     "op": "record",
+     "action": {
+      "defineExtra": {
+       "id": "00000000-0000-4000-8000-0000000009BF",
+       "title": "Stretch"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009C2"
+    },
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-0000000009BF",
+       "every": 0
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009C3",
+     "error": "invalidSchedule"
+    },
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-0000000009BF",
+       "every": 31
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009C4",
+     "error": "invalidSchedule"
+    },
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-0000000009BF",
+       "weekdays": []
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009C5",
+     "error": "invalidSchedule"
+    },
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-0000000009BF",
+       "weekdays": [
+        0
+       ]
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009C6",
+     "error": "invalidSchedule"
+    },
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-0000000009BF",
+       "weekdays": [
+        8
+       ]
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009C7",
+     "error": "invalidSchedule"
+    },
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-0000000009BF",
+       "weekdays": [
+        1,
+        1
+       ]
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009C8",
+     "error": "invalidSchedule"
+    },
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-0000000009BF",
+       "weekdays": [
+        1
+       ],
+       "every": 2
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009C9",
+     "error": "invalidSchedule"
+    },
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-0000000009BF"
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009CA",
+     "returns": null
+    },
+    {
+     "op": "merge",
+     "events": [
+      {
+       "id": "00000000-0000-4000-8000-0000000009CB",
+       "day": 813106800,
+       "recordedAt": 813153600,
+       "action": {
+        "scheduleExtra": {
+         "id": "00000000-0000-4000-8000-0000000009CC",
+         "every": 1
+        }
+       },
+       "deviceID": "MacB"
+      }
+     ],
+     "error": "unknownExtra"
+    },
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-0000000009BF",
+       "every": 30
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009CD"
+    },
+    {
+     "op": "record",
+     "action": {
+      "scheduleExtra": {
+       "id": "00000000-0000-4000-8000-0000000009BF",
+       "weekdays": [
+        7,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+       ]
+      }
+     },
+     "on": "2026-10-08T12:00:00Z",
+     "at": "2026-10-08T12:00:00Z",
+     "id": "00000000-0000-4000-8000-0000000009CE"
+    },
+    {
+     "op": "allExtras",
+     "extras": [
+      {
+       "id": "00000000-0000-4000-8000-0000000009BF",
+       "title": "Stretch",
+       "firstDay": "2026-10-07T23:00:00Z",
+       "completedOn": null,
+       "archivedFrom": null,
+       "schedule": "weekdays 1 2 3 4 5 6 7"
+      }
+     ]
+    }
+   ]
   }
  ],
  "encoding": [
@@ -28703,6 +32547,210 @@
     }
    },
    "sorted": "{\"setExtra\":{\"completed\":false,\"id\":\"E1E1E1E1-0000-4000-8000-000000000001\"}}"
+  },
+  {
+   "kind": "action",
+   "value": {
+    "setTarget": {
+     "_0": "walk",
+     "name": "Yoga",
+     "amount": 30,
+     "unit": "minutes",
+     "icon": "yoga"
+    }
+   },
+   "sorted": "{\"setTarget\":{\"_0\":\"walk\",\"amount\":30,\"icon\":\"yoga\",\"name\":\"Yoga\",\"unit\":\"minutes\"}}"
+  },
+  {
+   "kind": "action",
+   "value": {
+    "setTarget": {
+     "_0": "bibleReading",
+     "name": "Audiobook",
+     "amount": 20,
+     "unit": "minutes",
+     "icon": "headphones"
+    }
+   },
+   "sorted": "{\"setTarget\":{\"_0\":\"bibleReading\",\"amount\":20,\"icon\":\"headphones\",\"name\":\"Audiobook\",\"unit\":\"minutes\"}}"
+  },
+  {
+   "kind": "action",
+   "value": {
+    "setTarget": {
+     "_0": "workout",
+     "name": "Gym"
+    }
+   },
+   "sorted": "{\"setTarget\":{\"_0\":\"workout\",\"name\":\"Gym\"}}"
+  },
+  {
+   "kind": "action",
+   "value": {
+    "setTarget": {
+     "_0": "diet",
+     "name": "No sugar"
+    }
+   },
+   "sorted": "{\"setTarget\":{\"_0\":\"diet\",\"name\":\"No sugar\"}}"
+  },
+  {
+   "kind": "action",
+   "value": {
+    "setTarget": {
+     "_0": "walk",
+     "name": "Steps",
+     "amount": 10000,
+     "unit": "steps"
+    }
+   },
+   "sorted": "{\"setTarget\":{\"_0\":\"walk\",\"amount\":10000,\"name\":\"Steps\",\"unit\":\"steps\"}}"
+  },
+  {
+   "kind": "action",
+   "value": {
+    "setTarget": {
+     "_0": "bibleReading",
+     "name": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+     "amount": 500,
+     "unit": "pages"
+    }
+   },
+   "sorted": "{\"setTarget\":{\"_0\":\"bibleReading\",\"amount\":500,\"name\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀\",\"unit\":\"pages\"}}"
+  },
+  {
+   "kind": "action",
+   "value": {
+    "setTarget": {
+     "_0": "workout",
+     "name": "Run",
+     "icon": "run"
+    }
+   },
+   "sorted": "{\"setTarget\":{\"_0\":\"workout\",\"icon\":\"run\",\"name\":\"Run\"}}"
+  },
+  {
+   "kind": "action",
+   "value": {
+    "setTarget": {
+     "_0": "walk",
+     "name": "Café / parc",
+     "amount": 2,
+     "unit": "kilometres"
+    }
+   },
+   "sorted": "{\"setTarget\":{\"_0\":\"walk\",\"amount\":2,\"name\":\"Café \\/ parc\",\"unit\":\"kilometres\"}}"
+  },
+  {
+   "kind": "action",
+   "value": {
+    "setTarget": {
+     "_0": "walk",
+     "name": "Hike",
+     "amount": 60,
+     "unit": "miles"
+    }
+   },
+   "sorted": "{\"setTarget\":{\"_0\":\"walk\",\"amount\":60,\"name\":\"Hike\",\"unit\":\"miles\"}}"
+  },
+  {
+   "kind": "action",
+   "value": {
+    "setTarget": {
+     "_0": "bibleReading",
+     "name": "Psalms",
+     "amount": 50,
+     "unit": "chapters"
+    }
+   },
+   "sorted": "{\"setTarget\":{\"_0\":\"bibleReading\",\"amount\":50,\"name\":\"Psalms\",\"unit\":\"chapters\"}}"
+  },
+  {
+   "kind": "action",
+   "value": {
+    "setWater": {
+     "goal": 3000,
+     "pour": 250
+    }
+   },
+   "sorted": "{\"setWater\":{\"goal\":3000,\"pour\":250}}"
+  },
+  {
+   "kind": "action",
+   "value": {
+    "setWater": {
+     "goal": 5000,
+     "pour": 1000
+    }
+   },
+   "sorted": "{\"setWater\":{\"goal\":5000,\"pour\":1000}}"
+  },
+  {
+   "kind": "action",
+   "value": {
+    "setWater": {
+     "goal": 1000,
+     "pour": 50
+    }
+   },
+   "sorted": "{\"setWater\":{\"goal\":1000,\"pour\":50}}"
+  },
+  {
+   "kind": "action",
+   "value": {
+    "scheduleExtra": {
+     "id": "E1E1E1E1-0000-4000-8000-000000000001",
+     "weekdays": [
+      1,
+      2,
+      3,
+      4,
+      5
+     ]
+    }
+   },
+   "sorted": "{\"scheduleExtra\":{\"id\":\"E1E1E1E1-0000-4000-8000-000000000001\",\"weekdays\":[1,2,3,4,5]}}"
+  },
+  {
+   "kind": "action",
+   "value": {
+    "scheduleExtra": {
+     "id": "E1E1E1E1-0000-4000-8000-000000000001",
+     "weekdays": [
+      7
+     ]
+    }
+   },
+   "sorted": "{\"scheduleExtra\":{\"id\":\"E1E1E1E1-0000-4000-8000-000000000001\",\"weekdays\":[7]}}"
+  },
+  {
+   "kind": "action",
+   "value": {
+    "scheduleExtra": {
+     "id": "E1E1E1E1-0000-4000-8000-000000000001",
+     "every": 1
+    }
+   },
+   "sorted": "{\"scheduleExtra\":{\"every\":1,\"id\":\"E1E1E1E1-0000-4000-8000-000000000001\"}}"
+  },
+  {
+   "kind": "action",
+   "value": {
+    "scheduleExtra": {
+     "id": "E1E1E1E1-0000-4000-8000-000000000001",
+     "every": 30
+    }
+   },
+   "sorted": "{\"scheduleExtra\":{\"every\":30,\"id\":\"E1E1E1E1-0000-4000-8000-000000000001\"}}"
+  },
+  {
+   "kind": "action",
+   "value": {
+    "scheduleExtra": {
+     "id": "E1E1E1E1-0000-4000-8000-000000000001"
+    }
+   },
+   "sorted": "{\"scheduleExtra\":{\"id\":\"E1E1E1E1-0000-4000-8000-000000000001\"}}"
   },
   {
    "kind": "activity",
@@ -28834,6 +32882,79 @@
     "start_time": 1791414000
    },
    "sorted": "{\"id\":\"AAAAAAAA-0000-4000-8000-000000000001\",\"owner_id\":\"BBBBBBBB-0000-4000-8000-000000000001\",\"start_time\":1791414000,\"time_zone\":\"Europe\\/Jersey\"}"
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "action": {
+     "setTarget": {
+      "_0": "diet",
+      "name": "Diet",
+      "amount": null,
+      "unit": null,
+      "icon": null
+     }
+    },
+    "deviceID": "x"
+   },
+   "sorted": "{\"action\":{\"setTarget\":{\"_0\":\"diet\",\"name\":\"Diet\"}},\"day\":781484400,\"deviceID\":\"x\",\"id\":\"AAAAAAAA-0000-4000-8000-000000000001\",\"recordedAt\":781527600}"
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": "Yoga",
+      "colour": "red"
+     }
+    },
+    "deviceID": "x"
+   },
+   "sorted": "{\"action\":{\"setTarget\":{\"_0\":\"walk\",\"name\":\"Yoga\"}},\"day\":781484400,\"deviceID\":\"x\",\"id\":\"AAAAAAAA-0000-4000-8000-000000000001\",\"recordedAt\":781527600}"
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "action": {
+     "scheduleExtra": {
+      "id": "e1e1e1e1-0000-4000-8000-000000000001",
+      "weekdays": [
+       5,
+       1
+      ],
+      "every": null
+     }
+    },
+    "deviceID": "x"
+   },
+   "sorted": "{\"action\":{\"scheduleExtra\":{\"id\":\"E1E1E1E1-0000-4000-8000-000000000001\",\"weekdays\":[5,1]}},\"day\":781484400,\"deviceID\":\"x\",\"id\":\"AAAAAAAA-0000-4000-8000-000000000001\",\"recordedAt\":781527600}"
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "action": {
+     "setWater": {
+      "goal": 3000,
+      "pour": 250,
+      "note": 1
+     }
+    },
+    "deviceID": "x"
+   },
+   "sorted": "{\"action\":{\"setWater\":{\"goal\":3000,\"pour\":250}},\"day\":781484400,\"deviceID\":\"x\",\"id\":\"AAAAAAAA-0000-4000-8000-000000000001\",\"recordedAt\":781527600}"
   }
  ],
  "rejected": [
@@ -29023,6 +33144,893 @@
     "recordedAt": 781527600,
     "deviceID": "x",
     "action": "pour"
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "water",
+      "name": "Water"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "yoga",
+      "name": "Yoga"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": ""
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": " Yoga"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": "Yoga "
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": "Line\nbreak"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": "Tab\there"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": "xxxxxxxxxxxxxxxxxxxxx"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": "👨‍👩‍👧"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": "é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": "Yoga",
+      "amount": 30
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": "Yoga",
+      "unit": "minutes"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": "Yoga",
+      "amount": 30,
+      "unit": "hours"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": "Yoga",
+      "amount": 4,
+      "unit": "minutes"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": "Yoga",
+      "amount": 301,
+      "unit": "minutes"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": "Yoga",
+      "amount": 0,
+      "unit": "pages"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": "Yoga",
+      "amount": 501,
+      "unit": "pages"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": "Yoga",
+      "amount": 51,
+      "unit": "chapters"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": "Yoga",
+      "amount": 101,
+      "unit": "kilometres"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": "Yoga",
+      "amount": 61,
+      "unit": "miles"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": "Yoga",
+      "amount": 999,
+      "unit": "steps"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": "Yoga",
+      "amount": 50001,
+      "unit": "steps"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": "Yoga",
+      "amount": "30",
+      "unit": "minutes"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": "Yoga",
+      "amount": 30.5,
+      "unit": "minutes"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "diet",
+      "name": "No sugar",
+      "amount": 1,
+      "unit": "pages"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": "Yoga",
+      "icon": "Yoga"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": "Yoga",
+      "icon": ""
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": "Yoga",
+      "icon": "aaaaaaaaaaaaaaaaa"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": "Yoga",
+      "icon": "run2"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "name": "Yoga"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": 7
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": "walk"
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setWater": {
+      "goal": 999,
+      "pour": 250
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setWater": {
+      "goal": 5001,
+      "pour": 250
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setWater": {
+      "goal": 3000,
+      "pour": 49
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setWater": {
+      "goal": 3000,
+      "pour": 1001
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setWater": {
+      "goal": 1000,
+      "pour": 1001
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setWater": {
+      "goal": 3000
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setWater": {
+      "pour": 250
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setWater": {
+      "goal": "3000",
+      "pour": 250
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setWater": {
+      "goal": 3000.5,
+      "pour": 250
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "scheduleExtra": {
+      "id": "not-a-uuid",
+      "every": 2
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "scheduleExtra": {
+      "every": 2
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "scheduleExtra": {
+      "id": "E1E1E1E1-0000-4000-8000-000000000001",
+      "every": 0
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "scheduleExtra": {
+      "id": "E1E1E1E1-0000-4000-8000-000000000001",
+      "every": 31
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "scheduleExtra": {
+      "id": "E1E1E1E1-0000-4000-8000-000000000001",
+      "every": -1
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "scheduleExtra": {
+      "id": "E1E1E1E1-0000-4000-8000-000000000001",
+      "weekdays": []
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "scheduleExtra": {
+      "id": "E1E1E1E1-0000-4000-8000-000000000001",
+      "weekdays": [
+       0
+      ]
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "scheduleExtra": {
+      "id": "E1E1E1E1-0000-4000-8000-000000000001",
+      "weekdays": [
+       8
+      ]
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "scheduleExtra": {
+      "id": "E1E1E1E1-0000-4000-8000-000000000001",
+      "weekdays": [
+       1,
+       1
+      ]
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "scheduleExtra": {
+      "id": "E1E1E1E1-0000-4000-8000-000000000001",
+      "weekdays": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       1
+      ]
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "scheduleExtra": {
+      "id": "E1E1E1E1-0000-4000-8000-000000000001",
+      "weekdays": [
+       1
+      ],
+      "every": 2
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "scheduleExtra": {
+      "id": "E1E1E1E1-0000-4000-8000-000000000001",
+      "weekdays": 1
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "scheduleExtra": {
+      "id": "E1E1E1E1-0000-4000-8000-000000000001",
+      "every": "2"
+     }
+    }
+   }
+  },
+  {
+   "kind": "activity",
+   "value": {
+    "id": "AAAAAAAA-0000-4000-8000-000000000001",
+    "day": 781484400,
+    "recordedAt": 781527600,
+    "deviceID": "x",
+    "action": {
+     "setTarget": {
+      "_0": "walk",
+      "name": "Yoga"
+     },
+     "setWater": {
+      "goal": 3000,
+      "pour": 250
+     }
+    }
    }
   },
   {
@@ -29305,6 +34313,110 @@
   {
    "raw": "Café crème",
    "title": "Café crème"
+  }
+ ],
+ "targetNames": [
+  {
+   "raw": "  Yoga \n",
+   "name": "Yoga"
+  },
+  {
+   "raw": "xxxxxxxxxxxxxxxxxxxx",
+   "name": "xxxxxxxxxxxxxxxxxxxx"
+  },
+  {
+   "raw": "xxxxxxxxxxxxxxxxxxxxx",
+   "name": null
+  },
+  {
+   "raw": "",
+   "name": null
+  },
+  {
+   "raw": "   ",
+   "name": null
+  },
+  {
+   "raw": "Two\nlines",
+   "name": null
+  },
+  {
+   "raw": "Tab\there",
+   "name": null
+  },
+  {
+   "raw": "éééééééééééééééééééé",
+   "name": "éééééééééééééééééééé"
+  },
+  {
+   "raw": "👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽",
+   "name": "👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽"
+  },
+  {
+   "raw": "👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽👍🏽",
+   "name": null
+  },
+  {
+   "raw": "👨‍👩‍👧",
+   "name": null
+  },
+  {
+   "raw": "é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃",
+   "name": "é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃é̂̃"
+  },
+  {
+   "raw": "é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄é̂̃̄",
+   "name": null
+  },
+  {
+   "raw": "Zero​width",
+   "name": null
+  },
+  {
+   "raw": "No sugar",
+   "name": "No sugar"
+  },
+  {
+   "raw": "Café crème",
+   "name": "Café crème"
+  }
+ ],
+ "icons": [
+  {
+   "id": "yoga",
+   "valid": true
+  },
+  {
+   "id": "a",
+   "valid": true
+  },
+  {
+   "id": "aaaaaaaaaaaaaaaa",
+   "valid": true
+  },
+  {
+   "id": "aaaaaaaaaaaaaaaaa",
+   "valid": false
+  },
+  {
+   "id": "",
+   "valid": false
+  },
+  {
+   "id": "Yoga",
+   "valid": false
+  },
+  {
+   "id": "run2",
+   "valid": false
+  },
+  {
+   "id": "dumb-bell",
+   "valid": false
+  },
+  {
+   "id": "é",
+   "valid": false
   }
  ],
  "clockWarnings": [

@@ -93,7 +93,10 @@ public final class TrackerModel {
             let summary = challenge?.summary(on: day, asOf: date)
             return summary?.status == .outsideChallenge ? nil : summary?.waterMillilitres
         }
+        let standard = Challenge.Targets.standard.water.goal
         reminders?.refresh(waterMillilitres: water(on: date), nextDayWaterMillilitres: water(on: nextDay),
+                           waterGoal: challenge?.targets(on: date).water.goal ?? standard,
+                           nextDayWaterGoal: challenge?.targets(on: nextDay).water.goal ?? standard,
                            timeZone: dates.timeZone)
     }
     public private(set) var now: Date
@@ -330,7 +333,9 @@ public final class TrackerModel {
     public func enableCorrections() { isEditingHistory = true }
     public func dismissError() { errorMessage = nil }
 
-    public func startChallenge(on date: Date, timeZone: TimeZone) {
+    /// `targets` other than the standard five are recorded on the start day in the same
+    /// commit as the settings.
+    public func startChallenge(on date: Date, timeZone: TimeZone, targets: Challenge.Targets = .standard) {
         refresh()
         guard canStartChallenge else {
             errorMessage = "Check the server before setup. Existing local history can still be used offline."
@@ -343,7 +348,7 @@ public final class TrackerModel {
         }
         guard store != nil else { return }
         do {
-            try transact { try $0.start(on: date, timeZone: timeZone) }
+            try transact { try $0.start(on: date, timeZone: timeZone, targets: targets, at: now) }
             errorMessage = nil
             showToday()
             setupChecked = false

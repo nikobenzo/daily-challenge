@@ -32,14 +32,17 @@ public struct WaterReminderPlanner {
         self.clock = clock
     }
 
+    /// Slots through `horizon` on each day that is in the challenge (`waterMillilitres`
+    /// is not nil) and below that day's own goal.
     public func upcoming(settings: WaterReminderSettings, through horizon: Date,
+                         goal: (Date) -> Int = { _ in Challenge.Targets.standard.water.goal },
                          waterMillilitres: (Date) -> Int?) -> [Date] {
         guard settings.enabled, settings.isValid else { return [] }
         let now = clock()
         var day = calendar.startOfDay(for: now)
         var dates: [Date] = []
         while day <= horizon {
-            if let water = waterMillilitres(day), water < 4_000 {
+            if let water = waterMillilitres(day), water < goal(day) {
                 dates += stride(from: settings.startMinute, through: settings.endMinute,
                                 by: settings.intervalMinutes).compactMap { minute in
                     let components = DateComponents(hour: minute / 60, minute: minute % 60, second: 0)

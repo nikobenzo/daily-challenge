@@ -22,6 +22,13 @@ class WireException(message: String) : Exception(message)
  *     {"setHabit":{"_0":"walk","completed":true}}    {"setDiet":{"_0":"clean"}}
  *     {"defineExtra":{"id":"<UUID>","title":"Stretch"}}
  *     {"archiveExtra":{"id":"<UUID>"}}    {"setExtra":{"id":"<UUID>","completed":true}}
+ *     {"setTarget":{"_0":"walk","name":"Yoga","amount":30,"unit":"minutes","icon":"yoga"}}
+ *     {"setTarget":{"_0":"diet","name":"No sugar"}}    {"setWater":{"goal":3000,"pour":250}}
+ *     {"scheduleExtra":{"id":"<UUID>","weekdays":[1,2,3,4,5]}}
+ *     {"scheduleExtra":{"id":"<UUID>","every":2}}      {"scheduleExtra":{"id":"<UUID>"}}
+ *
+ * Absent values are left out, and null reads as absent. A target or schedule outside the
+ * shared rules ([contentError]) is unreadable, like an unknown kind.
  */
 object Wire {
     val json = Json { prettyPrint = false }
@@ -76,6 +83,19 @@ object Wire {
         is Action.DefineExtra -> obj("defineExtra" to obj("id" to uuid(action.id), "title" to JsonPrimitive(action.title)))
         is Action.ArchiveExtra -> obj("archiveExtra" to obj("id" to uuid(action.id)))
         is Action.SetExtra -> obj("setExtra" to obj("id" to uuid(action.id), "completed" to JsonPrimitive(action.completed)))
+        is Action.SetTarget -> obj("setTarget" to JsonObject(buildMap {
+            put("_0", JsonPrimitive(action.slot.wire))
+            put("name", JsonPrimitive(action.name))
+            action.amount?.let { put("amount", JsonPrimitive(it)) }
+            action.unit?.let { put("unit", JsonPrimitive(it.wire)) }
+            action.icon?.let { put("icon", JsonPrimitive(it)) }
+        }))
+        is Action.SetWater -> obj("setWater" to obj("goal" to JsonPrimitive(action.goal), "pour" to JsonPrimitive(action.pour)))
+        is Action.ScheduleExtra -> obj("scheduleExtra" to JsonObject(buildMap {
+            put("id", uuid(action.id))
+            action.weekdays?.let { days -> put("weekdays", JsonArray(days.map { JsonPrimitive(it) })) }
+            action.every?.let { put("every", JsonPrimitive(it)) }
+        }))
     }
 
     fun encode(activity: Activity): JsonObject {
@@ -177,17 +197,36 @@ object Wire {
             "defineExtra" -> Action.DefineExtra(uuidOf(inner["id"], "extra id"), stringOf(inner["title"], "title"))
             "archiveExtra" -> Action.ArchiveExtra(uuidOf(inner["id"], "extra id"))
             "setExtra" -> Action.SetExtra(uuidOf(inner["id"], "extra id"), boolOf(inner["completed"], "completed"))
+            "setTarget" -> Action.SetTarget(
+                TargetSlot.fromWire(stringOf(inner["_0"], "slot")) ?: fail("Unknown slot"),
+                stringOf(inner["name"], "name"),
+                inner.optional("amount")?.let { longOf(it, "amount") },
+                inner.optional("unit")?.let { TargetUnit.fromWire(stringOf(it, "unit")) ?: fail("Unknown unit") },
+                inner.optional("icon")?.let { stringOf(it, "icon") },
+            )
+            "setWater" -> Action.SetWater(longOf(inner["goal"], "goal"), longOf(inner["pour"], "pour"))
+            "scheduleExtra" -> Action.ScheduleExtra(
+                uuidOf(inner["id"], "extra id"),
+                inner.optional("weekdays")?.let { days -> (days as? JsonArray ?: fail("weekdays is not an array")).map { longOf(it, "weekday") } },
+                inner.optional("every")?.let { longOf(it, "every") },
+            )
             else -> fail("Unknown action $kind")
         }
     }
 
+    /** Swift's `decodeIfPresent`: a missing key and null are both absent. */
+    private fun JsonObject.optional(key: String): JsonElement? = this[key]?.takeUnless { it is JsonNull }
+
     fun decodeActivity(element: JsonElement): Activity {
         val values = element.asObject("activity")
+        val action = decodeAction(values.required("action"))
+        // Unreadable, like an unknown kind: sync skips the row, so it never fails a merge.
+        if (action.contentError != null) fail("Invalid target or schedule")
         return Activity(
             id = uuidOf(values["id"], "id"),
             day = doubleOf(values["day"], "day"),
             recordedAt = doubleOf(values["recordedAt"], "recordedAt"),
-            action = decodeAction(values.required("action")),
+            action = action,
             undonePourID = values["undonePourID"]?.takeUnless { it is JsonNull }?.let { uuidOf(it, "undonePourID") },
             deviceID = values["deviceID"]?.takeUnless { it is JsonNull }?.let { stringOf(it, "deviceID") },
         )

@@ -228,6 +228,8 @@ struct HistoryTrackerView: View {
         case .defineExtra: ("checklist", Theme.textSecondary)
         case .archiveExtra: ("archivebox", Theme.textTertiary)
         case .setExtra(_, let completed): ("checklist.checked", completed ? Theme.done : Theme.textTertiary)
+        case .setTarget, .setWater: ("slider.horizontal.3", Theme.textSecondary)
+        case .scheduleExtra: ("repeat", Theme.textSecondary)
         }
     }
 
@@ -285,6 +287,9 @@ struct HistoryTrackerView: View {
         case .defineExtra(let id, let title): addsExtra(activity, id: id) ? "Added “\(title)”" : "Renamed “\(title)”"
         case .archiveExtra(let id): "Archived \(extraTitle(id))"
         case .setExtra(let id, let completed): "\(extraTitle(id)) \(completed ? "done" : "not done")"
+        case .setTarget(_, let name, _, _, _): "Goal “\(name)”"
+        case .setWater(let goal, _): "Water goal \(goal.formatted()) ml"
+        case .scheduleExtra(let id, _, _): "\(extraTitle(id)) repeat changed"
         }
     }
     private func description(_ activity: Challenge.Activity) -> String {
@@ -297,6 +302,9 @@ struct HistoryTrackerView: View {
         case .defineExtra(let id, let title): addsExtra(activity, id: id) ? "Added extra “\(title)”" : "Renamed extra to “\(title)”"
         case .archiveExtra(let id): "Archived extra \(extraTitle(id))"
         case .setExtra(let id, let completed): "Extra \(extraTitle(id)) → \(completed ? "done" : "not done")"
+        case .setTarget(_, let name, _, _, _): "Goal set to “\(name)”"
+        case .setWater(let goal, let pour): "Water goal → \(goal.formatted()) ml, \(pour.formatted()) ml glass"
+        case .scheduleExtra(let id, _, _): "Repeat changed for extra \(extraTitle(id))"
         }
     }
 }

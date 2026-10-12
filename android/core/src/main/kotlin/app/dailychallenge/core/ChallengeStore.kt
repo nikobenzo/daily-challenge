@@ -62,12 +62,23 @@ class ChallengeStore(private val ownerID: UUID, directory: File) {
         if (file.exists()) snapshot = decode(file.readText())
     }
 
-    fun start(on: Double, zone: java.time.ZoneId) {
+    /**
+     * Targets other than the standard five become one `setWater` or `setTarget` event per changed
+     * value, dated the start day and committed with the settings, so setup is never half
+     * written. `at` is when they are recorded.
+     */
+    fun start(on: Double, zone: java.time.ZoneId, targets: Targets = Targets.STANDARD, at: Double = ChallengeTime.now()) {
         if (snapshot != null) throw ChallengeStoreException(ChallengeStoreError.ALREADY_STARTED)
         if (Challenge.canonicalZone(zone.id) == null) throw ChallengeSyncException(ChallengeSyncError.INVALID_RECORD)
         val challenge = Challenge(ownerID, on, zone)
-        commit(Snapshot(challenge, ChallengeRecord(ownerID, challenge.startDate, zone), Challenge.uuidString(UUID.randomUUID()),
-            emptySet(), headerPending = true, clockWarning = false))
+        var next = Snapshot(challenge, ChallengeRecord(ownerID, challenge.startDate, zone), Challenge.uuidString(UUID.randomUUID()),
+            emptySet(), headerPending = true, clockWarning = false)
+        for (action in targets.changes()) {
+            val id = nextID(at, next)
+            next.challenge.record(action, challenge.startDate, at, id, next.deviceID)
+            next = next.copy(pendingIDs = next.pendingIDs + id)
+        }
+        commit(next)
     }
 
     fun record(action: Action, on: Double, at: Double, id: UUID? = null): UUID? {

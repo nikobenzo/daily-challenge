@@ -39,6 +39,30 @@ class ParityVectorTest {
     private fun string(value: JsonElement?): String = value!!.jsonPrimitive.content
     private fun optionalInstant(value: JsonElement?): Double? = if (value == null || value is JsonNull) null else instant(value)
 
+    /** "once", "weekdays 1 2 3" or "every 2", as the vectors write a repeat rule. */
+    private fun scheduleName(schedule: ExtraSchedule): String = when (schedule) {
+        ExtraSchedule.Once -> "once"
+        is ExtraSchedule.Weekdays -> (listOf("weekdays") + schedule.days.sorted().map(Int::toString)).joinToString(" ")
+        is ExtraSchedule.Every -> "every ${schedule.interval}"
+    }
+
+    private fun optionalString(value: JsonElement?): String? = (value as? JsonPrimitive)?.takeIf { it.isString }?.content
+    private fun optionalLong(value: JsonElement?): Long? = (value as? JsonPrimitive)?.takeUnless { it is JsonNull }?.long
+
+    /** A slot's or water's expected target; every field is given, null for none. */
+    private fun assertTargets(where: String, targets: Targets, want: JsonObject) {
+        for ((key, value) in want) {
+            val fields = value.jsonObject
+            if (key == "water") {
+                assertEquals(where, WaterTarget(fields.getValue("goal").jsonPrimitive.long, fields.getValue("glass").jsonPrimitive.long), targets.water)
+            } else {
+                val expected = Target(string(fields["name"]), optionalLong(fields["amount"]),
+                    optionalString(fields["unit"])?.let { TargetUnit.fromWire(it)!! }, optionalString(fields["icon"]))
+                assertEquals(where, expected, targets[TargetSlot.fromWire(key)!!])
+            }
+        }
+    }
+
     /** Swift's `String(describing:)` of the error case. */
     private fun name(error: ChallengeError): String =
         error.name.lowercase().split('_').mapIndexed { i, part -> if (i == 0) part else part.replaceFirstChar(Char::uppercase) }.joinToString("")
@@ -89,6 +113,10 @@ class ParityVectorTest {
                         step["extrasDone"]?.let { assertEquals(where, it.jsonPrimitive.int, summary.extrasDone) }
                         step["extrasTotal"]?.let { assertEquals(where, it.jsonPrimitive.int, summary.extrasTotal) }
                         step["allExtrasDone"]?.let { assertEquals(where, it.jsonPrimitive.boolean, summary.allExtrasDone) }
+                        step["targets"]?.let {
+                            assertTargets(where, summary.targets, it.jsonObject)
+                            assertEquals(where, challenge.targets(instant(step["on"])), summary.targets)
+                        }
                         step["extras"]?.let { value ->
                             val shown = summary.extras.map { extra ->
                                 extra.title + (if (extra.id in summary.completedExtras) " ✓" else "") + (if (summary.isLate(extra)) " late" else "")
@@ -121,6 +149,7 @@ class ParityVectorTest {
                             assertEquals(where, instant(want["firstDay"]), extra.firstDay, 0.0)
                             assertEquals(where, optionalInstant(want["completedOn"]), extra.completedOn)
                             assertEquals(where, optionalInstant(want["archivedFrom"]), extra.archivedFrom)
+                            assertEquals(where, optionalString(want["schedule"]) ?: "once", scheduleName(extra.schedule))
                         }
                     }
                     "shownExtras" -> assertEquals(where, uuids(step["ids"]), challenge.extras(instant(step["asOf"])).map { it.id })
@@ -187,6 +216,12 @@ class ParityVectorTest {
         for (entry in list("titles")) {
             val expected = (entry["title"] as? JsonPrimitive)?.takeIf { it.isString }?.content
             assertEquals(string(entry["raw"]), expected, Challenge.extraTitle(string(entry["raw"])))
+        }
+        for (entry in list("targetNames")) {
+            assertEquals(string(entry["raw"]), optionalString(entry["name"]), Challenge.targetName(string(entry["raw"])))
+        }
+        for (entry in list("icons")) {
+            assertEquals(string(entry["id"]), entry.getValue("valid").jsonPrimitive.boolean, Challenge.isIconID(string(entry["id"])))
         }
         for (entry in list("clockWarnings")) {
             val at = instant(entry["recordedAt"])

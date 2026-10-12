@@ -188,8 +188,8 @@ private func confirmed(_ events: [ChallengeEvent]) -> [ChallengeEvent] {
 
     let export = try source.exportData()
     let json = try #require(JSONSerialization.jsonObject(with: export) as? [String: Any])
-    #expect(ChallengeBackup.currentVersion == 3)
-    #expect(json["formatVersion"] as? Int == 3)
+    #expect(ChallengeBackup.currentVersion == 4)
+    #expect(json["formatVersion"] as? Int == 4)
     #expect(try ChallengeBackup.decode(export).encoded() == export)
     #expect(try target.previewImport(export).newCount == 3)
     try target.importData(export)

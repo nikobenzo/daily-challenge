@@ -45,14 +45,20 @@ data class WaterReminderSettings(
 class WaterReminderPlanner(zone: ZoneId, private val clock: () -> Double = ChallengeTime::now) {
     val calendar = ChallengeCalendar(zone)
 
-    fun upcoming(settings: WaterReminderSettings, through: Double, waterMillilitres: (Double) -> Long?): List<Double> {
+    /** Slots through `through` on each day in the challenge (`waterMillilitres` not null) and below that day's own goal. */
+    fun upcoming(
+        settings: WaterReminderSettings,
+        through: Double,
+        goal: (Double) -> Long = { Targets.STANDARD.water.goal },
+        waterMillilitres: (Double) -> Long?,
+    ): List<Double> {
         if (!settings.enabled || !settings.isValid) return emptyList()
         val now = clock()
         var date = calendar.localDate(now)
         val dates = ArrayList<Double>()
         while (calendar.startOf(date) <= through) {
             val water = waterMillilitres(calendar.startOf(date))
-            if (water != null && water < 4_000) {
+            if (water != null && water < goal(calendar.startOf(date))) {
                 for (minute in settings.startMinute..settings.endMinute step settings.intervalMinutes) {
                     val wall = LocalDateTime.of(date, LocalTime.of(minute / 60, minute % 60))
                     if (calendar.zone.rules.getValidOffsets(wall).isEmpty()) continue
@@ -113,10 +119,12 @@ class WaterReminderController(
     var zone: ZoneId = ZoneId.systemDefault()
         private set
     private var waterByDay: Map<Double, Long> = emptyMap()
+    private var goalByDay: Map<Double, Long> = emptyMap()
     var onChange: () -> Unit = {}
 
     private val calendar get() = ChallengeCalendar(zone)
     private val water: Long? get() = waterByDay[calendar.startOfDay(clock())]
+    private val goal: Long get() = goalByDay[calendar.startOfDay(clock())] ?: Targets.STANDARD.water.goal
 
     val status: String
         get() = when (permission) {
@@ -126,7 +134,7 @@ class WaterReminderController(
             NotificationPermission.ALLOWED -> when {
                 !settings.enabled -> "Permission allowed · Reminders off on this ${wording.device}."
                 water == null -> "Permission allowed · Waiting for a local challenge."
-                water!! >= 4_000 -> "Permission allowed · Today's water goal met."
+                water!! >= goal -> "Permission allowed · Today's water goal met."
                 else -> "Permission allowed · Reminders enabled on this ${wording.device}. Delivery depends on ${wording.system} and ${wording.quietMode}."
             }
         }
@@ -138,7 +146,14 @@ class WaterReminderController(
         reconcile()
     }
 
-    fun refresh(waterMillilitres: Long?, nextDayWaterMillilitres: Long?, zone: ZoneId) {
+    /** Each day's total and its own goal: reminders stop for a day once its goal is met. */
+    fun refresh(
+        waterMillilitres: Long?,
+        nextDayWaterMillilitres: Long?,
+        zone: ZoneId,
+        waterGoal: Long = Targets.STANDARD.water.goal,
+        nextDayWaterGoal: Long = Targets.STANDARD.water.goal,
+    ) {
         this.zone = zone
         val day = calendar.startOfDay(clock())
         val next = calendar.addDays(day, 1)
@@ -146,6 +161,7 @@ class WaterReminderController(
             waterMillilitres?.let { put(day, it) }
             nextDayWaterMillilitres?.let { put(next, it) }
         }
+        goalByDay = mapOf(day to waterGoal, next to nextDayWaterGoal)
         reconcile()
     }
 
@@ -154,7 +170,8 @@ class WaterReminderController(
         permission = scheduler.permission()
         val now = clock()
         val planned = WaterReminderPlanner(zone) { now }
-            .upcoming(settings, now + 48 * 3_600) { waterByDay[it] }.take(QUEUED_LIMIT)
+            .upcoming(settings, now + 48 * 3_600, { goalByDay[it] ?: Targets.STANDARD.water.goal }) { waterByDay[it] }
+            .take(QUEUED_LIMIT)
         val desired = if (permission == NotificationPermission.ALLOWED) planned else emptyList()
         try {
             if (desired.isEmpty()) scheduler.cancel() else if (desired != scheduledDates) scheduler.replace(desired, zone)

@@ -35,7 +35,9 @@ import androidx.compose.material.icons.outlined.Eco
 import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
+import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -366,6 +368,8 @@ object ActivityWords {
         is Action.DefineExtra -> Icons.Filled.Checklist to P.textSecondary
         is Action.ArchiveExtra -> Icons.Outlined.Archive to P.textSecondary
         is Action.SetExtra -> Icons.Outlined.CheckCircle to if (action.completed) P.done else P.textTertiary
+        is Action.SetTarget, is Action.SetWater -> Icons.Outlined.Tune to P.textSecondary
+        is Action.ScheduleExtra -> Icons.Outlined.Repeat to P.textSecondary
     }
 
     fun short(activity: Activity): String = when (val action = activity.action) {
@@ -376,6 +380,9 @@ object ActivityWords {
         is Action.DefineExtra -> "Extra named “${action.title}”"
         is Action.ArchiveExtra -> "Archived extra"
         is Action.SetExtra -> "Extra ${if (action.completed) "done" else "not done"}"
+        is Action.SetTarget -> "Goal “${action.name}”"
+        is Action.SetWater -> "Water goal ${formatNumber(action.goal)} ml"
+        is Action.ScheduleExtra -> "Extra repeat changed"
     }
 
     fun long(activity: Activity): String = when (val action = activity.action) {
@@ -386,6 +393,9 @@ object ActivityWords {
         is Action.DefineExtra -> "Extra named “${action.title}”"
         is Action.ArchiveExtra -> "Archived extra"
         is Action.SetExtra -> "Extra ${if (action.completed) "done" else "not done"}"
+        is Action.SetTarget -> "Goal set to “${action.name}”"
+        is Action.SetWater -> "Water goal set to ${formatNumber(action.goal)} ml, ${formatNumber(action.pour)} ml glass"
+        is Action.ScheduleExtra -> "Extra repeat changed"
     }
 }
 

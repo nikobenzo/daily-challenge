@@ -13,6 +13,8 @@ enum class ChallengeError(val message: String) {
     TOO_MANY_EXTRAS("You can have up to ${Challenge.MAXIMUM_ACTIVE_EXTRAS} extras. Archive one to add another."),
     UNKNOWN_EXTRA("That extra doesn't exist. Nothing was changed."),
     ARCHIVED_EXTRA("That extra is archived, so it can't be changed for this day."),
+    INVALID_TARGET("A goal needs a name of 1 to 20 characters on one line, and amounts within their limits. Nothing was changed."),
+    INVALID_SCHEDULE("An extra repeats on chosen weekdays or every 1 to 30 days. Nothing was changed."),
 }
 
 class ChallengeException(val error: ChallengeError) : Exception(error.message)
@@ -34,6 +36,140 @@ enum class DietState(val wire: String) {
 }
 
 /**
+ * The four labelled slots beside water (Swift `Challenge.TargetSlot`). A key only identifies a
+ * ring and its `setHabit` or `setDiet` events, so `walk` may be labelled Yoga. Never rename them.
+ */
+enum class TargetSlot(val wire: String) {
+    WORKOUT("workout"), WALK("walk"), DIET("diet"), BIBLE_READING("bibleReading");
+
+    companion object {
+        fun fromWire(value: String): TargetSlot? = entries.firstOrNull { it.wire == value }
+    }
+}
+
+/** The units of an activity's optional amount, each with the amounts it allows. */
+enum class TargetUnit(val wire: String, val amounts: LongRange) {
+    MINUTES("minutes", 5L..300L), PAGES("pages", 1L..500L), CHAPTERS("chapters", 1L..50L),
+    KILOMETRES("kilometres", 1L..100L), MILES("miles", 1L..60L), STEPS("steps", 1_000L..50_000L);
+
+    companion object {
+        fun fromWire(value: String): TargetUnit? = entries.firstOrNull { it.wire == value }
+    }
+}
+
+/**
+ * What a slot is called and, optionally, how much. Display only: the slot is still completed
+ * by its tick (or, for diet, by a clean day). An [icon] id this version does not know, or
+ * none, shows the slot's default icon.
+ */
+data class Target(val name: String, val amount: Long? = null, val unit: TargetUnit? = null, val icon: String? = null) {
+    /**
+     * The rules every client and the server apply: a valid name, an amount and unit together
+     * or neither (diet takes none), the amount in its unit's range, and an icon id of 1 to 16
+     * lower-case letters.
+     */
+    fun isValid(slot: TargetSlot): Boolean {
+        if (Challenge.targetName(name) != name || (icon != null && !Challenge.isIconID(icon))) return false
+        return when {
+            amount == null && unit == null -> true
+            amount != null && unit != null -> slot != TargetSlot.DIET && amount in unit.amounts
+            else -> false
+        }
+    }
+}
+
+/** The daily water goal and the glass the + button pours, in millilitres. */
+data class WaterTarget(val goal: Long, val glass: Long) {
+    val isValid: Boolean get() = goal in GOALS && glass in GLASSES && glass <= goal
+
+    companion object {
+        val GOALS = 1_000L..5_000L
+        val GLASSES = 50L..1_000L
+    }
+}
+
+/** The targets in force on one challenge day. */
+data class Targets(
+    val water: WaterTarget,
+    val workout: Target,
+    val walk: Target,
+    val diet: Target,
+    val bibleReading: Target,
+) {
+    operator fun get(slot: TargetSlot): Target = when (slot) {
+        TargetSlot.WORKOUT -> workout
+        TargetSlot.WALK -> walk
+        TargetSlot.DIET -> diet
+        TargetSlot.BIBLE_READING -> bibleReading
+    }
+
+    fun with(slot: TargetSlot, target: Target): Targets = when (slot) {
+        TargetSlot.WORKOUT -> copy(workout = target)
+        TargetSlot.WALK -> copy(walk = target)
+        TargetSlot.DIET -> copy(diet = target)
+        TargetSlot.BIBLE_READING -> copy(bibleReading = target)
+    }
+
+    /** One `setWater` or `setTarget` per value that differs from [base]. */
+    fun changes(base: Targets = STANDARD): List<Action> = buildList {
+        if (water != base.water) add(Action.SetWater(water.goal, water.glass))
+        for (slot in TargetSlot.entries) {
+            val target = get(slot)
+            if (target != base[slot]) add(Action.SetTarget(slot, target.name, target.amount, target.unit, target.icon))
+        }
+    }
+
+    companion object {
+        /**
+         * The original five: 4,000 ml in 450 ml glasses, a 45-minute workout, a 45-minute walk,
+         * a clean diet and 10 pages of the Bible. A day without target events uses these.
+         */
+        val STANDARD = Targets(
+            WaterTarget(4_000, 450),
+            Target("Workout", 45, TargetUnit.MINUTES),
+            Target("Walk", 45, TargetUnit.MINUTES),
+            Target("Diet"),
+            Target("Bible", 10, TargetUnit.PAGES),
+        )
+    }
+}
+
+/** How an extra repeats (Swift `Challenge.ExtraSchedule`). */
+sealed interface ExtraSchedule {
+    /** A to-do: shown from its first day until the day it is ticked, carried over as late while open. */
+    data object Once : ExtraSchedule
+    /** Shown on these ISO weekdays, Monday = 1 through Sunday = 7. Never late. */
+    data class Weekdays(val days: Set<Int>) : ExtraSchedule
+    /** Shown every N days (1 is daily), counted from the day the rule applies from. Never late. */
+    data class Every(val interval: Int) : ExtraSchedule
+
+    /** The event that sets this rule for an extra, weekdays in ascending order. */
+    fun action(id: UUID): Action.ScheduleExtra = when (this) {
+        Once -> Action.ScheduleExtra(id)
+        is Weekdays -> Action.ScheduleExtra(id, weekdays = days.sorted().map(Int::toLong))
+        is Every -> Action.ScheduleExtra(id, every = interval.toLong())
+    }
+
+    companion object {
+        val INTERVALS = 1L..30L
+
+        /**
+         * The rule of a `scheduleExtra` event, or null when no client accepts it: both rules, an
+         * empty, repeated or out-of-range weekday, or N outside 1 to 30.
+         */
+        fun of(weekdays: List<Long>?, every: Long?): ExtraSchedule? = when {
+            weekdays == null && every == null -> Once
+            weekdays != null && every == null ->
+                if (weekdays.isNotEmpty() && weekdays.toSet().size == weekdays.size && weekdays.all { it in 1L..7L }) {
+                    Weekdays(weekdays.mapTo(HashSet()) { it.toInt() })
+                } else null
+            weekdays == null && every != null -> if (every in INTERVALS) Every(every.toInt()) else null
+            else -> null
+        }
+    }
+}
+
+/**
  * One event's change. The JSON names (see [Wire]) are the wire format shared with the
  * server and every client, so they never change. Extras never count toward a complete day.
  */
@@ -47,9 +183,33 @@ sealed interface Action {
     data class DefineExtra(val id: UUID, val title: String) : Action
     /** Hides an extra from its archive day on, permanently; earlier days keep their ticks. */
     data class ArchiveExtra(val id: UUID) : Action
-    /** Ticks or unticks an extra for the event's day. The earliest ticked day completes it. */
+    /** Ticks or unticks an extra for the event's day. The earliest ticked day completes a to-do. */
     data class SetExtra(val id: UUID, val completed: Boolean) : Action
+    /** Sets a slot's name, amount and icon from the event's day on (see [Challenge.targets]). */
+    data class SetTarget(
+        val slot: TargetSlot,
+        val name: String,
+        val amount: Long? = null,
+        val unit: TargetUnit? = null,
+        val icon: String? = null,
+    ) : Action
+    /** Sets the daily water goal and the + button's glass from the event's day on. */
+    data class SetWater(val goal: Long, val pour: Long) : Action
+    /** Sets how an extra repeats from the event's day on (see [ExtraSchedule]). */
+    data class ScheduleExtra(val id: UUID, val weekdays: List<Long>? = null, val every: Long? = null) : Action
 }
+
+/**
+ * What recording or merging refuses this action for on its content alone, or null. [Wire]
+ * treats such an event as unreadable, like an unknown kind.
+ */
+val Action.contentError: ChallengeError?
+    get() = when (this) {
+        is Action.SetTarget -> if (Target(name, amount, unit, icon).isValid(slot)) null else ChallengeError.INVALID_TARGET
+        is Action.SetWater -> if (WaterTarget(goal, pour).isValid) null else ChallengeError.INVALID_TARGET
+        is Action.ScheduleExtra -> if (ExtraSchedule.of(weekdays, every) == null) ChallengeError.INVALID_SCHEDULE else null
+        else -> null
+    }
 
 /** An immutable event. `day` and `recordedAt` are reference seconds ([ChallengeTime]). */
 data class Activity(
@@ -66,23 +226,66 @@ data class WaterPour(val id: UUID, val millilitres: Long)
 enum class DayStatus { OUTSIDE_CHALLENGE, FUTURE, IN_PROGRESS, MISSED, COMPLETE }
 
 /**
- * A personal to-do beside the five requirements that carries over, day by day, until it is
- * done or archived. Never part of `isComplete`. All three days derive from the extras events.
+ * A personal item beside the five requirements. Never part of `isComplete`. As a to-do it
+ * carries over, day by day, until it is done or archived; scheduled to repeat, it shows on
+ * its scheduled days instead. Everything here derives from the extras events.
  */
 data class Extra(
     val id: UUID,
     val title: String,
-    /** The first challenge day it is shown on; later days mark it late. */
+    /** The first challenge day it can show on: its earliest definition day, or an earlier day it was ticked on as a to-do. */
     val firstDay: Double,
-    /** The earliest day it is ticked on, before any archive, or null while it is open. */
+    /** The day its current to-do was done, before any archive. Null while that is open, or while it repeats. */
     val completedOn: Double?,
     /** The first challenge day it is hidden from, or null while it is active. */
     val archivedFrom: Double?,
+    /** Its repeat rules in day order, each from its `start` until the next one's. */
+    internal val periods: List<Period>,
 ) {
     val isArchived: Boolean get() = archivedFrom != null
+    /** Its latest repeat rule: [ExtraSchedule.Once] unless it has been scheduled. */
+    val schedule: ExtraSchedule get() = periods.last().schedule
 
-    fun isShown(day: Double): Boolean =
-        firstDay <= day && (completedOn?.let { day <= it } ?: true) && (archivedFrom?.let { day < it } ?: true)
+    /**
+     * For a to-do period, the first day shown (in the first period, `firstDay`) and its earliest
+     * ticked day. `startNumber` is `start` as a day number, where "every N" counts from.
+     */
+    data class Period(
+        val start: Double,
+        val startNumber: Long,
+        val schedule: ExtraSchedule,
+        val shownFrom: Double,
+        val completedOn: Double?,
+    )
+
+    /** The repeat rule in force on the challenge day starting at `day`. */
+    fun schedule(day: Double): ExtraSchedule = period(day).schedule
+
+    private fun period(day: Double): Period = periods.lastOrNull { it.start <= day } ?: periods[0]
+
+    /** Whether the challenge day starting at `day`, day number `number`, shows it. */
+    internal fun isShown(day: Double, number: Long): Boolean {
+        if (archivedFrom != null && day >= archivedFrom) return false
+        val period = period(day)
+        return when (val schedule = period.schedule) {
+            ExtraSchedule.Once -> period.shownFrom <= day && (period.completedOn?.let { day <= it } ?: true)
+            is ExtraSchedule.Weekdays -> period.start <= day && Challenge.isoWeekday(number) in schedule.days
+            is ExtraSchedule.Every -> period.start <= day && (number - period.startNumber) % schedule.interval == 0L
+        }
+    }
+
+    /** Carried over to the day starting at `day`: a to-do shown after its period's first day. A repeating extra is never late. */
+    fun isLate(day: Double): Boolean {
+        val period = period(day)
+        return period.schedule == ExtraSchedule.Once && period.shownFrom < day
+    }
+
+    /** Still to do as of the day starting at `day`: active, and repeating or not done. */
+    fun isOpen(asOf: Double): Boolean {
+        if (isArchived) return false
+        val period = period(asOf)
+        return period.schedule != ExtraSchedule.Once || (period.completedOn?.let { it > asOf } ?: true)
+    }
 }
 
 data class DailySummary(
@@ -95,17 +298,20 @@ data class DailySummary(
     /** The extras shown for this day, in creation order, and which of them are ticked. */
     val extras: List<Extra>,
     val completedExtras: Set<UUID>,
+    /** The targets in force on this day. */
+    val targets: Targets = Targets.STANDARD,
 ) {
     val waterMillilitres: Long get() = activePours.sumOf { it.millilitres }
-    val waterComplete: Boolean get() = waterMillilitres >= 4_000
+    /** The day's own water goal: a later change never re-judges an earlier day. */
+    val waterComplete: Boolean get() = waterMillilitres >= targets.water.goal
     /** The five requirements only. Extras never change it. */
     val isComplete: Boolean get() = status == DayStatus.COMPLETE
     val extrasDone: Int get() = completedExtras.size
     val extrasTotal: Int get() = extras.size
     val allExtrasDone: Boolean get() = extrasTotal > 0 && extrasDone == extrasTotal
     val intervalDuration: Double get() = intervalEnd - intervalStart
-    /** Carried over: shown on a day after the first day it appeared, ticked or not. */
-    fun isLate(extra: Extra): Boolean = extra.firstDay < intervalStart
+    /** Carried over: a to-do shown on a day after the first day it appeared, ticked or not. A repeating extra is never late. */
+    fun isLate(extra: Extra): Boolean = extra.isLate(intervalStart)
 }
 
 data class StreakSummary(val current: Int, val best: Int, val milestones: List<Double>)
@@ -143,6 +349,24 @@ class Challenge(val ownerID: UUID, startDate: Double, val zone: ZoneId) {
                 null
             }
             is Action.SetHabit, is Action.SetDiet -> null
+            is Action.SetTarget, is Action.SetWater -> {
+                action.contentError?.let { throw ChallengeException(it) }
+                null
+            }
+            is Action.ScheduleExtra -> {
+                val schedule = ExtraSchedule.of(action.weekdays, action.every)
+                    ?: throw ChallengeException(ChallengeError.INVALID_SCHEDULE)
+                val existing = allExtras.firstOrNull { it.id == action.id }
+                    ?: throw ChallengeException(ChallengeError.UNKNOWN_EXTRA)
+                if (existing.isArchived) throw ChallengeException(ChallengeError.ARCHIVED_EXTRA)
+                if (existing.schedule(day(on)) == schedule) return null
+                // A repeating extra is open, so scheduling a finished to-do takes a place.
+                if (!existing.isOpen(day(at))) {
+                    val trial = copy().also { it.activities = activities + Activity(id, day(on), at, action, null) }
+                    if (trial.openExtras(at).size > MAXIMUM_ACTIVE_EXTRAS) throw ChallengeException(ChallengeError.TOO_MANY_EXTRAS)
+                }
+                null
+            }
             is Action.DefineExtra -> {
                 if (extraTitle(action.title) != action.title) throw ChallengeException(ChallengeError.INVALID_EXTRA_TITLE)
                 val existing = allExtras.firstOrNull { it.id == action.id }
@@ -225,6 +449,15 @@ class Challenge(val ownerID: UUID, startDate: Double, val zone: ZoneId) {
                     val extraID = if (action is Action.ArchiveExtra) action.id else (action as Action.SetExtra).id
                     if (extraID !in definedExtras) throw ChallengeException(ChallengeError.UNKNOWN_EXTRA)
                 }
+                is Action.SetTarget, is Action.SetWater -> {
+                    if (event.undonePourID != null) throw ChallengeException(ChallengeError.CONFLICTING_ACTIVITY)
+                    action.contentError?.let { throw ChallengeException(it) }
+                }
+                is Action.ScheduleExtra -> {
+                    if (event.undonePourID != null) throw ChallengeException(ChallengeError.CONFLICTING_ACTIVITY)
+                    action.contentError?.let { throw ChallengeException(it) }
+                    if (action.id !in definedExtras) throw ChallengeException(ChallengeError.UNKNOWN_EXTRA)
+                }
             }
         }
         activities = known.values.sortedWith(eventOrder)
@@ -256,7 +489,9 @@ class Challenge(val ownerID: UUID, startDate: Double, val zone: ZoneId) {
         val selected = day(on)
         val shown = extras(selected)
         val today = day(asOf)
-        val allMet = pours.sumOf { it.millilitres } >= 4_000 && completed.size == Habit.entries.size && diet == DietState.CLEAN
+        val targets = targets(selected)
+        val allMet = pours.sumOf { it.millilitres } >= targets.water.goal && completed.size == Habit.entries.size &&
+            diet == DietState.CLEAN
         val status = when {
             selected < startDate -> DayStatus.OUTSIDE_CHALLENGE
             selected > today -> DayStatus.FUTURE
@@ -266,7 +501,37 @@ class Challenge(val ownerID: UUID, startDate: Double, val zone: ZoneId) {
         }
         val (start, end) = calendar.interval(selected)
         val shownIDs = shown.mapTo(HashSet()) { it.id }
-        return DailySummary(start, end, pours, completed, diet, status, shown, ticked.filterTo(HashSet()) { it in shownIDs })
+        return DailySummary(start, end, pours, completed, diet, status, shown, ticked.filterTo(HashSet()) { it in shownIDs }, targets)
+    }
+
+    /**
+     * The targets in force on the day of `on`: the standard five, changed by every `setTarget`
+     * and `setWater` dated that day or earlier. For each slot the latest dated change wins, then
+     * the last in event order, so two devices changing one slot on one day resolve like
+     * conflicting habit edits, and changes to different slots both survive.
+     */
+    fun targets(on: Double): Targets {
+        val selected = day(on)
+        var targets = Targets.STANDARD
+        var waterDay: Double? = null
+        val slotDays = HashMap<TargetSlot, Double>()
+        for (activity in activities) {
+            if (activity.day > selected) continue
+            when (val action = activity.action) {
+                is Action.SetTarget -> {
+                    if (slotDays[action.slot]?.let { it > activity.day } == true) continue
+                    slotDays[action.slot] = activity.day
+                    targets = targets.with(action.slot, Target(action.name, action.amount, action.unit, action.icon))
+                }
+                is Action.SetWater -> {
+                    if (waterDay?.let { it > activity.day } == true) continue
+                    waterDay = activity.day
+                    targets = targets.copy(water = WaterTarget(action.goal, action.pour))
+                }
+                else -> Unit
+            }
+        }
+        return targets
     }
 
     /**
@@ -274,6 +539,12 @@ class Challenge(val ownerID: UUID, startDate: Double, val zone: ZoneId) {
      * like [merge]: the earliest definition day, the earliest archive day and each day's last
      * tick in event order. `firstDay` is the earliest definition day, or the completion day
      * when that is earlier.
+     *
+     * Each repeat rule applies from its event's day, or from the definition day when that is
+     * later; on one day the latest dated rule wins, then the last in event order. A to-do rule
+     * after a to-do period changes nothing, and any other change starts a period: a to-do
+     * period is completed only by a tick inside it (the first period also by an earlier tick),
+     * so a repeating extra switched back to a to-do is a fresh open to-do from that day.
      */
     val allExtras: List<Extra>
         get() {
@@ -282,6 +553,7 @@ class Challenge(val ownerID: UUID, startDate: Double, val zone: ZoneId) {
             val defined = HashMap<UUID, Double>()
             val archived = HashMap<UUID, Double>()
             val ticks = HashMap<UUID, HashMap<Double, Boolean>>()
+            val schedules = HashMap<UUID, ArrayList<Pair<Double, ExtraSchedule>>>()
             for (activity in activities) {
                 when (val action = activity.action) {
                     is Action.DefineExtra -> {
@@ -291,6 +563,9 @@ class Challenge(val ownerID: UUID, startDate: Double, val zone: ZoneId) {
                     }
                     is Action.ArchiveExtra -> archived[action.id] = minOf(archived[action.id] ?: activity.day, activity.day)
                     is Action.SetExtra -> ticks.getOrPut(action.id) { HashMap() }[activity.day] = action.completed
+                    is Action.ScheduleExtra -> ExtraSchedule.of(action.weekdays, action.every)?.let {
+                        schedules.getOrPut(action.id) { ArrayList() }.add(activity.day to it)
+                    }
                     else -> Unit
                 }
             }
@@ -298,23 +573,54 @@ class Challenge(val ownerID: UUID, startDate: Double, val zone: ZoneId) {
                 val title = titles[id] ?: return@mapNotNull null
                 val definedOn = defined[id] ?: return@mapNotNull null
                 // A tick from its archive day on is kept as history but never completes it.
-                val completedOn = ticks[id]?.filter { (day, value) -> value && (archived[id]?.let { day < it } ?: true) }
-                    ?.keys?.minOrNull()
-                Extra(id, title, minOf(definedOn, completedOn ?: definedOn), completedOn, archived[id])
+                val ticked = ticks[id]?.filter { (day, value) -> value && (archived[id]?.let { day < it } ?: true) }?.keys
+                    ?: emptySet()
+                val changes = HashMap<Double, Pair<Double, ExtraSchedule>>()
+                for ((dated, schedule) in schedules[id] ?: emptyList()) {
+                    val from = maxOf(dated, definedOn)
+                    if (changes[from]?.let { it.first > dated } == true) continue
+                    changes[from] = dated to schedule
+                }
+                val sorted = changes.keys.sorted().map { it to changes.getValue(it).second }
+                val withFirst = if (sorted.firstOrNull()?.first != definedOn) listOf(definedOn to ExtraSchedule.Once) + sorted else sorted
+                val starts = withFirst.filterIndexed { index, (_, schedule) ->
+                    index == 0 || schedule != ExtraSchedule.Once || withFirst[index - 1].second != ExtraSchedule.Once
+                }
+                val periods = starts.mapIndexed { index, (start, schedule) ->
+                    val end = starts.getOrNull(index + 1)?.first
+                    if (schedule != ExtraSchedule.Once) {
+                        Extra.Period(start, dayNumber(start), schedule, start, null)
+                    } else {
+                        val completedOn = ticked.filter { day -> (index == 0 || day >= start) && (end?.let { day < it } ?: true) }.minOrNull()
+                        val shownFrom = if (index == 0) minOf(start, completedOn ?: start) else start
+                        Extra.Period(start, dayNumber(start), ExtraSchedule.Once, shownFrom, completedOn)
+                    }
+                }
+                val latest = periods.last()
+                Extra(id, title, periods[0].shownFrom, if (latest.schedule == ExtraSchedule.Once) latest.completedOn else null,
+                    archived[id], periods)
             }
         }
 
-    /** The extras shown for the day of `date`, in creation order. */
+    /**
+     * The extras shown for the day of `asOf`, in creation order, until the day each is archived:
+     * a to-do from its first day through its completion day, carried over while open; a
+     * repeating extra on its scheduled days.
+     */
     fun extras(asOf: Double): List<Extra> {
         val selected = day(asOf)
-        return allExtras.filter { it.isShown(selected) }
+        val number = dayNumber(selected)
+        return allExtras.filter { it.isShown(selected, number) }
     }
 
-    /** Neither archived nor completed on or before that day: what the cap counts. */
+    /** Active, and repeating on that day or a to-do not completed on or before it: what the cap counts. */
     fun openExtras(asOf: Double): List<Extra> {
         val selected = day(asOf)
-        return allExtras.filter { !it.isArchived && (it.completedOn?.let { done -> done > selected } ?: true) }
+        return allExtras.filter { it.isOpen(selected) }
     }
+
+    /** The calendar date of `instant` in the challenge's zone as days since 1970-01-01. */
+    internal fun dayNumber(instant: Double): Long = calendar.localDate(instant).toEpochDay()
 
     fun streaks(asOf: Double): StreakSummary {
         val today = day(asOf)
@@ -343,6 +649,8 @@ class Challenge(val ownerID: UUID, startDate: Double, val zone: ZoneId) {
     companion object {
         const val MAXIMUM_ACTIVE_EXTRAS = 10
         const val MAXIMUM_EXTRA_TITLE_LENGTH = 40
+        const val MAXIMUM_TARGET_NAME_LENGTH = 20
+        private const val MAXIMUM_TARGET_NAME_SCALARS = 80
         /** Challenges and data from before per-challenge timezones were all Jersey days. */
         const val LEGACY_TIME_ZONE_ID = "Europe/Jersey"
         val legacyZone: ZoneId get() = ZoneId.of(LEGACY_TIME_ZONE_ID)
@@ -358,6 +666,9 @@ class Challenge(val ownerID: UUID, startDate: Double, val zone: ZoneId) {
 
         /** Swift's `uuidString`: upper case. */
         fun uuidString(id: UUID): String = id.toString().uppercase()
+
+        /** The ISO weekday (Monday = 1 through Sunday = 7) of a day number; day 0 was a Thursday. */
+        internal fun isoWeekday(number: Long): Int = (Math.floorMod(number, 7L) + 3).toInt() % 7 + 1
 
         /**
          * A zone is accepted only in a spelling Apple's Foundation keeps as is (it turns
@@ -376,10 +687,22 @@ class Challenge(val ownerID: UUID, startDate: Double, val zone: ZoneId) {
         private val zonePattern = Regex("[A-Za-z][A-Za-z0-9_+\\-]*(/[A-Za-z0-9_+\\-]+)*")
 
         /** The stored form of an extra's name: trimmed, 1 to 40 characters, one line. */
-        fun extraTitle(raw: String): String? {
+        fun extraTitle(raw: String): String? = label(raw, MAXIMUM_EXTRA_TITLE_LENGTH)
+
+        /**
+         * The stored form of a slot's name: trimmed, 1 to 20 characters, one line, and at most 80
+         * Unicode scalars (what PostgreSQL's `char_length` counts), so the server never refuses it.
+         */
+        fun targetName(raw: String): String? =
+            label(raw, MAXIMUM_TARGET_NAME_LENGTH)?.takeIf { it.codePointCount(0, it.length) <= MAXIMUM_TARGET_NAME_SCALARS }
+
+        /** An icon id: 1 to 16 lower-case ASCII letters. */
+        fun isIconID(id: String): Boolean = id.length in 1..16 && id.all { it in 'a'..'z' }
+
+        private fun label(raw: String, maximum: Int): String? {
             val title = trimWhitespaceAndNewlines(raw)
             val length = graphemeCount(title)
-            if (length < 1 || length > MAXIMUM_EXTRA_TITLE_LENGTH) return null
+            if (length < 1 || length > maximum) return null
             var index = 0
             while (index < title.length) {
                 val scalar = title.codePointAt(index)
