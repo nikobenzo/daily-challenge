@@ -5,28 +5,33 @@
   applies its own rounded mask), 512 x 512, 32-bit PNG.
 - feature-graphic-1024x500.png: docs/assets/play/source/feature-graphic.html through Chrome
   (chrome-devtools-axi), 24-bit PNG.
-- screenshots/NN-<name>.png: Redmi Note 7 captures from docs/screenshots/android/ with the
-  phone's status and navigation bars cropped, fitted to 1080 x 1920 (9:16), 24-bit PNG.
+- screenshots/NN-<name>.png: Android 10 emulator captures from docs/screenshots/android/play/
+  (scripts/capture-play-screenshots.sh) with the status and navigation bars cropped, fitted to
+  1080 x 1920 (9:16), 24-bit PNG.
 
 Requires macOS (swift, system font), chrome-devtools-axi and Pillow. Run with a Python that has
 Pillow, for example: python3 -m venv .build/play-venv && .build/play-venv/bin/pip install Pillow
 && .build/play-venv/bin/python scripts/render-play-assets.py
+Pass --screenshots to render only the screenshots (Pillow alone; the icon and feature graphic stay).
 """
 import os
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 DEST = ROOT / 'docs/assets/play'
 CAPTURES = ROOT / 'docs/screenshots/android'
+PLAY_CAPTURES = CAPTURES / 'play'
 # Listing order: the first screenshots show first on the store page.
-SCREENSHOTS = ['today-extras-light', 'today-complete-light', 'history-light', 'setup-light',
-               'account-light', 'today-dark']
-# Redmi Note 7 (1080 x 2340): MIUI's status bar above, the system navigation bar below.
-STATUS_BAR, NAVIGATION_BAR_TOP = 90, 2208
-# The Today card (goals, jug, pour controls) in today-light.png, for the feature graphic.
+SCREENSHOTS = ['today-light', 'daily-goals-light', 'repeat-light', 'history-light', 'setup-light',
+               'today-complete-light', 'account-light', 'today-dark']
+# Android 10 emulator (1080 x 2280, 440 dpi): the 24 dp status bar above, the 48 dp navigation bar below.
+CAPTURE_SIZE = (1080, 2280)
+STATUS_BAR, NAVIGATION_BAR_TOP = 66, 2148
+# The Today card (goals, jug, pour controls) in the Redmi's today-light.png, for the feature graphic.
 TODAY_CROP = (48, 388, 984, 930)
 TODAY_HEIGHT = 340
 
@@ -81,10 +86,10 @@ def feature_graphic(work, master):
 
 
 def screenshot(name, index):
-    with Image.open(CAPTURES / (name + '.png')) as im:
+    with Image.open(PLAY_CAPTURES / (name + '.png')) as im:
         rgb = im.convert('RGB')
-    if rgb.size != (1080, 2340):
-        raise ValueError(f'{name}: expected a 1080 x 2340 Redmi capture, got {rgb.size}')
+    if rgb.size != CAPTURE_SIZE:
+        raise ValueError(f'{name}: expected a 1080 x 2280 emulator capture, got {rgb.size}')
     app = rgb.crop((0, STATUS_BAR, 1080, NAVIGATION_BAR_TOP))
     # Fit the app into 1080 x 1920 and fill the narrow side margins by repeating each edge
     # column, which continues the app's own background.
@@ -101,10 +106,13 @@ def screenshot(name, index):
 
 def main():
     (DEST / 'screenshots').mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory() as directory:
-        work = Path(directory)
-        master = icon(work)
-        feature_graphic(work, master)
+    for old in (DEST / 'screenshots').glob('*.png'):
+        old.unlink()
+    if '--screenshots' not in sys.argv[1:]:
+        with tempfile.TemporaryDirectory() as directory:
+            work = Path(directory)
+            master = icon(work)
+            feature_graphic(work, master)
     for index, name in enumerate(SCREENSHOTS, 1):
         screenshot(name, index)
     print('Rendered', DEST.relative_to(ROOT))

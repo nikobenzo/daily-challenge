@@ -124,7 +124,9 @@ Screens: `signIn`, `createAccount`, `forgotPassword`, `confirmCode`, `resetPassw
 `--es appearance light|dark|system`, `--ez manageExtras true`, `--ez deleteAccount true`,
 `--ez deleteAccountConfirm true`, `--ez deletionFails true`, `--ez dailyGoals true` (opens
 Account > Daily goals), `--es editGoal water|workout|walk|diet|bibleReading` (opens that editor,
-in setup or in Daily goals) and `--es editExtra <title>` (with `manageExtras`, edits that extra). Capture with
+in setup or in Daily goals), `--es editExtra <title>` (with `manageExtras`, edits that extra), `--ez customGoals true` (a seeded
+challenge with personalised goals from day 1) and `--ez synced true` (syncs with an in-memory
+server, so the chip and Account read as up to date). Capture with
 `adb exec-out screencap -p > docs/screenshots/android/<name>.png`. Launching without a fixture
 opens the real app again.
 
@@ -133,7 +135,8 @@ MIUI 12.5, 1080 by 2340) taken with these fixture launches, plus `launch-signed-
 real configured app opened with no account. Those in `emulator/` come from an Android 10
 (API 29) emulator at 1080 by 2280. Daily goals and repeating extras are in `goals/` (Android 10
 emulator in Light, Dark and large text, `android16-*` from an Android 16 emulator, and the
-placed widgets as `widgets-goals-*`).
+placed widgets as `widgets-goals-*`). The Play listing's sources are in `play/` (Android 10 emulator, from
+`scripts/capture-play-screenshots.sh`).
 
 ## Daily goals and repeating extras
 

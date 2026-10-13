@@ -97,27 +97,28 @@ docstring has the run command):
 | --- | --- | --- |
 | `icon-512.png` | App icon | 512 x 512, 32-bit PNG. The same tile as the iPhone icon (`scripts/render-app-icon.swift --ios`) and the Android launcher icon; full bleed, because Play applies the rounded mask. |
 | `feature-graphic-1024x500.png` | Feature graphic | 1024 x 500, 24-bit PNG. The App Store header's style with the real Android Today card; source `docs/assets/play/source/feature-graphic.html`. |
-| `screenshots/01-today-extras-light.png` | Phone screenshot 1 | Today with extras, two of them Late |
-| `screenshots/02-today-complete-light.png` | Phone screenshot 2 | All five complete |
-| `screenshots/03-history-light.png` | Phone screenshot 3 | Monthly calendar and a complete day |
-| `screenshots/04-setup-light.png` | Phone screenshot 4 | "Your next 75 days" setup |
-| `screenshots/05-account-light.png` | Phone screenshot 5 | Water reminders and appearance |
-| `screenshots/06-today-dark.png` | Phone screenshot 6 | Today in Dark |
+| `screenshots/01-today-light.png` | Phone screenshot 1 | Today with personalised goals (Gym, Yoga, No sugar, Audiobook, 3,000 ml with a 330 ml glass), a Late one-off beside repeating extras |
+| `screenshots/02-daily-goals-light.png` | Phone screenshot 2 | Account > Daily goals |
+| `screenshots/03-repeat-light.png` | Phone screenshot 3 | Manage extras: an extra's repeat, Choose days on Fridays |
+| `screenshots/04-history-light.png` | Phone screenshot 4 | Monthly calendar and a complete personalised day |
+| `screenshots/05-setup-light.png` | Phone screenshot 5 | "Your next 75 days" setup with "Your daily five" (the standard five as the default) |
+| `screenshots/06-today-complete-light.png` | Phone screenshot 6 | All five personalised goals complete |
+| `screenshots/07-account-light.png` | Phone screenshot 7 | Signed in and up to date, water reminders and appearance |
+| `screenshots/08-today-dark.png` | Phone screenshot 8 | Today in Dark, scrolled to the extras and streak |
 
-The screenshots are 1080 x 1920 (9:16), 24-bit PNG, made from the Redmi Note 7 fixture captures in
-`docs/screenshots/android/` with the phone's status and navigation bars cropped off and the app
-scaled to fit, with its own background continued into narrow side margins. No captions or frames.
-Caveats, as for the iPhone set: the fixtures run offline, so Today, History and setup show a "Local
-only" chip and Account shows "Saved on this phone only, not connected to the server" and the
-sample address `sam@example.com`. Drop `05-account-light.png` (five screenshots still qualify) or
-recapture Account from the reviewer test account if that reads badly. Phone screenshots are enough to
-publish; tablet and other form factors are optional.
+The screenshots are 1080 x 1920 (9:16), 24-bit PNG, made from Android 10 emulator captures in
+`docs/screenshots/android/play/` (`scripts/capture-play-screenshots.sh` launches the Debug fixtures
+with `customGoals` and `synced`; then `scripts/render-play-assets.py --screenshots`), with the
+status and navigation bars cropped off and the app scaled to fit, with its own background continued
+into narrow side margins. No captions or frames. The fixtures never sign in or reach the hosted
+server: `synced` is an in-memory server, so the chip shows a synced time and Account says "Up to
+date, checked 15:00" for the sample address `sam@example.com`, with no "Local only" chip or "not
+connected" text. Phone screenshots are enough to publish; tablet and other form factors are
+optional.
 
-Follow-up: these captures predate the daily goals editors. `04-setup-light.png` shows the old setup
-without the "Your daily five" rows, and none shows Account > Daily goals or a repeating extra.
-Recapture from the emulator fixtures in `docs/screenshots/android/goals/` before the production
-listing; the standard five still shown elsewhere is accurate as the default. The listing text
-describes your own goals and repeating extras, so apply
+The feature graphic's Today card is still the Redmi capture of the standard five (Water, Workout,
+Walk, Diet, Bible, 4,000 ml), which is accurate as the default; it has no "Local only" chip. The
+listing text describes your own goals and repeating extras, so apply
 `20261012000100_custom_targets_action_kinds.sql` first ([owner step](production-sync.md#custom-goals-update-owner-only-once)).
 
 ## App content (Policy > App content)

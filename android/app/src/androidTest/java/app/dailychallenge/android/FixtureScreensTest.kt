@@ -224,6 +224,17 @@ class FixtureScreensTest {
         compose.onNodeWithTag("extras-count", useUnmergedTree = false).assert(hasContentDescription("Extras, 2 of 4 done"))
     }
 
+    @Test fun customGoalsFromTheStartAndAnInMemoryServerReadAsSynced() {
+        launch("todayComplete", "customGoals", "synced")
+        compose.waitUntil(5_000) { compose.onAllNodes(hasText("Local only")).fetchSemanticsNodes().isEmpty() }
+        compose.onNode(hasTestTag("water-total") and hasContentDescription("3300 of 3,000 millilitres")).assertExists()
+        compose.onNodeWithText("All five complete!").assertExists()
+        scenario?.close()
+        launch("account", "customGoals", "synced")
+        compose.waitUntil(5_000) { compose.onAllNodes(hasText("Up to date", substring = true)).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("not connected to the server", substring = true).assertDoesNotExist()
+    }
+
     @Test fun manageExtrasChangesHowAnExtraRepeats() {
         launch("todayRepeating", "manageExtras", extras = mapOf("editExtra" to "Book dentist"))
         compose.onNodeWithTag("repeat-days").performClick()

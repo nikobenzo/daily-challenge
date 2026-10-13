@@ -48,6 +48,10 @@ import java.util.UUID
  * (`src/release/.../Fixtures.kt` returns null).
  *
  *     adb shell am start -n app.dailychallenge.android/.MainActivity --es fixture today --es appearance dark
+ *
+ * `--ez customGoals true` starts a seeded challenge with the custom goals instead of the standard
+ * five, and `--ez synced true` syncs with an in-memory server, so the chip and Account read as
+ * connected (the Play listing screenshots).
  */
 object Fixtures {
     /** 9 October 2026, 15:00 in Jersey: a fixed clock keeps renders identical. */
@@ -69,11 +73,12 @@ object Fixtures {
             showGoals = intent.getBooleanExtra("dailyGoals", false),
             editGoal = intent.getStringExtra("editGoal"),
             editExtra = intent.getStringExtra("editExtra"),
-        ), deletionFails = intent.getBooleanExtra("deletionFails", false))
+        ), deletionFails = intent.getBooleanExtra("deletionFails", false),
+            customGoals = intent.getBooleanExtra("customGoals", false), synced = intent.getBooleanExtra("synced", false))
     }
 
     fun make(context: Context, screen: String, appearance: String? = null, options: FixtureOptions = FixtureOptions(),
-             deletionFails: Boolean = false): AppGraph {
+             deletionFails: Boolean = false, customGoals: Boolean = false, synced: Boolean = false): AppGraph {
         context.cacheDir.listFiles { file -> file.name.startsWith("fixture-") }?.forEach { it.deleteRecursively() }
         val directory = File(context.cacheDir, "fixture-${UUID.randomUUID()}")
         val prefs = MemoryKeyValueStore()
@@ -107,18 +112,21 @@ object Fixtures {
             in seeded -> {
                 // Twelve days in: ten complete, one missed, and today in progress (or complete).
                 val complete = screen == "todayComplete"
-                tracker.startChallenge(ChallengeCalendar(zone).localDate(day(-11)), zone)
+                tracker.startChallenge(ChallengeCalendar(zone).localDate(day(-11)), zone,
+                    if (customGoals) Fixtures.customGoals else Targets.STANDARD)
+                // Glasses to meet the water goal: 9 x 450 ml, or 10 x 330 ml with the custom goals.
+                val glasses = if (customGoals) 10 else 9
                 for (offset in -11L..-1L) {
                     if (offset == -7L) continue
                     tracker.selectHistoryDay(day(offset)); tracker.enableCorrections()
-                    repeat(9) { tracker.addWater() }
+                    repeat(glasses) { tracker.addWater() }
                     tracker.toggle(Habit.WORKOUT); tracker.toggle(Habit.WALK)
                     tracker.setDiet(DietState.CLEAN); tracker.toggle(Habit.BIBLE_READING)
                 }
                 tracker.selectHistoryDay(day(-7)); tracker.enableCorrections()
                 tracker.addWater(1_800); tracker.toggle(Habit.WORKOUT)
                 tracker.showToday()
-                repeat(if (complete) 9 else 5) { tracker.addWater() }
+                repeat(if (complete) glasses else if (customGoals) 7 else 5) { tracker.addWater() }
                 tracker.toggle(Habit.WORKOUT); tracker.setDiet(DietState.CLEAN)
                 if (complete) { tracker.toggle(Habit.WALK); tracker.toggle(Habit.BIBLE_READING) }
                 tracker.clearCelebration()
@@ -149,7 +157,7 @@ object Fixtures {
                 }
                 if (screen in goals) {
                     // Changed from today (day 12): earlier days keep the standard five.
-                    tracker.setGoals(customGoals)
+                    tracker.setGoals(Fixtures.customGoals)
                     tracker.addWater(330)
                     tracker.clearCelebration()
                     when (screen) {
@@ -184,19 +192,23 @@ object Fixtures {
                 }
             }
         }
+        if (synced && (screen == "setup" || screen in seeded)) {
+            tracker.configureSync(FixtureServer())
+            scope.launch { tracker.sync(force = true) }
+        }
         if (options.showDeletion) graph.tab = Tab.ACCOUNT
         return graph
     }
-}
 
-/** The goals the custom-goals fixtures change to on day 12, as in the plan's wireframes. */
-private val customGoals = Targets(
-    WaterTarget(3_000, 330),
-    Target("Gym", 45, TargetUnit.MINUTES),
-    Target("Yoga", 30, TargetUnit.MINUTES, "yoga"),
-    Target("No sugar"),
-    Target("Audiobook", 20, TargetUnit.MINUTES, "headphones"),
-)
+    /** The goals the custom-goals fixtures change to on day 12, as in the plan's wireframes. */
+    val customGoals = Targets(
+        WaterTarget(3_000, 330),
+        Target("Gym", 45, TargetUnit.MINUTES),
+        Target("Yoga", 30, TargetUnit.MINUTES, "yoga"),
+        Target("No sugar"),
+        Target("Audiobook", 20, TargetUnit.MINUTES, "headphones"),
+    )
+}
 
 /**
  * An in-memory server without the custom goals update: it keeps the challenge and older kinds,
@@ -211,6 +223,18 @@ private class UnmigratedTransport : ChallengeTransport {
         if (events.any { it.activity.action.let { action -> action is Action.SetTarget || action is Action.SetWater || action is Action.ScheduleExtra } }) {
             throw ChallengeSyncException(ChallengeSyncError.SERVER_NEEDS_CUSTOM_GOALS_UPDATE)
         }
+        events.forEach { this.events.putIfAbsent(it.id, it.copy(receivedAt = "2026-10-09T14:00:00Z")) }
+    }
+    override suspend fun fetchEvents(ownerID: UUID, challengeID: UUID): RemoteEvents = RemoteEvents(events.values.toList())
+}
+
+/** An in-memory server that accepts everything, so a fixture syncs without a network. */
+private class FixtureServer : ChallengeTransport {
+    private var header: ChallengeRecord? = null
+    private val events = LinkedHashMap<UUID, ChallengeEvent>()
+    override suspend fun fetchChallenge(ownerID: UUID): ChallengeRecord? = header
+    override suspend fun insertChallenge(record: ChallengeRecord) { if (header == null) header = record }
+    override suspend fun upload(events: List<ChallengeEvent>, ownerID: UUID) {
         events.forEach { this.events.putIfAbsent(it.id, it.copy(receivedAt = "2026-10-09T14:00:00Z")) }
     }
     override suspend fun fetchEvents(ownerID: UUID, challengeID: UUID): RemoteEvents = RemoteEvents(events.values.toList())

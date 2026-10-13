@@ -16,7 +16,7 @@ with at least 12 testers opted in for 14 days in a row before production access 
 - `./gradlew bundleRelease`: a signed Android App Bundle, minified and shrunk with R8, targetSdk 36.
 - The account deletion page `site/delete-account.html`, and the privacy policy updated for Android.
 - Store text, Data safety, content rating and reviewer instructions: [listing drafts](play-store-listing.md).
-- Store graphics: `docs/assets/play/` (icon, feature graphic, six phone screenshots).
+- Store graphics: `docs/assets/play/` (icon, feature graphic, eight phone screenshots).
 
 ## 1. Before you start
 
@@ -97,7 +97,7 @@ two as different signers.
       App, Free; accept the declarations (Developer Program Policies, US export laws).
 - [ ] **Store presence > Main store listing**: app name, short and full description from the
       [listing drafts](play-store-listing.md); upload `docs/assets/play/icon-512.png`,
-      `feature-graphic-1024x500.png` and the six files in `docs/assets/play/screenshots/` in their
+      `feature-graphic-1024x500.png` and the eight files in `docs/assets/play/screenshots/` in their
       numbered order.
 - [ ] **Store presence > Store settings**: category Health & Fitness, tags, contact email
       `yakovetskyi@icloud.com`, website.
