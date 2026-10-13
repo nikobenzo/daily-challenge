@@ -45,8 +45,9 @@ the challenge tag is generic. Public copy contains no em or en dashes.
 There are no pricing, rankings, testimonials, awards or transformation claims.
 
 The Today panel uniformly scales `[48, 492, 1224, 1030]` (x, y, width, height)
-from `raw/01-today-light.png`. All five rings, the jug, actual water amount,
-undo, + 450 ml and more control are retained. Its cropped detail is explicitly
+from `raw/01-today-goals-light.png` (1.1, personalised goals: Gym, Yoga, No sugar,
+Audiobook, a 3,000 ml goal). All five rings, the jug, actual water amount,
+undo, + 330 ml and more control are retained. Its cropped detail is explicitly
 presented as “Your day, at a glance.”, rather than a reconstructed phone screen.
 The tilted peripheral phone contains the entire real SpringBoard capture
 `raw/04-widgets-home-light.png`. The surround and Island are decorative.
@@ -54,7 +55,7 @@ No screenshot pixels or labels were repainted.
 
 Both captures were already committed: iPhone 17 Pro Max / iOS 26.4 simulator,
 1320 × 2868, synthetic fixture data, 9:41 status bar. Today is Day 12; the
-widgets are Day 1. They are separate product examples, not a claim of one
+widgets are Day 1 and show the standard five. They are separate product examples, not a claim of one
 synchronised session. Full capture provenance is in the parent README.
 No app, account, production data, Keychain or notification setting was touched.
 

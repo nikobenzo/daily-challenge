@@ -153,33 +153,18 @@ both if the owner picks "Health"; (3) that no SDK has been added since this draf
 each declare a `PrivacyInfo.xcprivacy` privacy manifest (see [docs/ios-testflight.md](ios-testflight.md)); it
 matches this table.
 
-## App Review notes (draft, 4,000 bytes max)
+## App Review notes (1.1, 4,000 bytes max)
 
-```text
-Daily Challenge is a personal tracker for a 75-day daily challenge. The standard five daily goals are
-water (4 litres), a 45-minute workout, a 45-minute walk, diet and reading (10 Bible pages); the user can
-rename the activities, reading and diet, and set their own water goal and glass size, in setup or later
-from today. Optional personal extras can repeat on chosen days.
+The paste-ready Notes text for **1.1 (11)** is in [app-review-1.1.md](app-review-1.1.md#2-app-review-information-notes)
+(3,026 bytes with the `[DEMO EMAIL]` and `[DEMO PASSWORD]` placeholders), together with the reply to App Review,
+the screen-recording shot list and the demo account steps. It replaces the build 1.0 (9) notes: it describes the
+standard five as the default, Account › Daily goals (water goal 1,000 to 5,000 ml, glass size from presets or
+Other…, renamed activities, diet and reading), repeating extras, and deletion through Account › Delete account.
 
-Sign in with the demo account (email and password in the fields below). The account already has a challenge in progress, so no setup is
-needed.
-  Email:    [DEMO ACCOUNT EMAIL]
-  Password: [DEMO ACCOUNT PASSWORD]
-
-New accounts are created in the app with an emailed code (no links). The demo account does not need one.
-
-Features to try: Today (tap + for a glass, tick a requirement), History (calendar, Edit this day), Account
-(Daily goals, water reminders, appearance, Manage extras, where an extra can be set to repeat). Widgets: add "Daily Challenge" widgets from the Home Screen gallery;
-they read the same data and need no extra sign-in.
-
-Account deletion: Account > Delete account (permanently deletes the account and its data).
-Notifications are optional local water reminders, requested only when the user turns them on.
-No ads, tracking, purchases or third-party analytics. Backend: Supabase (account and challenge sync).
-Contact: yakovetskyi@icloud.com
-```
-
-Create the demo account on the production server before submitting, seed a few days of entries, and keep it
-out of real use. The owner supplies the credentials; never commit them.
+Tick **Sign-in required** and enter the demo account there too. The demo account is a separate, dedicated
+account, not the owner's, with a start date 8 to 10 days back, populated history, at least one personalised goal
+and a repeating extra, and it is never deleted ([steps](app-review-1.1.md#4-demo-account)). Apply the account
+deletion and custom goals server updates before creating it. The owner supplies the credentials; never commit them.
 
 ## Screenshots
 
@@ -192,6 +177,13 @@ sizes by display: the **6.9-inch class (iPhone 17 Pro Max, 16 Pro Max, Air and s
 sizes down when the UI is the same, so the 6.9-inch set below should satisfy it; confirm in App Store Connect
 when uploading, and supply a 1206 × 2622 set if it asks.
 
+Upload the composed frames in [`docs/screenshots/app-store/marketing/`](screenshots/app-store/marketing/README.md):
+seven 1320 × 2868 PNGs in `iphone-6.9/` and seven 1206 × 2622 PNGs in `iphone-medium/`, in file order, all opaque
+RGB. For 1.1 they show the personalised goals (Gym, Yoga, No sugar, Audiobook, a 3,000 ml goal and a 330 ml
+glass) on Today, the water close-up and History, and repeating extras beside a Late to-do on the extras close-up and
+the Dark frame. The Home Screen widgets and the all-complete frame keep the standard five, which every new
+challenge starts with.
+
 Raw captures (no captions, frames or marketing layout) are in
 [`docs/screenshots/app-store/raw/`](screenshots/app-store/raw/): iPhone 17 Pro Max simulator, iOS 26.4,
 1320 × 2868, no alpha, status bar fixed at 9:41 with full signal and battery, synthetic fixture data. Light mode
@@ -199,29 +191,35 @@ is primary, with a `-dark` twin of each.
 
 | File | Shows |
 | --- | --- |
-| `01-today-{light,dark}.png` | Today: five rings, jug, extras with two **Late** items, streak |
+| `01-today-goals-{light,dark}.png` | Today with personalised goals: Gym, Yoga, No sugar, Audiobook, 2,250 / 3,000 ml, + 330 ml |
+| `02-history-goals-{light,dark}.png` | History: calendar, today's card with the personalised goals and the goal changes in Activity |
+| `07-today-recurring-{light,dark}.png` | Today: extras repeating every day, on weekdays and on Fridays, beside a **Late** to-do |
+| `01-today-{light,dark}.png` | Today with the standard five: rings, jug, extras with two **Late** items, streak |
 | `02-history-{light,dark}.png` | History: monthly calendar and a complete day with extras |
-| `03-account-{light,dark}.png` | Account: sync state, water reminders, appearance, extras |
+| `03-account-{light,dark}.png` | Account: sync state, water reminders, appearance, Daily goals, extras, version |
 | `04-widgets-home-{light,dark}.png` | Home Screen: Water, Daily requirements and Extras widgets placed |
 | `05-widgets-home-carry-over-{light,dark}.png` | Home Screen widgets with Late extras |
+| `06-today-complete-{light,dark}.png` | All five complete (also native 1206 × 2622 in `iphone-medium/`) |
 
-Reproduce with `bash iOS/scripts/capture-app-store-screenshots.sh` (app screens) and
+Reproduce with `bash iOS/scripts/capture-app-store-screenshots.sh` (app screens; `DEVICE` and `MEDIUM_DEVICE` name
+the simulators), `.build/app-store-venv/bin/python scripts/render-app-store-marketing.py` (frames, then `--header`)
+and
 `WIDGET_SIMULATOR_ID=<disposable iPhone 17 Pro Max> WIDGET_CAPTURE_MODE=phase5 WIDGET_LAYOUT=a WIDGET_PLACE=1 WIDGET_VARIANTS=partial,carry-over APPEARANCE=light bash iOS/scripts/capture-widgets.sh`
 (then `dark`), which writes into `docs/screenshots/ios/widgets/` from where the headline captures were copied.
 Caveats: the fixtures show "Local only" on Today and History because they run offline, and the fixture's challenge
-day differs between the in-app screens (Day 12) and the widget fixtures (Day 1 and Day 3). The marketing
-screenshots composed from these should crop or avoid that, or re-seed a consistent fixture.
+day differs between the in-app screens (Day 12) and the widget fixtures (Day 1 and Day 3). Each frame is an
+independent example; the gallery makes no claim that they are one session.
 
 ## Build for review
 
-Upload an App Store build with `bash scripts/ios-archive.sh --app-store`
+The build for review is **1.1 (11)** ([review pack](app-review-1.1.md#owner-steps-before-replying)). Upload an App Store build with `bash scripts/ios-archive.sh --app-store`
 ([steps](ios-testflight.md#app-store-builds---app-store)); the default export is internal TestFlight only and
 cannot be submitted.
 
 ## Open items
 
 - **Custom goals need the server update.** The Description, What's New and review notes describe your own goals and repeating extras. Apply `20261012000100_custom_targets_action_kinds.sql` once before any build that writes them reaches the demo account or the public ([owner step](production-sync.md#custom-goals-update-owner-only-once)), and re-check the wording against that build.
-- **Screenshots predate the editors.** The five captures in [Screenshots](#screenshots) still show the standard five, which stays accurate as the default, but none shows setup rows, Account > Daily goals or a repeating extra. Raw simulator captures of those exist in `docs/screenshots/ios/` (`goals-*`, [evidence](ios-custom-goals-evidence.md)); composing new marketing frames from them is a follow-up.
+- **Screenshots** were re-rendered for 1.1 (13 October): Today, the water close-up and History show personalised goals, and the extras close-up and the Dark frame show repeating extras. The Home Screen widget frame still shows the standard five; a placed-widget capture with personalised goals would need a new widget fixture.
 
 - **Account deletion** is in the iPhone app (Account > Delete account, landed in 184a0f1), matching the privacy policy and review notes. Re-check the wording against the released build.
 - **Privacy manifest:** done. `iOS/DailyChallenge/PrivacyInfo.xcprivacy` and `iOS/DailyChallengeWidgets/PrivacyInfo.xcprivacy` exist and `scripts/ios-archive.sh --check` verifies them in the archive. Re-check them against the App Privacy answers before submitting.

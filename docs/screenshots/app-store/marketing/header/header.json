@@ -4,7 +4,7 @@
   "headline": ["Make every", "day count."],
   "sources": {
     "icon": "Resources/AppIcon/icon_1024.png",
-    "today": "docs/screenshots/app-store/raw/01-today-light.png",
+    "today": "docs/screenshots/app-store/raw/01-today-goals-light.png",
     "widgets": "docs/screenshots/app-store/raw/04-widgets-home-light.png"
   },
   "today_crop": [48, 492, 1224, 1030],

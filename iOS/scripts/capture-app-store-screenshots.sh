@@ -58,6 +58,11 @@ for appearance in light dark; do
     capture 01-today todayExtras "$appearance"
     capture 02-history historyCarryOver "$appearance"
     capture 03-account account "$appearance"
+    # 1.1: personalised goals (Gym, Yoga, No sugar, Audiobook, 3,000 ml in 330 ml glasses)
+    # and repeating extras beside a late to-do.
+    capture 01-today-goals todayGoals "$appearance"
+    capture 02-history-goals historyGoals "$appearance"
+    capture 07-today-recurring todayRecurring "$appearance"
   fi
   capture 06-today-complete todayComplete "$appearance"
 done
@@ -76,7 +81,8 @@ PY
 }
 if [[ "${CAPTURE_COMPLETE_ONLY:-0}" != 1 ]]; then
   strip_alpha 01-today-light.png 01-today-dark.png 02-history-light.png 02-history-dark.png \
-    03-account-light.png 03-account-dark.png
+    03-account-light.png 03-account-dark.png 01-today-goals-light.png 01-today-goals-dark.png \
+    02-history-goals-light.png 02-history-goals-dark.png 07-today-recurring-light.png 07-today-recurring-dark.png
 fi
 strip_alpha 06-today-complete-light.png 06-today-complete-dark.png
 xcrun simctl ui "$udid" appearance light

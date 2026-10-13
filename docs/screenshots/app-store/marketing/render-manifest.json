@@ -5,12 +5,12 @@
       1320,
       2868
     ],
-    "source": "docs/screenshots/app-store/raw/01-today-light.png",
+    "source": "docs/screenshots/app-store/raw/01-today-goals-light.png",
     "source_size": [
       1320,
       2868
     ],
-    "source_sha256": "1d5ac040043570b1c1dbbc83da4c1e296c8bbbaa3f946a11f6652c5e79a6b833",
+    "source_sha256": "e25e7661c7de605e4e1bb55af9b9b96f3ff250a146066e0deb3c5a9f97dbc728",
     "bounds": "result: \"[{\\\"class\\\":\\\"brand\\\",\\\"x\\\":100,\\\"y\\\":92,\\\"width\\\":308.453125,\\\"height\\\":62},{\\\"class\\\":\\\"copy\\\",\\\"x\\\":100,\\\"y\\\":240,\\\"width\\\":1136,\\\"height\\\":352.84375},{\\\"class\\\":\\\"phone phone\\\",\\\"x\\\":190,\\\"y\\\":755,\\\"width\\\":940,\\\"height\\\":2009.515625},{\\\"class\\\":\\\"footer\\\",\\\"x\\\":100,\\\"y\\\":2794,\\\"width\\\":1120,\\\"height\\\":26}]\""
   },
   {
@@ -33,12 +33,12 @@
       1320,
       2868
     ],
-    "source": "docs/screenshots/app-store/raw/01-today-light.png",
+    "source": "docs/screenshots/app-store/raw/01-today-goals-light.png",
     "source_size": [
       1320,
       2868
     ],
-    "source_sha256": "1d5ac040043570b1c1dbbc83da4c1e296c8bbbaa3f946a11f6652c5e79a6b833",
+    "source_sha256": "e25e7661c7de605e4e1bb55af9b9b96f3ff250a146066e0deb3c5a9f97dbc728",
     "bounds": "result: \"[{\\\"class\\\":\\\"brand\\\",\\\"x\\\":100,\\\"y\\\":92,\\\"width\\\":308.453125,\\\"height\\\":62},{\\\"class\\\":\\\"copy\\\",\\\"x\\\":100,\\\"y\\\":240,\\\"width\\\":1136,\\\"height\\\":352.84375},{\\\"class\\\":\\\"phone water\\\",\\\"x\\\":250,\\\"y\\\":760,\\\"width\\\":820,\\\"height\\\":1748.796875},{\\\"class\\\":\\\"zoom water\\\",\\\"x\\\":90,\\\"y\\\":1500,\\\"width\\\":1140,\\\"height\\\":670},{\\\"class\\\":\\\"footer\\\",\\\"x\\\":100,\\\"y\\\":2794,\\\"width\\\":1120,\\\"height\\\":26}]\""
   },
   {
@@ -47,13 +47,13 @@
       1320,
       2868
     ],
-    "source": "docs/screenshots/app-store/raw/01-today-light.png",
+    "source": "docs/screenshots/app-store/raw/07-today-recurring-light.png",
     "source_size": [
       1320,
       2868
     ],
-    "source_sha256": "1d5ac040043570b1c1dbbc83da4c1e296c8bbbaa3f946a11f6652c5e79a6b833",
-    "bounds": "result: \"[{\\\"class\\\":\\\"brand\\\",\\\"x\\\":100,\\\"y\\\":92,\\\"width\\\":308.453125,\\\"height\\\":62},{\\\"class\\\":\\\"copy\\\",\\\"x\\\":100,\\\"y\\\":240,\\\"width\\\":1136,\\\"height\\\":352.84375},{\\\"class\\\":\\\"phone extras\\\",\\\"x\\\":250,\\\"y\\\":760,\\\"width\\\":820,\\\"height\\\":1748.796875},{\\\"class\\\":\\\"zoom extras\\\",\\\"x\\\":90,\\\"y\\\":1530,\\\"width\\\":1140,\\\"height\\\":665},{\\\"class\\\":\\\"footer\\\",\\\"x\\\":100,\\\"y\\\":2794,\\\"width\\\":1120,\\\"height\\\":26}]\""
+    "source_sha256": "8b771cdadf1edcc9486898c66aaddea77048b06ff1d5e624c12e57e09910d3b1",
+    "bounds": "result: \"[{\\\"class\\\":\\\"brand\\\",\\\"x\\\":100,\\\"y\\\":92,\\\"width\\\":308.453125,\\\"height\\\":62},{\\\"class\\\":\\\"copy\\\",\\\"x\\\":100,\\\"y\\\":240,\\\"width\\\":1136,\\\"height\\\":352.84375},{\\\"class\\\":\\\"phone extras\\\",\\\"x\\\":250,\\\"y\\\":760,\\\"width\\\":820,\\\"height\\\":1748.796875},{\\\"class\\\":\\\"zoom extras\\\",\\\"x\\\":90,\\\"y\\\":1530,\\\"width\\\":1140,\\\"height\\\":740},{\\\"class\\\":\\\"footer\\\",\\\"x\\\":100,\\\"y\\\":2794,\\\"width\\\":1120,\\\"height\\\":26}]\""
   },
   {
     "output": "docs/screenshots/app-store/marketing/iphone-6.9/05-history.png",
@@ -61,12 +61,12 @@
       1320,
       2868
     ],
-    "source": "docs/screenshots/app-store/raw/02-history-light.png",
+    "source": "docs/screenshots/app-store/raw/02-history-goals-light.png",
     "source_size": [
       1320,
       2868
     ],
-    "source_sha256": "13c8c8072fd60de3db107c681d545e41ae21c63c9afd3d8ec8a9772d1b35538d",
+    "source_sha256": "b54c5402614ef2346623f0e8977c313a8ec11262d907d70baf1dd7c338947ab3",
     "bounds": "result: \"[{\\\"class\\\":\\\"brand\\\",\\\"x\\\":100,\\\"y\\\":92,\\\"width\\\":308.453125,\\\"height\\\":62},{\\\"class\\\":\\\"copy\\\",\\\"x\\\":100,\\\"y\\\":240,\\\"width\\\":1136,\\\"height\\\":352.84375},{\\\"class\\\":\\\"phone phone\\\",\\\"x\\\":190,\\\"y\\\":755,\\\"width\\\":940,\\\"height\\\":2009.515625},{\\\"class\\\":\\\"footer\\\",\\\"x\\\":100,\\\"y\\\":2794,\\\"width\\\":1120,\\\"height\\\":26}]\""
   },
   {
@@ -75,12 +75,12 @@
       1320,
       2868
     ],
-    "source": "docs/screenshots/app-store/raw/01-today-dark.png",
+    "source": "docs/screenshots/app-store/raw/07-today-recurring-dark.png",
     "source_size": [
       1320,
       2868
     ],
-    "source_sha256": "e7984a086fb452ed7e56b8df679183416f6780ee88c9bbabefb6b9323d614afc",
+    "source_sha256": "2b1706e53d0cb63dc3d435e6cb67f975087094a79f07d82e7a51dbfc3e667a2e",
     "bounds": "result: \"[{\\\"class\\\":\\\"brand\\\",\\\"x\\\":100,\\\"y\\\":92,\\\"width\\\":308.453125,\\\"height\\\":62},{\\\"class\\\":\\\"copy\\\",\\\"x\\\":100,\\\"y\\\":240,\\\"width\\\":1136,\\\"height\\\":352.84375},{\\\"class\\\":\\\"phone phone\\\",\\\"x\\\":190,\\\"y\\\":755,\\\"width\\\":940,\\\"height\\\":2009.515625},{\\\"class\\\":\\\"footer\\\",\\\"x\\\":100,\\\"y\\\":2794,\\\"width\\\":1120,\\\"height\\\":26}]\""
   },
   {
@@ -94,7 +94,7 @@
       1320,
       2868
     ],
-    "source_sha256": "982b8d6e83b1f2d58c6f63230c96461d49bd8e37d86bbcefd0f07114070d6011",
+    "source_sha256": "d060daadb3f645daa297d2e799f74f4f641f9fe4a6f8337b9777f308a6362d9b",
     "bounds": "result: \"[{\\\"class\\\":\\\"brand\\\",\\\"x\\\":100,\\\"y\\\":92,\\\"width\\\":308.453125,\\\"height\\\":62},{\\\"class\\\":\\\"copy\\\",\\\"x\\\":100,\\\"y\\\":240,\\\"width\\\":1136,\\\"height\\\":352.84375},{\\\"class\\\":\\\"phone phone\\\",\\\"x\\\":190,\\\"y\\\":755,\\\"width\\\":940,\\\"height\\\":2009.515625},{\\\"class\\\":\\\"footer\\\",\\\"x\\\":100,\\\"y\\\":2794,\\\"width\\\":1120,\\\"height\\\":26}]\""
   },
   {
@@ -103,12 +103,12 @@
       1206,
       2622
     ],
-    "source": "docs/screenshots/app-store/raw/01-today-light.png",
+    "source": "docs/screenshots/app-store/raw/01-today-goals-light.png",
     "source_size": [
       1320,
       2868
     ],
-    "source_sha256": "1d5ac040043570b1c1dbbc83da4c1e296c8bbbaa3f946a11f6652c5e79a6b833",
+    "source_sha256": "e25e7661c7de605e4e1bb55af9b9b96f3ff250a146066e0deb3c5a9f97dbc728",
     "bounds": "result: \"[{\\\"class\\\":\\\"brand\\\",\\\"x\\\":91.36363983154297,\\\"y\\\":84.05455017089844,\\\"width\\\":281.8139953613281,\\\"height\\\":56.64544677734375},{\\\"class\\\":\\\"copy\\\",\\\"x\\\":91.36363983154297,\\\"y\\\":219.27273559570312,\\\"width\\\":1037.890869140625,\\\"height\\\":322.3708801269531},{\\\"class\\\":\\\"phone phone\\\",\\\"x\\\":173.59091186523438,\\\"y\\\":689.7954711914062,\\\"width\\\":858.818115234375,\\\"height\\\":1835.966552734375},{\\\"class\\\":\\\"footer\\\",\\\"x\\\":91.36363983154297,\\\"y\\\":2554.384521484375,\\\"width\\\":1023.272705078125,\\\"height\\\":23.754638671875}]\""
   },
   {
@@ -131,12 +131,12 @@
       1206,
       2622
     ],
-    "source": "docs/screenshots/app-store/raw/01-today-light.png",
+    "source": "docs/screenshots/app-store/raw/01-today-goals-light.png",
     "source_size": [
       1320,
       2868
     ],
-    "source_sha256": "1d5ac040043570b1c1dbbc83da4c1e296c8bbbaa3f946a11f6652c5e79a6b833",
+    "source_sha256": "e25e7661c7de605e4e1bb55af9b9b96f3ff250a146066e0deb3c5a9f97dbc728",
     "bounds": "result: \"[{\\\"class\\\":\\\"brand\\\",\\\"x\\\":91.36363983154297,\\\"y\\\":84.05455017089844,\\\"width\\\":281.8139953613281,\\\"height\\\":56.64544677734375},{\\\"class\\\":\\\"copy\\\",\\\"x\\\":91.36363983154297,\\\"y\\\":219.27273559570312,\\\"width\\\":1037.890869140625,\\\"height\\\":322.3708801269531},{\\\"class\\\":\\\"phone water\\\",\\\"x\\\":228.4091033935547,\\\"y\\\":694.3636474609375,\\\"width\\\":749.1818237304688,\\\"height\\\":1597.7645263671875},{\\\"class\\\":\\\"zoom water\\\",\\\"x\\\":82.2272720336914,\\\"y\\\":1370.45458984375,\\\"width\\\":1041.54541015625,\\\"height\\\":612.1363525390625},{\\\"class\\\":\\\"footer\\\",\\\"x\\\":91.36363983154297,\\\"y\\\":2554.384521484375,\\\"width\\\":1023.272705078125,\\\"height\\\":23.754638671875}]\""
   },
   {
@@ -145,13 +145,13 @@
       1206,
       2622
     ],
-    "source": "docs/screenshots/app-store/raw/01-today-light.png",
+    "source": "docs/screenshots/app-store/raw/07-today-recurring-light.png",
     "source_size": [
       1320,
       2868
     ],
-    "source_sha256": "1d5ac040043570b1c1dbbc83da4c1e296c8bbbaa3f946a11f6652c5e79a6b833",
-    "bounds": "result: \"[{\\\"class\\\":\\\"brand\\\",\\\"x\\\":91.36363983154297,\\\"y\\\":84.05455017089844,\\\"width\\\":281.8139953613281,\\\"height\\\":56.64544677734375},{\\\"class\\\":\\\"copy\\\",\\\"x\\\":91.36363983154297,\\\"y\\\":219.27273559570312,\\\"width\\\":1037.890869140625,\\\"height\\\":322.3708801269531},{\\\"class\\\":\\\"phone extras\\\",\\\"x\\\":228.4091033935547,\\\"y\\\":694.3636474609375,\\\"width\\\":749.1818237304688,\\\"height\\\":1597.7645263671875},{\\\"class\\\":\\\"zoom extras\\\",\\\"x\\\":82.2272720336914,\\\"y\\\":1397.8636474609375,\\\"width\\\":1041.54541015625,\\\"height\\\":607.5682373046875},{\\\"class\\\":\\\"footer\\\",\\\"x\\\":91.36363983154297,\\\"y\\\":2554.384521484375,\\\"width\\\":1023.272705078125,\\\"height\\\":23.754638671875}]\""
+    "source_sha256": "8b771cdadf1edcc9486898c66aaddea77048b06ff1d5e624c12e57e09910d3b1",
+    "bounds": "result: \"[{\\\"class\\\":\\\"brand\\\",\\\"x\\\":91.36363983154297,\\\"y\\\":84.05455017089844,\\\"width\\\":281.8139953613281,\\\"height\\\":56.64544677734375},{\\\"class\\\":\\\"copy\\\",\\\"x\\\":91.36363983154297,\\\"y\\\":219.27273559570312,\\\"width\\\":1037.890869140625,\\\"height\\\":322.3708801269531},{\\\"class\\\":\\\"phone extras\\\",\\\"x\\\":228.4091033935547,\\\"y\\\":694.3636474609375,\\\"width\\\":749.1818237304688,\\\"height\\\":1597.7645263671875},{\\\"class\\\":\\\"zoom extras\\\",\\\"x\\\":82.2272720336914,\\\"y\\\":1397.8636474609375,\\\"width\\\":1041.54541015625,\\\"height\\\":676.0909423828125},{\\\"class\\\":\\\"footer\\\",\\\"x\\\":91.36363983154297,\\\"y\\\":2554.384521484375,\\\"width\\\":1023.272705078125,\\\"height\\\":23.754638671875}]\""
   },
   {
     "output": "docs/screenshots/app-store/marketing/iphone-medium/05-history.png",
@@ -159,12 +159,12 @@
       1206,
       2622
     ],
-    "source": "docs/screenshots/app-store/raw/02-history-light.png",
+    "source": "docs/screenshots/app-store/raw/02-history-goals-light.png",
     "source_size": [
       1320,
       2868
     ],
-    "source_sha256": "13c8c8072fd60de3db107c681d545e41ae21c63c9afd3d8ec8a9772d1b35538d",
+    "source_sha256": "b54c5402614ef2346623f0e8977c313a8ec11262d907d70baf1dd7c338947ab3",
     "bounds": "result: \"[{\\\"class\\\":\\\"brand\\\",\\\"x\\\":91.36363983154297,\\\"y\\\":84.05455017089844,\\\"width\\\":281.8139953613281,\\\"height\\\":56.64544677734375},{\\\"class\\\":\\\"copy\\\",\\\"x\\\":91.36363983154297,\\\"y\\\":219.27273559570312,\\\"width\\\":1037.890869140625,\\\"height\\\":322.3708801269531},{\\\"class\\\":\\\"phone phone\\\",\\\"x\\\":173.59091186523438,\\\"y\\\":689.7954711914062,\\\"width\\\":858.818115234375,\\\"height\\\":1835.966552734375},{\\\"class\\\":\\\"footer\\\",\\\"x\\\":91.36363983154297,\\\"y\\\":2554.384521484375,\\\"width\\\":1023.272705078125,\\\"height\\\":23.754638671875}]\""
   },
   {
@@ -173,12 +173,12 @@
       1206,
       2622
     ],
-    "source": "docs/screenshots/app-store/raw/01-today-dark.png",
+    "source": "docs/screenshots/app-store/raw/07-today-recurring-dark.png",
     "source_size": [
       1320,
       2868
     ],
-    "source_sha256": "e7984a086fb452ed7e56b8df679183416f6780ee88c9bbabefb6b9323d614afc",
+    "source_sha256": "2b1706e53d0cb63dc3d435e6cb67f975087094a79f07d82e7a51dbfc3e667a2e",
     "bounds": "result: \"[{\\\"class\\\":\\\"brand\\\",\\\"x\\\":91.36363983154297,\\\"y\\\":84.05455017089844,\\\"width\\\":281.8139953613281,\\\"height\\\":56.64544677734375},{\\\"class\\\":\\\"copy\\\",\\\"x\\\":91.36363983154297,\\\"y\\\":219.27273559570312,\\\"width\\\":1037.890869140625,\\\"height\\\":322.3708801269531},{\\\"class\\\":\\\"phone phone\\\",\\\"x\\\":173.59091186523438,\\\"y\\\":689.7954711914062,\\\"width\\\":858.818115234375,\\\"height\\\":1835.966552734375},{\\\"class\\\":\\\"footer\\\",\\\"x\\\":91.36363983154297,\\\"y\\\":2554.384521484375,\\\"width\\\":1023.272705078125,\\\"height\\\":23.754638671875}]\""
   },
   {

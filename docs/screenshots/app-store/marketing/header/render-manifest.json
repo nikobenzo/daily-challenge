@@ -6,8 +6,8 @@
       1646
     ],
     "mode": "RGB",
-    "bytes": 1509572,
-    "sha256": "89049679224ff7b569a8d8be293b5630df12bf950ec954141ec54a50e78acee2",
+    "bytes": 1512303,
+    "sha256": "5e7292ea08202d8d9ca0e88efd575bc3ae7275fd12635dd127298a30d6d97a61",
     "safe_area": [
       1097,
       493,
@@ -30,12 +30,12 @@
         "sha256": "1265882d4406ee38c746cd8c27201cd5f25f728dcadde0ae7cef150e95d2d79f"
       },
       "today": {
-        "path": "docs/screenshots/app-store/raw/01-today-light.png",
+        "path": "docs/screenshots/app-store/raw/01-today-goals-light.png",
         "size": [
           1320,
           2868
         ],
-        "sha256": "1d5ac040043570b1c1dbbc83da4c1e296c8bbbaa3f946a11f6652c5e79a6b833"
+        "sha256": "e25e7661c7de605e4e1bb55af9b9b96f3ff250a146066e0deb3c5a9f97dbc728"
       },
       "widgets": {
         "path": "docs/screenshots/app-store/raw/04-widgets-home-light.png",
@@ -55,8 +55,8 @@
       2950
     ],
     "mode": "RGB",
-    "bytes": 2455363,
-    "sha256": "fe7db5e089df88bd83e43ac5b73100e80514b02dba478b9469823bd30168b578",
+    "bytes": 2457492,
+    "sha256": "54210622d40f5e5b3b07720722b19d32b506d7d05d1aa4a1e7c67fbce3c44f8c",
     "safe_area": [
       1921,
       660,
@@ -79,12 +79,12 @@
         "sha256": "1265882d4406ee38c746cd8c27201cd5f25f728dcadde0ae7cef150e95d2d79f"
       },
       "today": {
-        "path": "docs/screenshots/app-store/raw/01-today-light.png",
+        "path": "docs/screenshots/app-store/raw/01-today-goals-light.png",
         "size": [
           1320,
           2868
         ],
-        "sha256": "1d5ac040043570b1c1dbbc83da4c1e296c8bbbaa3f946a11f6652c5e79a6b833"
+        "sha256": "e25e7661c7de605e4e1bb55af9b9b96f3ff250a146066e0deb3c5a9f97dbc728"
       },
       "widgets": {
         "path": "docs/screenshots/app-store/raw/04-widgets-home-light.png",

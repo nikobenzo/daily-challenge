@@ -6,8 +6,8 @@
       "One day.",
       "Five clear goals."
     ],
-    "detail": "Water, workout, walk, diet and Bible reading.",
-    "source": "docs/screenshots/app-store/raw/01-today-light.png",
+    "detail": "Use the standard five or make them your own.",
+    "source": "docs/screenshots/app-store/raw/01-today-goals-light.png",
     "theme": "light",
     "layout": "phone"
   },
@@ -30,8 +30,8 @@
       "Every pour",
       "adds up."
     ],
-    "detail": "See your progress. Add 450 ml with a tap.",
-    "source": "docs/screenshots/app-store/raw/01-today-light.png",
+    "detail": "See your progress. Add your own glass with a tap.",
+    "source": "docs/screenshots/app-store/raw/01-today-goals-light.png",
     "theme": "light",
     "layout": "water"
   },
@@ -42,10 +42,12 @@
       "Small extras.",
       "Less to forget."
     ],
-    "detail": "Unfinished to-dos carry over with a Late label.",
-    "source": "docs/screenshots/app-store/raw/01-today-light.png",
+    "detail": "Repeat them on your days. To-dos carry over.",
+    "source": "docs/screenshots/app-store/raw/07-today-recurring-light.png",
     "theme": "light",
-    "layout": "extras"
+    "layout": "extras",
+    "zoom_top": 0.545,
+    "zoom_height": 740
   },
   {
     "id": "05-history",
@@ -55,7 +57,7 @@
       "streak grow."
     ],
     "detail": "A clear calendar of the days you complete.",
-    "source": "docs/screenshots/app-store/raw/02-history-light.png",
+    "source": "docs/screenshots/app-store/raw/02-history-goals-light.png",
     "theme": "light",
     "layout": "phone"
   },
@@ -67,7 +69,7 @@
       "Your look."
     ],
     "detail": "A clear view of your day, in light or dark.",
-    "source": "docs/screenshots/app-store/raw/01-today-dark.png",
+    "source": "docs/screenshots/app-store/raw/07-today-recurring-dark.png",
     "theme": "dark",
     "layout": "phone"
   },

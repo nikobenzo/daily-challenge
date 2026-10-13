@@ -12,6 +12,10 @@ The owner must follow the [exact hosted migration/install steps](docs/production
 
 Appearance backing and the device-local setting remain implemented; [appearance verification](docs/appearance-verification.md) still distinguishes in-process renders from real-popup acceptance. Automated testing must never quit or replace the running app.
 
+## iPhone 1.1 (11) for App Review (13 October)
+
+Apple asked for more information on iOS 1.0 (9) (Guideline 2.1). The answer goes out with **1.1 (11)**, unchanged `VERSION` (build 11 is new for the iPhone app), and a separate demo account. [Review pack](docs/app-review-1.1.md): owner steps (both server updates first, `bash scripts/ios-archive.sh --app-store`, renumber the unreleased App Store version to 1.1), the reply, Notes text (3,026 bytes), a one-take recording shot list and demo account steps. App Store frames in `docs/screenshots/app-store/marketing/` now show personalised goals and repeating extras. Worker verification: tests, `ios-archive.sh --check` and simulators only; nothing uploaded or signed in.
+
 ## Mac first launch and welcome window (12 October)
 
 The empty "Daily Challenge Settings" window that every launch showed since the popup moved to its own panel came from the SwiftUI `Settings { EmptyView() }` scene, the app's only scene. The app now starts from `main.swift` with no SwiftUI `App`, so nothing opens a window it did not create. A first-run welcome window (four steps, a menu-bar sketch, confetti when the challenge starts) shows until this Mac is signed in with a challenge, never for existing users or upgraded installs. Diagnosis, decision table, regression script and evidence: [first launch](docs/tracker-interface.md#first-launch). Not released: the owner bumps `VERSION` and publishes as in [releases](docs/releases.md).

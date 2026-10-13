@@ -139,10 +139,12 @@ def main():
             with Image.open(source) as im:
                 sw, sh = im.size
             zoom_width = 1140 / .92
-            zoom_top = -(sh / sw) * zoom_width * (.285 if frame['layout'] == 'water' else .53)
+            # frames.json may move the enlarged detail when its content sits elsewhere in the capture.
+            zoom_top = -(sh / sw) * zoom_width * frame.get('zoom_top', .285 if frame['layout'] == 'water' else .53)
             zoom = ''
             if frame['layout'] in ('water', 'extras'):
-                zoom = ('<div class="zoom ' + frame['layout'] + '"><img src="__SOURCE__" '
+                zoom_style = f' style="height:{frame["zoom_height"]}px"' if 'zoom_height' in frame else ''
+                zoom = ('<div class="zoom ' + frame['layout'] + '"' + zoom_style + '><img src="__SOURCE__" '
                         'alt="Enlarged detail from the same capture"></div>'
                         '<div class="zoom-note">A closer look at ' +
                         ('water tracking.' if frame['layout'] == 'water' else 'your extras.') + '</div>')

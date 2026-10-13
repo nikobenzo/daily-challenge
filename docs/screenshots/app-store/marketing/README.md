@@ -9,16 +9,17 @@ safe-area previews and rebuild instructions are in [header/README.md](header/REA
 
 | Frame | Benefit | Product evidence |
 | --- | --- | --- |
-| 01 | One day. Five clear goals. | Today: five rings, jug and current streak |
-| 02 | Check in. Keep moving. | Actual Home Screen widgets, with water and checklist controls |
-| 03 | Every pour adds up. | Today water jug and + 450 ml button, with enlarged crop |
-| 04 | Small extras. Less to forget. | Today's extras with the amber Late labels, with enlarged crop |
-| 05 | See your streak grow. | History calendar and streak information |
-| 06 | Your routine. Your look. | Today in Dark appearance |
-| 07 | Five goals. One good day. | All five requirements complete |
+| 01 | One day. Five clear goals. | Today with personalised goals (Gym, Yoga, No sugar, Audiobook), jug and streak |
+| 02 | Check in. Keep moving. | Actual Home Screen widgets, with water and checklist controls (standard five) |
+| 03 | Every pour adds up. | Today water jug toward a 3,000 ml goal and the + 330 ml glass button, with enlarged crop |
+| 04 | Small extras. Less to forget. | Extras repeating every day, on weekdays and on Fridays beside a Late to-do, with enlarged crop |
+| 05 | See your streak grow. | History calendar, today's card with the personalised goals, and the goal changes in Activity |
+| 06 | Your routine. Your look. | Today in Dark appearance, with repeating extras |
+| 07 | Five goals. One good day. | All five requirements complete (standard five) |
 
-The generic 75-day wording refers to this app's five fixed requirements. Extras
-are personal to-dos and do not count towards complete days or streaks. Captions
+The generic 75-day wording refers to this app's five daily goals: the standard
+five by default, or the user's own names and amounts from 1.1. Extras are
+personal to-dos and do not count towards complete days or streaks. Captions
 make no user-count, testimonial, ranking, medical-result or award claim. The
 optional cross-device/sign-in frame is omitted: the seven frames focus on the
 phone's daily experience. The app is iPhone-only according to `iOS/project.yml`.
@@ -34,6 +35,9 @@ python3 -m venv .build/app-store-venv
 ```
 
 Optional: `--size iphone-6.9`, `--size iphone-medium`, or `--frame 04-extras`.
+A frame may set `zoom_top` (fraction of the capture's height) and `zoom_height`
+(pixels) when its enlarged detail sits elsewhere in the capture; 04 uses them
+for the four-row repeating list.
 A single-frame run updates that PNG only; run the full command before delivery to
 refresh both contact sheets and the complete provenance manifest.
 
@@ -58,53 +62,37 @@ extension for the medium display's slightly different aspect ratio.
 
 ## Capture provenance and visual review
 
-Frames 01-06 use `docs/screenshots/app-store/raw/` from `main` at
-`24fb3e5`: real iPhone 17 Pro Max simulator captures on iOS 26.4, synthetic
-fixture data, fixed 9:41 status bar and full signal/battery. The raw capture
-commands and caveats are in `docs/app-store-listing.md` and
-`iOS/scripts/capture-app-store-screenshots.sh`. No account, Keychain, network
-or notification permission was used for these captures. The placed widget
-capture comes from SpringBoard, not an in-process widget render.
-
-Frame 07 adds fresh all-complete captures using the existing `todayComplete`
-Debug fixture, on iPhone 17 Pro Max (1320 × 2868) and iPhone 17 (1206 × 2622),
-both on iOS 26.4. Light and Dark raw twins are retained. The medium marketing
-frame reads the native medium raw capture through `source_by_size` in
-`frames.json`. No fixture implementation change was needed.
-
-Reproduce these additional raw captures with:
-
-```sh
-CAPTURE_COMPLETE_ONLY=1 bash iOS/scripts/capture-app-store-screenshots.sh
-```
-
-This mode preserves the existing raw captures, uses temporary fixture storage
-and fake authentication, and captures both appearances on both devices with
-the same clean status bar. The default capture command also includes them.
+1.1 refresh (13 October 2026, branch `fm/dc-iphone-110` on `1183ebe`): frames
+01, 03, 04, 05 and 06 now use the 1.1 fixtures `todayGoals` (`01-today-goals-*`),
+`historyGoals` (`02-history-goals-*`) and `todayRecurring` (`07-today-recurring-*`),
+and frame 07 uses a fresh `todayComplete` capture. All were captured with
+`iOS/scripts/capture-app-store-screenshots.sh` on dedicated iPhone 17 Pro Max and
+iPhone 17 simulators on iOS 26.4 (synthetic fixture data, fixed 9:41 status bar,
+full signal and battery; no account, Keychain, network or notification
+permission). Frame 02 still uses the SpringBoard widget capture
+`04-widgets-home-light.png` from `24fb3e5`, which shows the standard five; no
+widget fixture with personalised goals exists. The header's Today crop now uses
+`01-today-goals-light.png`. Frame 07 reads the native medium capture through
+`source_by_size` in `frames.json`; frames 01 to 06 are uniformly scaled at the
+medium size.
 
 Each frame is an independent feature example. The app examples use Day 12,
-while the widget example uses Day 1; their dates differ because the app fixture
-clock is fixed and WidgetKit uses the simulator's date. The gallery makes no
-claim that these examples are one continuous session or a synchronised account.
-The offline fixture's Local only label remains visible and is not relabelled as
-Synced. See [research](../../../app-store-visuals-research.md) for references
-and the design rationale.
+while the widget example uses Day 1; the personalised and standard examples are
+separate fixtures. The gallery makes no claim that these examples are one
+continuous session or a synchronised account. The offline fixture's Local only
+label remains visible and is not relabelled as Synced. See
+[research](../../../app-store-visuals-research.md) for references and the
+design rationale.
 
-Final checks passed on 11 October 2026 after restoring frame 07:
+Checks on 13 October 2026:
 
-- All fourteen PNGs were reviewed in both contact sheets at thumbnail size.
-  Frames 01-06 retain their individually reviewed layout; frame 07 was also
-  inspected individually at both sizes. Headlines, rings, jug, controls and Late labels are legible;
-  the water and extras crops preserve their complete focal content. The native
-  History activity list continues behind its tab bar, as in the raw capture.
-- DOM checks passed for caption overflow and canvas bounds. Export checks passed
-  for the exact dimensions, opaque RGB pixels, seven frames per size, the four new
-  native-size raw captures and all input hashes recorded in `render-manifest.json`.
-- Caption wording and punctuation checks passed. The renderer's Python syntax, the
-  capture script's Bash syntax, the actual two-device capture run and
-  `git diff --check` passed. No application code changes are part of this
-  delivery.
+- All fourteen frames were reviewed in both contact sheets, and frames 01, 03
+  and 04 individually at full size; the extras close-up shows the heading and
+  all four rows with their repeat captions and the Late label.
+- The renderer's DOM checks passed for caption overflow and canvas bounds;
+  export checks passed for the exact dimensions, opaque RGB and seven frames per
+  size; `render-manifest.json` records every input hash. Both header exports
+  re-rendered with their safe-area previews.
+- Captions contain no em or en dashes. No application code changed.
 
-The final set has seven frames. It covers all required features including the
-all-complete screen. Re-render and repeat the visual review whenever captions,
-inputs or layout change.
+Re-render and repeat the visual review whenever captions, inputs or layout change.
